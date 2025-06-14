@@ -1,0 +1,17 @@
+---
+description: Rules define the project documentation need follow 
+globs: 
+alwaysApply: false
+---
+# Documentation Rules
+documentation:
+  required_files:
+    - README.md
+    - docs/index.md
+    - docs/api/*.md
+    - docs/guides/*.md
+  code_documentation:
+    required: true
+    style: google
+
+    coverage: 85%

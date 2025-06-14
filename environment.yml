@@ -1,0 +1,16 @@
+name: wealth_lite
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - xlsxwriter==3.1.9
+    - cryptography==41.0.7
+    - matplotlib==3.8.2
+    - pytest==7.4.3
+    - pytest-cov==4.1.0
+    - black==23.11.0
+    - flake8==6.1.0
+    - mypy==1.7.1 

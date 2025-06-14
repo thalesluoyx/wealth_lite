@@ -1,0 +1,3 @@
+asset_id,asset_name,primary_category,secondary_category,initial_amount,current_value,start_date,last_update_date,description,tags,created_date,updated_date
+87d0178b-c5ff-4434-a60f-7f9290084312,余额宝,现金及等价物,货币基金,5000,5150,2024-03-01,2025-06-14,日常理财,,2025-06-14T14:12:52.179257,2025-06-14T15:44:10.951603
+c2fc31b9-0121-458d-a03f-427bae3205a8,浦发银行,固定收益类,定期存款,100000,102997.92,2024-06-14,2025-06-14,,,2025-06-14T18:15:30.998343,2025-06-14T18:15:30.998343

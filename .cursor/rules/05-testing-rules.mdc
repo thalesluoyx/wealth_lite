@@ -1,0 +1,17 @@
+---
+description: Define the testing rules
+globs: 
+alwaysApply: false
+---
+# Testing Rules
+testing:
+  framework: pytest
+  coverage:
+    minimum: 80%
+    required_files:
+      - tests/unit
+      - tests/integration
+  naming:
+    test_files: test_*.py
+
+    test_functions: test_*

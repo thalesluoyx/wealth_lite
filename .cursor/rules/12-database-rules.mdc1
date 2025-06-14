@@ -1,0 +1,22 @@
+---
+description: Rules for using database
+globs: 
+alwaysApply: false
+---
+---
+description: Enforce the use of PostgreSQL and store Tushare API data in the tushare schema
+globs:
+  - **/*.py
+---
+
+# Use PostgreSQL as the database
+When interacting with databases, use PostgreSQL.
+
+# Store Tushare API data in the tushare schema
+When storing data from the Tushare API, ensure the data is stored in the `tushare` schema.
+
+# Example SQL commands
+- Use the following SQL command to create the tushare schema if it does not exist:
+  ```sql
+
+  CREATE SCHEMA IF NOT EXISTS tushare;

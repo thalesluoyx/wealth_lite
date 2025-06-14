@@ -1,0 +1,23 @@
+---
+description: Rules for git hub source control
+globs: 
+alwaysApply: false
+---
+# Git Rules
+git:
+  branch_naming:
+    feature: feature/*
+    bugfix: bugfix/*
+    hotfix: hotfix/*
+    release: release/*
+  commit_message:
+    format: "<type>(<scope>): <description>"
+    types:
+      - feat
+      - fix
+      - docs
+      - style
+      - refactor
+      - test
+
+      - chore

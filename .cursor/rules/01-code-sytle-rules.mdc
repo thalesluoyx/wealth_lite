@@ -1,0 +1,22 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+# Code Style Rules
+style:
+  # Python code style
+  python:
+    formatter: black
+    line_length: 88
+    quote_style: double
+    import_sorting: isort
+    docstring_style: google
+    type_hints: required
+
+  # Documentation style
+  documentation:
+    language: markdown
+    max_line_length: 100
+
+    code_blocks: fenced

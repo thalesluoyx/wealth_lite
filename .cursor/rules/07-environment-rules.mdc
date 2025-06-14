@@ -1,0 +1,13 @@
+---
+description: Define this project's environment rules
+globs: 
+alwaysApply: false
+---
+# Environment Rules
+environment:
+  required_files:
+    - environment.yml
+    - requirements.txt
+    - .env.example
+
+  python_version: "3.12"

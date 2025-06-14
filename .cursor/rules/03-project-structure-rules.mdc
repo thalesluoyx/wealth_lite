@@ -1,0 +1,32 @@
+---
+description: Rules define the project structure
+globs: 
+alwaysApply: false
+---
+# Project Structure Rules
+structure:
+  # Source code organization
+  src:
+    required_dirs:
+      - stock_analysis/api
+      - stock_analysis/data
+      - stock_analysis/analysis
+      - stock_analysis/models
+      - stock_analysis/utils
+    naming:
+      files: snake_case
+      classes: PascalCase
+      functions: snake_case
+      variables: snake_case
+      constants: UPPER_CASE
+
+  # Test organization
+  tests:
+    required_dirs:
+      - unit
+      - integration
+    naming:
+      files: test_*.py
+      classes: Test*
+      functions: test_*
+

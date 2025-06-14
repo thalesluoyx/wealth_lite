@@ -1,0 +1,16 @@
+---
+description: Define the project security rules
+globs: 
+alwaysApply: false
+---
+# Security Rules
+security:
+  sensitive_data:
+    files:
+      - .env
+      - config/secrets.yaml
+    git_ignore: true
+  api_keys:
+    storage: environment_variables
+
+    validation: required

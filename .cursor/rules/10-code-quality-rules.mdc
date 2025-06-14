@@ -1,0 +1,18 @@
+---
+description: Define code quality rules
+globs: 
+alwaysApply: false
+---
+# Code Quality Rules
+quality:
+  linting:
+    tools:
+      - flake8
+      - mypy
+      - pylint
+    max_complexity: 10
+    max_line_length: 88
+  dependencies:
+    version_pinning: true
+
+    security_scan: true 

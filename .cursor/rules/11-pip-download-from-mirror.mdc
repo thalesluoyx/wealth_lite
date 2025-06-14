@@ -1,0 +1,15 @@
+---
+description: 
+globs: **/*.py
+alwaysApply: false
+---
+---
+description: Use a specific mirror site for pip installations
+globs:
+  - **/*.py
+---
+
+# Use a specific mirror site for pip installations
+When installing packages with pip, use the following mirror site:
+
+pip install <package_name> -i https://pypi.tuna.tsinghua.edu.cn/simple

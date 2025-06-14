@@ -1,0 +1,45 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+---
+description: Extract repeated code into common functions
+globs:
+  - **/*.py
+---
+
+# Extract repeated code into common functions
+
+## Identify repeated code patterns
+- Look for repeated code blocks within the same file or across multiple files.
+- Identify common patterns such as:
+  - Repeated loops with similar logic
+  - Repeated conditional statements
+  - Repeated function calls with similar arguments
+
+## Strong Suggest extraction into common functions, instead of duiplicate the coding
+- When repeated code is identified, suggest extracting it into a common function.
+- Provide a name for the common function based on the context.
+- Replace the repeated code with a call to the common function.
+
+## Example
+- If the following code is repeated in multiple places:
+  ```python
+  def process_data(data):
+      cleaned_data = data.strip()
+      return cleaned_data.upper()
+```
+
+- Suggest extracting it into a common function:
+```python
+  def clean_and_uppercase(data):
+    cleaned_data = data.strip()
+    return cleaned_data.upper()
+```   
+   
+- Replace the repeated code with: 
+```python
+  cleaned_data = clean_and_uppercase(data)
+```
+

@@ -1,0 +1,21 @@
+{
+  "user_preferences": {
+    "default_category": "",
+    "auto_save": true,
+    "show_tooltips": true,
+    "theme": "dark"
+  },
+  "window_settings": {
+    "width": 1200,
+    "height": 800,
+    "maximized": false,
+    "position_x": 100,
+    "position_y": 100
+  },
+  "data_settings": {
+    "auto_refresh": true,
+    "refresh_interval_minutes": 30,
+    "show_zero_values": false
+  },
+  "updated_date": "2025-06-14T14:12:52.225244"
+}

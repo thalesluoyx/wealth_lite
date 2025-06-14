@@ -1,0 +1,37 @@
+---
+description: Ensure PowerShell commands are Windows-compatible
+globs: 
+alwaysApply: false
+---
+---
+description: Ensure PowerShell commands are Windows-compatible
+globs:
+  - **/*.ps1
+  - **/*.psm1
+  - **/*.psd1
+---
+
+# Windows PowerShell Command Rules
+
+When suggesting shell commands, use these PowerShell equivalents:
+
+- Use `New-Item -ItemType Directory -Path` instead of `mkdir`
+- Use `Remove-Item` instead of `rm`
+- Use `Remove-Item -Recurse -Force` instead of `rm -rf`
+- Use `New-Item -ItemType File -Path` instead of `touch`
+- Use `Get-ChildItem` instead of `ls`
+- Use `Copy-Item` instead of `cp`
+- Use `Move-Item` instead of `mv`
+- Use `Get-Content` instead of `cat`
+- Use `Write-Output` instead of `echo`
+- Use `$PWD` instead of `pwd`
+- Use `Set-Location` instead of `cd`
+- Use `Select-String` instead of `grep`
+- Use `Set-ItemProperty` instead of `chmod`
+- Use `$env:` prefix for environment variables
+- Use `.` instead of `source`
+- Use `Get-Command` instead of `which`
+- Use `New-Item -ItemType SymbolicLink -Path` instead of `ln -s`
+
+
+Use Windows-style path separators (backslashes) and convert forward slashes to backslashes in paths.

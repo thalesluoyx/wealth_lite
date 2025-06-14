@@ -1,0 +1,14 @@
+---
+description: Define performance rules
+globs: 
+alwaysApply: false
+---
+# Performance Rules
+performance:
+  data_processing:
+    batch_size: 100
+    timeout: 30
+  api_calls:
+    rate_limit: true
+
+    retry_attempts: 3
