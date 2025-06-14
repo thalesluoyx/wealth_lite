@@ -19,14 +19,21 @@ from utils.calculator import Calculator
 class AssetManager:
     """资产管理器"""
     
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = "user_data"):
         """
         初始化资产管理器
         
         Args:
-            data_dir: 数据目录路径
+            data_dir: 数据目录路径，默认为user_data
         """
         self.data_dir = data_dir
+        
+        # 确保数据目录存在
+        self._ensure_data_directory()
+        
+        # 检查是否需要从旧版本迁移数据
+        self._migrate_from_old_data_dir()
+        
         self.csv_storage = CSVStorage(data_dir)
         self.json_storage = JSONStorage(data_dir)
         self.category_manager = CategoryManager()
@@ -37,6 +44,68 @@ class AssetManager:
         
         # 加载数据
         self.load_data()
+    
+    def _ensure_data_directory(self):
+        """确保数据目录存在"""
+        import os
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir, exist_ok=True)
+            print(f"创建数据目录: {self.data_dir}")
+        
+        # 创建子目录
+        subdirs = ['backups', 'exports']
+        for subdir in subdirs:
+            subdir_path = os.path.join(self.data_dir, subdir)
+            if not os.path.exists(subdir_path):
+                os.makedirs(subdir_path, exist_ok=True)
+                print(f"创建子目录: {subdir_path}")
+    
+    def _migrate_from_old_data_dir(self):
+        """从旧的data目录迁移数据到新的user_data目录"""
+        import os
+        import shutil
+        
+        old_data_dir = "data"
+        if not os.path.exists(old_data_dir) or self.data_dir == old_data_dir:
+            return
+        
+        # 检查是否有需要迁移的文件
+        files_to_migrate = ['assets.csv', 'transactions.csv']
+        migration_needed = False
+        
+        for file_name in files_to_migrate:
+            old_file = os.path.join(old_data_dir, file_name)
+            if os.path.exists(old_file):
+                migration_needed = True
+                break
+        
+        if migration_needed:
+            print(f"检测到旧版本数据文件，开始迁移到 {self.data_dir}/")
+            
+            for file_name in files_to_migrate:
+                old_file = os.path.join(old_data_dir, file_name)
+                new_file = os.path.join(self.data_dir, file_name)
+                
+                if os.path.exists(old_file) and not os.path.exists(new_file):
+                    try:
+                        shutil.copy2(old_file, new_file)
+                        print(f"迁移文件: {old_file} -> {new_file}")
+                    except Exception as e:
+                        print(f"迁移文件失败 {old_file}: {e}")
+            
+            # 迁移备份目录
+            old_backup_dir = os.path.join(old_data_dir, 'backups')
+            new_backup_dir = os.path.join(self.data_dir, 'backups')
+            
+            if os.path.exists(old_backup_dir) and not os.path.exists(new_backup_dir):
+                try:
+                    shutil.copytree(old_backup_dir, new_backup_dir)
+                    print(f"迁移备份目录: {old_backup_dir} -> {new_backup_dir}")
+                except Exception as e:
+                    print(f"迁移备份目录失败: {e}")
+            
+            print("数据迁移完成！")
+            print(f"注意：旧的数据文件仍保留在 {old_data_dir}/ 目录中，您可以手动删除")
     
     def load_data(self) -> bool:
         """

@@ -3,10 +3,11 @@
     "default_category": "",
     "auto_save": true,
     "show_tooltips": true,
-    "theme": "dark"
+    "theme": "light",
+    "language": "zh_CN"
   },
   "window_settings": {
-    "width": 1200,
+    "width": 1400,
     "height": 800,
     "maximized": false,
     "position_x": 100,
@@ -17,5 +18,9 @@
     "refresh_interval_minutes": 30,
     "show_zero_values": false
   },
-  "updated_date": "2025-06-14T14:12:52.225244"
+  "export_settings": {
+    "default_format": "xlsx",
+    "include_charts": true,
+    "include_summary": true
+  }
 }

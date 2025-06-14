@@ -21,6 +21,7 @@ from gui.fixed_income_form import FixedIncomeForm
 from gui.asset_form import AssetForm
 from gui.asset_form_factory import AssetFormFactory
 from gui.asset_type_selector import AssetTypeSelector
+from config.config_manager import config_manager
 
 
 class MainWindow:
@@ -29,7 +30,10 @@ class MainWindow:
     def __init__(self):
         """初始化主窗口"""
         self.root = tk.Tk()
-        self.asset_manager = AssetManager("data")
+        
+        # 使用配置管理器获取数据目录
+        data_dir = config_manager.get_data_directory()
+        self.asset_manager = AssetManager(data_dir)
         self.category_manager = CategoryManager()
         
         # 窗口配置
@@ -50,20 +54,25 @@ class MainWindow:
     def _setup_window(self):
         """设置窗口属性"""
         self.root.title("WealthLite - 轻量级资产管理工具")
-        self.root.geometry("1200x800")
+        
+        # 从配置获取窗口设置
+        window_settings = config_manager.get_window_settings()
+        width = window_settings.get('width', 1200)
+        height = window_settings.get('height', 800)
+        
+        self.root.geometry(f"{width}x{height}")
         self.root.minsize(800, 600)
         
-        # 居中显示
-        self._center_window()
-    
-    def _center_window(self):
-        """窗口居中显示"""
-        self.root.update_idletasks()
-        width = self.root.winfo_width()
-        height = self.root.winfo_height()
-        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.root.winfo_screenheight() // 2) - (height // 2)
-        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        # 设置窗口位置
+        if window_settings.get('maximized', False):
+            self.root.state('zoomed')  # Windows下最大化
+        else:
+            pos_x = window_settings.get('position_x', 100)
+            pos_y = window_settings.get('position_y', 100)
+            self.root.geometry(f"{width}x{height}+{pos_x}+{pos_y}")
+        
+        # 绑定窗口关闭事件以保存设置
+        self.root.protocol("WM_DELETE_WINDOW", self._on_window_close)
     
     def _create_menu(self):
         """创建菜单栏"""
@@ -566,6 +575,38 @@ class MainWindow:
                 self.status_label.config(text="固定收益类产品创建成功")
         except Exception as e:
             messagebox.showerror("错误", f"创建固定收益类产品失败: {e}")
+    
+    def _on_window_close(self):
+        """窗口关闭事件"""
+        # 保存窗口设置
+        try:
+            # 获取当前窗口状态
+            is_maximized = self.root.state() == 'zoomed'
+            
+            if not is_maximized:
+                # 获取窗口尺寸和位置
+                geometry = self.root.geometry()
+                # 解析geometry字符串 "widthxheight+x+y"
+                size_pos = geometry.split('+')
+                size = size_pos[0].split('x')
+                width = int(size[0])
+                height = int(size[1])
+                pos_x = int(size_pos[1]) if len(size_pos) > 1 else 100
+                pos_y = int(size_pos[2]) if len(size_pos) > 2 else 100
+                
+                # 保存窗口设置
+                config_manager.set_user_setting('window_settings.width', width)
+                config_manager.set_user_setting('window_settings.height', height)
+                config_manager.set_user_setting('window_settings.position_x', pos_x)
+                config_manager.set_user_setting('window_settings.position_y', pos_y)
+            
+            config_manager.set_user_setting('window_settings.maximized', is_maximized)
+            print("窗口设置已保存")
+            
+        except Exception as e:
+            print(f"保存窗口设置失败: {e}")
+        
+        self._quit_app()
     
     def run(self):
         """运行应用程序"""
