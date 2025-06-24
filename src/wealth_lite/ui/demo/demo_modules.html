@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthLite - 完整模块演示</title>
+    <link rel="stylesheet" href="styles/demo.css">
+    <style>
+        /* 引入基础样式 */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-lg: 1rem;
+            --spacing: 1rem;
+            --spacing-lg: 2rem;
+            --font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .app-container { min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0 var(--spacing-lg);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: var(--spacing);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem var(--spacing);
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-currency {
+            padding: 0.5rem var(--spacing);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* 主内容 */
+        .main-content {
+            flex: 1;
+            padding: var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing);
+            padding-bottom: var(--spacing);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem var(--spacing);
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 表格样式 */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--spacing);
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .table tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            border: 2px dashed var(--gray-300);
+            margin: var(--spacing) 0;
+        }
+
+        /* 搜索和筛选 */
+        .toolbar {
+            display: flex;
+            gap: var(--spacing);
+            margin-bottom: var(--spacing);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            min-width: 200px;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            background: var(--white);
+        }
+
+        /* 标签 */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+        .badge-info { background: var(--info); color: white; }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-menu { display: none; }
+            .main-content { padding: var(--spacing); }
+            .stats-grid { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+    
+    <!-- Stagewise Toolbar Integration (Non-intrusive) -->
+    <script src="stagewise-toolbar.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 导航栏 -->
+        <header class="navbar">
+            <div class="logo">
+                <span>💰</span>
+                <span>WealthLite</span>
+            </div>
+            <nav class="nav-menu">
+                <a class="nav-item active" data-page="dashboard">
+                    <span>🏠</span>
+                    <span>仪表板</span>
+                </a>
+                <a class="nav-item" data-page="assets">
+                    <span>🪙</span>
+                    <span>资产管理</span>
+                </a>
+                <a class="nav-item" data-page="transactions">
+                    <span>📋</span>
+                    <span>交易记录</span>
+                </a>
+                <a class="nav-item" data-page="portfolio">
+                    <span>📊</span>
+                    <span>投资组合</span>
+                </a>
+                <a class="nav-item" data-page="settings">
+                    <span>⚙️</span>
+                    <span>设置</span>
+                </a>
+            </nav>
+            <div class="nav-right">
+                <button class="btn-currency">CNY</button>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 仪表板页面 -->
+            <div id="dashboard" class="page active">
+                <h1 style="color: white; margin-bottom: 2rem;">📊 仪表板模块</h1>
+                
+                <!-- 关键指标 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">2,341,270</div>
+                        <div class="stat-label">总资产价值 (CNY)</div>
+                        <div class="stat-change positive">+8,750 (+5.85%)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1,234,000</div>
+                        <div class="stat-label">现金类资产</div>
+                        <div class="stat-change positive">+12,340 (+1.2%)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1,107,270</div>
+                        <div class="stat-label">固定收益</div>
+                        <div class="stat-change positive">+23,450 (+2.8%)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">12.5%</div>
+                        <div class="stat-label">年化收益率</div>
+                        <div class="stat-change positive">+0.8%</div>
+                    </div>
+                </div>
+
+                <!-- 主图表 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">资产趋势</h3>
+                        <div>
+                            <button class="btn btn-secondary active">7天</button>
+                            <button class="btn btn-secondary">1月</button>
+                            <button class="btn btn-secondary">3月</button>
+                            <button class="btn btn-secondary">1年</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        📈 资产总览趋势图 (Chart.js)
+                    </div>
+                </div>
+
+                <!-- 资产分布 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">资产类型分布</h3>
+                        </div>
+                        <div class="chart-container" style="height: 200px;">
+                            🥧 饼图 - 按类型分布
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">币种分布</h3>
+                        </div>
+                        <div class="chart-container" style="height: 200px;">
+                            🍩 环形图 - 按币种分布
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 资产管理页面 -->
+            <div id="assets" class="page">
+                <h1 style="color: white; margin-bottom: 2rem;">🪙 资产管理模块</h1>
+                
+                <!-- 工具栏 -->
+                <div class="card">
+                    <div class="toolbar">
+                        <input type="text" class="search-input" placeholder="搜索资产名称或符号...">
+                        <select class="filter-select">
+                            <option>所有类型</option>
+                            <option>现金</option>
+                            <option>固定收益</option>
+                            <option>股票</option>
+                        </select>
+                        <select class="filter-select">
+                            <option>所有币种</option>
+                            <option>CNY</option>
+                            <option>USD</option>
+                            <option>HKD</option>
+                        </select>
+                        <button class="btn btn-primary">➕ 添加资产</button>
+                        <button class="btn btn-secondary">📤 导出</button>
+                    </div>
+                </div>
+
+                <!-- 资产列表 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">资产列表</h3>
+                        <span class="badge badge-info">共 15 项资产</span>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>资产名称</th>
+                                <th>类型</th>
+                                <th>符号</th>
+                                <th>币种</th>
+                                <th>当前价值</th>
+                                <th>收益率</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>现金账户</td>
+                                <td><span class="badge badge-success">现金</span></td>
+                                <td>CASH</td>
+                                <td>CNY</td>
+                                <td>65,000</td>
+                                <td class="stat-change positive">+2.1%</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>国债2024001</td>
+                                <td><span class="badge badge-info">固定收益</span></td>
+                                <td>GB2024001</td>
+                                <td>CNY</td>
+                                <td>100,000</td>
+                                <td class="stat-change positive">+3.8%</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>银行理财产品A</td>
+                                <td><span class="badge badge-warning">理财</span></td>
+                                <td>BANK_A</td>
+                                <td>CNY</td>
+                                <td>50,000</td>
+                                <td class="stat-change positive">+4.2%</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">编辑</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 资产统计 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">资产统计</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div class="chart-container">
+                            📊 按类型统计柱状图
+                        </div>
+                        <div class="chart-container">
+                            📈 资产增长趋势图
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 交易记录页面 -->
+            <div id="transactions" class="page">
+                <h1 style="color: white; margin-bottom: 2rem;">📋 交易记录模块</h1>
+                
+                <!-- 交易统计 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">156</div>
+                        <div class="stat-label">本月交易笔数</div>
+                        <div class="stat-change positive">+23</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1,234,567</div>
+                        <div class="stat-label">本月交易金额</div>
+                        <div class="stat-change positive">+15.6%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">23,456</div>
+                        <div class="stat-label">本月收益</div>
+                        <div class="stat-change positive">+12.3%</div>
+                    </div>
+                </div>
+
+                <!-- 工具栏 -->
+                <div class="card">
+                    <div class="toolbar">
+                        <input type="date" class="search-input" style="min-width: 150px;">
+                        <span style="color: var(--text-muted);">至</span>
+                        <input type="date" class="search-input" style="min-width: 150px;">
+                        <select class="filter-select">
+                            <option>所有类型</option>
+                            <option>存入</option>
+                            <option>取出</option>
+                            <option>购买</option>
+                            <option>赎回</option>
+                        </select>
+                        <select class="filter-select">
+                            <option>所有资产</option>
+                            <option>现金</option>
+                            <option>国债2024001</option>
+                            <option>银行理财A</option>
+                        </select>
+                        <button class="btn btn-primary">➕ 新增交易</button>
+                        <button class="btn btn-secondary">📤 导出</button>
+                    </div>
+                </div>
+
+                <!-- 交易列表 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">交易记录</h3>
+                        <span class="badge badge-info">共 1,234 笔交易</span>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>资产</th>
+                                <th>交易类型</th>
+                                <th>数量</th>
+                                <th>价格</th>
+                                <th>金额</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2025-06-21</td>
+                                <td>现金账户</td>
+                                <td><span class="badge badge-success">存入</span></td>
+                                <td>10,000</td>
+                                <td>1.00</td>
+                                <td>10,000</td>
+                                <td>工资收入</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2025-06-20</td>
+                                <td>国债2024001</td>
+                                <td><span class="badge badge-info">购买</span></td>
+                                <td>1</td>
+                                <td>100,000</td>
+                                <td>100,000</td>
+                                <td>投资国债</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2025-06-19</td>
+                                <td>银行理财A</td>
+                                <td><span class="badge badge-warning">赎回</span></td>
+                                <td>50,000</td>
+                                <td>1.05</td>
+                                <td>52,500</td>
+                                <td>理财到期</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">查看</button>
+                                    <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 交易分析 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">交易分析</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div class="chart-container">
+                            📊 月度交易量统计
+                        </div>
+                        <div class="chart-container">
+                            🥧 交易类型分布
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 投资组合页面 -->
+            <div id="portfolio" class="page">
+                <h1 style="color: white; margin-bottom: 2rem;">📊 投资组合模块</h1>
+                
+                <!-- 组合总览 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">2,341,270</div>
+                        <div class="stat-label">组合总价值</div>
+                        <div class="stat-change positive">+234,127 (+11.1%)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">12.5%</div>
+                        <div class="stat-label">年化收益率</div>
+                        <div class="stat-change positive">+2.3%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">8.2%</div>
+                        <div class="stat-label">波动率</div>
+                        <div class="stat-change negative">+0.5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1.52</div>
+                        <div class="stat-label">夏普比率</div>
+                        <div class="stat-change positive">+0.12</div>
+                    </div>
+                </div>
+
+                <!-- 资产配置分析 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">资产配置分析</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4 style="text-align: center; margin-bottom: 1rem;">按类型分布</h4>
+                            <div class="chart-container">
+                                🥧 类型分布饼图
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="text-align: center; margin-bottom: 1rem;">按币种分布</h4>
+                            <div class="chart-container">
+                                🍩 币种分布环形图
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="text-align: center; margin-bottom: 1rem;">按风险分布</h4>
+                            <div class="chart-container">
+                                📊 风险分布柱状图
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收益分析 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">收益分析</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <div class="chart-container">
+                            📈 历史收益曲线图
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">收益统计</h4>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">+23.4%</div>
+                                    <div class="stat-label">今年收益率</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">+156,789</div>
+                                    <div class="stat-label">今年收益金额</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">-5.2%</div>
+                                    <div class="stat-label">最大回撤</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风险评估 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">风险评估</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div class="chart-container">
+                            📊 风险收益散点图
+                        </div>
+                        <div class="chart-container">
+                            📈 VaR风险价值分析
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设置页面 -->
+            <div id="settings" class="page">
+                <h1 style="color: white; margin-bottom: 2rem;">⚙️ 设置模块</h1>
+                
+                <!-- 显示设置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">显示设置</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">默认币种</label>
+                            <select class="filter-select" style="width: 100%;">
+                                <option>CNY - 人民币</option>
+                                <option>USD - 美元</option>
+                                <option>HKD - 港币</option>
+                                <option>EUR - 欧元</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">数字格式</label>
+                            <select class="filter-select" style="width: 100%;">
+                                <option>1,234.56</option>
+                                <option>1234.56</option>
+                                <option>1,234</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据设置 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">数据设置</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">自动刷新间隔</label>
+                            <select class="filter-select" style="width: 100%;">
+                                <option>实时</option>
+                                <option>30秒</option>
+                                <option>1分钟</option>
+                                <option>5分钟</option>
+                                <option>手动</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">数据保留期</label>
+                            <select class="filter-select" style="width: 100%;">
+                                <option>永久保留</option>
+                                <option>5年</option>
+                                <option>3年</option>
+                                <option>1年</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 导入导出 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">数据管理</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">数据导出</h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <button class="btn btn-secondary">📤 导出所有数据 (JSON)</button>
+                                <button class="btn btn-secondary">📊 导出Excel报表</button>
+                                <button class="btn btn-secondary">📋 导出CSV文件</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">数据导入</h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <button class="btn btn-secondary">📥 导入数据文件</button>
+                                <button class="btn btn-secondary">🔄 恢复备份</button>
+                                <button class="btn btn-secondary">🗑️ 清空所有数据</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">系统信息</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <table class="table">
+                                <tr><td>应用版本</td><td>1.0.0</td></tr>
+                                <tr><td>数据库版本</td><td>SQLite 3.45</td></tr>
+                                <tr><td>最后备份</td><td>2025-06-21 19:30</td></tr>
+                                <tr><td>数据库大小</td><td>2.3 MB</td></tr>
+                            </table>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 1rem;">使用统计</h4>
+                            <div class="stats-grid" style="grid-template-columns: 1fr;">
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">1,234</div>
+                                    <div class="stat-label">总交易笔数</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">15</div>
+                                    <div class="stat-label">管理资产数</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" style="font-size: 1.5rem;">89</div>
+                                    <div class="stat-label">使用天数</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 页面切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const pages = document.querySelectorAll('.page');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const targetPage = this.getAttribute('data-page');
+                    
+                    // 更新导航状态
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 切换页面
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(targetPage).classList.add('active');
+                });
+            });
+
+            // 币种切换演示
+            const currencyBtn = document.querySelector('.btn-currency');
+            const currencies = ['CNY', 'USD', 'HKD', 'EUR'];
+            let currentIndex = 0;
+            
+            currencyBtn.addEventListener('click', function() {
+                currentIndex = (currentIndex + 1) % currencies.length;
+                this.textContent = currencies[currentIndex];
+            });
+
+            // 按钮点击效果
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (!this.classList.contains('btn-currency')) {
+                        e.preventDefault();
+                        console.log('按钮点击:', this.textContent);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

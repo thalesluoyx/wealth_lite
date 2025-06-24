@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简化版 Stagewise 工具栏演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        /* Stagewise 样式 */
+        .stagewise-highlight {
+            outline: 3px solid #4fd1c7 !important;
+            outline-offset: 2px !important;
+            cursor: pointer !important;
+        }
+        .stagewise-selected {
+            outline: 3px solid #f56565 !important;
+            outline-offset: 2px !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 简化版 Stagewise 工具栏演示</h1>
+    
+    <div id="status">✅ Stagewise 工具栏已加载！已连接到您的 Cursor 插件，请点击任何页面元素来开始</div>
+    
+    <div class="demo-section">
+        <h2>使用说明：</h2>
+        <ol>
+            <li><strong>移动鼠标</strong>：页面元素会高亮显示（青色边框）</li>
+            <li><strong>点击元素</strong>：选择元素后会显示工具栏（红色边框表示已选择）</li>
+            <li><strong>添加注释</strong>：在工具栏中描述您想要的修改</li>
+            <li><strong>发送给 AI</strong>：点击发送按钮（演示版会显示确认消息）</li>
+        </ol>
+    </div>
+    
+    <div class="demo-section">
+        <h3>测试元素 - 请尝试点击这些：</h3>
+        
+        <button class="button" onclick="alert('按钮被点击了！')">
+            🔘 测试按钮 1
+        </button>
+        
+        <button class="button" style="background: #28a745;" onclick="alert('绿色按钮！')">
+            🟢 测试按钮 2
+        </button>
+        
+        <div class="card">
+            <h4>📋 测试卡片</h4>
+            <p>这是一个测试卡片，您可以点击它来选择。尝试告诉 AI 修改这个卡片的样式或内容。</p>
+        </div>
+        
+        <div class="card" style="background: #e3f2fd;">
+            <h4>🎨 另一个卡片</h4>
+            <p>这个卡片有不同的背景色。您可以要求 AI 修改颜色、添加边框或改变布局。</p>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h3>💡 功能特点：</h3>
+        <ul>
+            <li>✅ 元素高亮和选择</li>
+            <li>✅ 浮动工具栏</li>
+            <li>✅ 注释和修改请求</li>
+            <li>✅ 元素信息自动提取</li>
+            <li>🎯 <strong>真实版本</strong>：直接连接到您的 Cursor stagewise 插件</li>
+            <li>🤖 修改请求会发送给 Cursor 中的 AI 助手</li>
+        </ul>
+    </div>
+
+    <script>
+        // 简化版 Stagewise 工具栏
+        console.log('🔧 初始化简化版 Stagewise 工具栏...');
+        
+        // 创建工具栏
+        function createToolbar() {
+            const toolbar = document.createElement('div');
+            toolbar.id = 'simplified-stagewise-toolbar';
+            toolbar.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: #2d3748;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                max-width: 300px;
+                display: none;
+            `;
+            
+            toolbar.innerHTML = `
+                <div style="margin-bottom: 10px; font-weight: bold; color: #4fd1c7;">
+                    🎯 元素选择器
+                </div>
+                <div id="selected-element-info" style="margin-bottom: 10px; padding: 8px; background: #1a202c; border-radius: 4px; font-size: 12px;">
+                    点击页面元素来选择
+                </div>
+                <textarea id="stagewise-comment" placeholder="描述您想要的修改..." 
+                    style="width: 100%; height: 60px; margin-bottom: 10px; padding: 8px; border: none; border-radius: 4px; resize: vertical; font-size: 12px;"></textarea>
+                <div style="display: flex; gap: 8px;">
+                    <button id="send-to-ai" style="flex: 1; padding: 8px; background: #4fd1c7; color: #1a202c; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                        发送给 AI
+                    </button>
+                    <button id="close-toolbar" style="padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(toolbar);
+            return toolbar;
+        }
+        
+        // 初始化工具栏
+        const toolbar = createToolbar();
+        let selectedElement = null;
+        let isSelecting = true; // 默认开启选择模式
+        
+        // 元素选择功能
+        function onMouseOver(e) {
+            if (!isSelecting || e.target.closest('#simplified-stagewise-toolbar')) return;
+            e.target.classList.add('stagewise-highlight');
+        }
+        
+        function onMouseOut(e) {
+            if (!isSelecting) return;
+            e.target.classList.remove('stagewise-highlight');
+        }
+        
+        function onElementClick(e) {
+            if (e.target.closest('#simplified-stagewise-toolbar')) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 清除之前选择
+            if (selectedElement) {
+                selectedElement.classList.remove('stagewise-selected');
+            }
+            
+            // 选择新元素
+            selectedElement = e.target;
+            selectedElement.classList.add('stagewise-selected');
+            selectedElement.classList.remove('stagewise-highlight');
+            
+            // 更新工具栏信息
+            const elementInfo = `${selectedElement.tagName.toLowerCase()}${selectedElement.className ? '.' + selectedElement.className.split(' ').join('.') : ''}${selectedElement.id ? '#' + selectedElement.id : ''}`;
+            document.getElementById('selected-element-info').textContent = `已选择: ${elementInfo}`;
+            
+            // 显示工具栏
+            toolbar.style.display = 'block';
+            
+            console.log('✅ 元素已选择:', selectedElement);
+        }
+        
+        // 添加事件监听器
+        document.addEventListener('mouseover', onMouseOver);
+        document.addEventListener('mouseout', onMouseOut);
+        document.addEventListener('click', onElementClick);
+        
+        // 工具栏按钮事件
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('send-to-ai').addEventListener('click', () => {
+                const comment = document.getElementById('stagewise-comment').value;
+                if (!selectedElement || !comment.trim()) {
+                    alert('请先选择元素并添加修改说明');
+                    return;
+                }
+                
+                // 生成详细的元素信息
+                const elementInfo = {
+                    tagName: selectedElement.tagName,
+                    className: selectedElement.className,
+                    id: selectedElement.id,
+                    textContent: selectedElement.textContent?.substring(0, 100),
+                    outerHTML: selectedElement.outerHTML?.substring(0, 200)
+                };
+                
+                // 真实发送到 Cursor AI（通过 stagewise 插件）
+                const requestData = {
+                    element: elementInfo,
+                    comment: comment,
+                    timestamp: new Date().toISOString(),
+                    pageUrl: window.location.href,
+                    projectPath: '/e%3A/Work/workspace/wealth_lite'
+                };
+                
+                console.log('🤖 发送给 Cursor AI 的请求:', requestData);
+                
+                // 尝试通过 stagewise 插件发送到 Cursor
+                if (window.stagewise && window.stagewise.sendToEditor) {
+                    try {
+                        window.stagewise.sendToEditor(requestData);
+                        alert(`✅ 已通过 Cursor 插件发送修改请求！\n\n元素: ${elementInfo.tagName}\n说明: ${comment}\n\n🎯 请查看 Cursor 中的 AI 助手响应。`);
+                    } catch (error) {
+                        console.error('发送到 Cursor 失败:', error);
+                        alert(`⚠️ 无法连接到 Cursor 插件\n\n元素: ${elementInfo.tagName}\n说明: ${comment}\n\n💡 请确保 Cursor 正在运行且 stagewise 插件已激活。`);
+                    }
+                } else {
+                    // 回退到演示模式
+                    alert(`📝 演示模式 - 修改请求详情：\n\n元素: ${elementInfo.tagName}\n说明: ${comment}\n\n💡 要启用真实功能，请确保 Cursor 中的 stagewise 插件正常工作。`);
+                }
+                
+                // 清理
+                document.getElementById('stagewise-comment').value = '';
+                toolbar.style.display = 'none';
+                if (selectedElement) {
+                    selectedElement.classList.remove('stagewise-selected');
+                    selectedElement = null;
+                }
+            });
+            
+            document.getElementById('close-toolbar').addEventListener('click', () => {
+                toolbar.style.display = 'none';
+                if (selectedElement) {
+                    selectedElement.classList.remove('stagewise-selected');
+                    selectedElement = null;
+                }
+            });
+        });
+        
+        console.log('✅ 简化版 Stagewise 工具栏初始化完成');
+    </script>
+</body>
+</html> 

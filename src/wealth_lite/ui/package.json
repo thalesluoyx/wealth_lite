@@ -1,0 +1,44 @@
+{
+  "name": "wealth-lite-ui",
+  "version": "1.0.0",
+  "description": "WealthLite个人财富管理系统UI界面",
+  "main": "src/index.html",
+  "scripts": {
+    "dev": "python serve.py",
+    "build": "python build.py",
+    "demo": "cd demo && python start_demo.py",
+    "serve": "python -m http.server 8000 --directory src",
+    "preview": "python -m http.server 8080 --directory dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/wealth-lite.git"
+  },
+  "keywords": [
+    "wealth-management",
+    "personal-finance",
+    "dashboard",
+    "ui",
+    "javascript",
+    "css",
+    "html"
+  ],
+  "author": "WealthLite Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "python": ">=3.8"
+  },
+  "browserslist": [
+    "Chrome >= 76",
+    "Firefox >= 103",
+    "Safari >= 9",
+    "Edge >= 79"
+  ],
+  "config": {
+    "dev_port": 8000,
+    "build_port": 8080,
+    "demo_port": 8001
+  }
+} 

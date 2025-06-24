@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stagewise 工具栏测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+    
+    <!-- Stagewise Toolbar Integration (Development Only) -->
+    <script>
+        // 检测是否为开发环境（本地服务器）
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1' ||
+                             window.location.hostname === '';
+        
+        if (isDevelopment) {
+            console.log('🔧 开发环境检测到，正在加载 stagewise 工具栏...');
+            
+            // 创建简化版的 stagewise 替代方案
+            console.log('🔧 开发环境检测到，正在初始化 Stagewise 替代工具栏...');
+            
+            // 创建简化版工具栏
+            function createSimplifiedStagewise() {
+                console.log('📦 创建简化版 Stagewise 工具栏');
+                
+                // 创建工具栏容器
+                const toolbar = document.createElement('div');
+                toolbar.id = 'simplified-stagewise-toolbar';
+                toolbar.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    right: 10px;
+                    background: #2d3748;
+                    color: white;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-size: 14px;
+                    max-width: 300px;
+                    display: none;
+                `;
+                
+                toolbar.innerHTML = `
+                    <div style="margin-bottom: 10px; font-weight: bold; color: #4fd1c7;">
+                        🎯 元素选择器
+                    </div>
+                    <div id="selected-element-info" style="margin-bottom: 10px; padding: 8px; background: #1a202c; border-radius: 4px; font-size: 12px;">
+                        点击页面元素来选择
+                    </div>
+                    <textarea id="stagewise-comment" placeholder="描述您想要的修改..." 
+                        style="width: 100%; height: 60px; margin-bottom: 10px; padding: 8px; border: none; border-radius: 4px; resize: vertical; font-size: 12px;"></textarea>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="send-to-ai" style="flex: 1; padding: 8px; background: #4fd1c7; color: #1a202c; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                            发送给 AI
+                        </button>
+                        <button id="close-toolbar" style="padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            ✕
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(toolbar);
+                
+                // 添加元素选择功能
+                let selectedElement = null;
+                let isSelecting = false;
+                
+                // 高亮样式
+                const highlightStyle = document.createElement('style');
+                highlightStyle.textContent = `
+                    .stagewise-highlight {
+                        outline: 3px solid #4fd1c7 !important;
+                        outline-offset: 2px !important;
+                        cursor: pointer !important;
+                    }
+                    .stagewise-selected {
+                        outline: 3px solid #f56565 !important;
+                        outline-offset: 2px !important;
+                    }
+                `;
+                document.head.appendChild(highlightStyle);
+                
+                // 元素选择逻辑
+                function startElementSelection() {
+                    isSelecting = true;
+                    document.body.style.cursor = 'crosshair';
+                    
+                    // 鼠标悬停高亮
+                    document.addEventListener('mouseover', onMouseOver);
+                    document.addEventListener('mouseout', onMouseOut);
+                    document.addEventListener('click', onElementClick);
+                }
+                
+                function onMouseOver(e) {
+                    if (!isSelecting || e.target.closest('#simplified-stagewise-toolbar')) return;
+                    e.target.classList.add('stagewise-highlight');
+                }
+                
+                function onMouseOut(e) {
+                    if (!isSelecting) return;
+                    e.target.classList.remove('stagewise-highlight');
+                }
+                
+                function onElementClick(e) {
+                    if (!isSelecting || e.target.closest('#simplified-stagewise-toolbar')) return;
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // 清除之前选择
+                    if (selectedElement) {
+                        selectedElement.classList.remove('stagewise-selected');
+                    }
+                    
+                    // 选择新元素
+                    selectedElement = e.target;
+                    selectedElement.classList.add('stagewise-selected');
+                    selectedElement.classList.remove('stagewise-highlight');
+                    
+                    // 停止选择模式
+                    isSelecting = false;
+                    document.body.style.cursor = 'default';
+                    document.removeEventListener('mouseover', onMouseOver);
+                    document.removeEventListener('mouseout', onMouseOut);
+                    document.removeEventListener('click', onElementClick);
+                    
+                    // 更新工具栏信息
+                    const elementInfo = `${selectedElement.tagName.toLowerCase()}${selectedElement.className ? '.' + selectedElement.className.split(' ').join('.') : ''}${selectedElement.id ? '#' + selectedElement.id : ''}`;
+                    document.getElementById('selected-element-info').textContent = `已选择: ${elementInfo}`;
+                    
+                    // 显示工具栏
+                    toolbar.style.display = 'block';
+                }
+                
+                // 工具栏按钮事件
+                document.getElementById('send-to-ai').addEventListener('click', () => {
+                    const comment = document.getElementById('stagewise-comment').value;
+                    if (!selectedElement || !comment.trim()) {
+                        alert('请先选择元素并添加修改说明');
+                        return;
+                    }
+                    
+                    // 生成详细的元素信息
+                    const elementInfo = {
+                        tagName: selectedElement.tagName,
+                        className: selectedElement.className,
+                        id: selectedElement.id,
+                        textContent: selectedElement.textContent?.substring(0, 100),
+                        outerHTML: selectedElement.outerHTML?.substring(0, 200)
+                    };
+                    
+                    // 模拟发送到 AI（实际应用中会通过 VS Code 扩展发送）
+                    console.log('🤖 发送给 AI 的请求:', {
+                        element: elementInfo,
+                        comment: comment,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // 显示成功消息
+                    alert(`已发送修改请求：\n\n元素: ${elementInfo.tagName}\n说明: ${comment}\n\n注意：在实际使用中，这会通过 VS Code 扩展发送给 AI 助手。`);
+                    
+                    // 清理
+                    document.getElementById('stagewise-comment').value = '';
+                    toolbar.style.display = 'none';
+                    if (selectedElement) {
+                        selectedElement.classList.remove('stagewise-selected');
+                        selectedElement = null;
+                    }
+                });
+                
+                document.getElementById('close-toolbar').addEventListener('click', () => {
+                    toolbar.style.display = 'none';
+                    if (selectedElement) {
+                        selectedElement.classList.remove('stagewise-selected');
+                        selectedElement = null;
+                    }
+                });
+                
+                // 启动元素选择
+                startElementSelection();
+                
+                return toolbar;
+            }
+            
+            // 初始化简化版工具栏
+            try {
+                createSimplifiedStagewise();
+                console.log('✅ 简化版 Stagewise 工具栏初始化成功');
+                updateStatus('success', '✅ 简化版 Stagewise 工具栏已加载！现在可以点击页面元素来选择');
+            } catch (error) {
+                console.error('❌ 简化版工具栏初始化失败:', error);
+                updateStatus('error', '❌ 工具栏初始化失败: ' + error.message);
+            }
+        } else {
+            updateStatus('error', '⚠️ 非开发环境，Stagewise 工具栏未加载');
+        }
+        
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.className = type;
+                statusEl.textContent = message;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>🧪 Stagewise 工具栏测试页面</h1>
+    
+    <div id="status">⏳ 正在检测 Stagewise 工具栏...</div>
+    
+    <div class="test-section">
+        <h2>如何使用 Stagewise：</h2>
+        <ol>
+            <li><strong>选择元素</strong>：点击页面上的任何元素（按钮、卡片等）</li>
+            <li><strong>查看工具栏</strong>：应该会看到 Stagewise 工具栏出现</li>
+            <li><strong>添加注释</strong>：在工具栏中描述您想要的修改</li>
+            <li><strong>发送给 AI</strong>：让 AI 直接在代码中进行修改</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试元素 - 请尝试点击这些：</h3>
+        
+        <button class="button" onclick="alert('按钮被点击了！')">
+            🔘 测试按钮 1
+        </button>
+        
+        <button class="button" style="background: #28a745;" onclick="alert('绿色按钮！')">
+            🟢 测试按钮 2
+        </button>
+        
+        <div class="card">
+            <h4>📋 测试卡片</h4>
+            <p>这是一个测试卡片，您可以点击它来选择。尝试告诉 AI 修改这个卡片的样式或内容。</p>
+        </div>
+        
+        <div class="card" style="background: #e3f2fd;">
+            <h4>🎨 另一个卡片</h4>
+            <p>这个卡片有不同的背景色。您可以要求 AI 修改颜色、添加边框或改变布局。</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>💡 使用提示：</h3>
+        <ul>
+            <li>确保您已安装 "Stagewise VSCode Extension"</li>
+            <li>在 VS Code 中打开此项目</li>
+            <li>工具栏只在开发环境（localhost）中显示</li>
+            <li>选中元素后，工具栏会提供编辑选项</li>
+        </ul>
+    </div>
+</body>
+</html> 

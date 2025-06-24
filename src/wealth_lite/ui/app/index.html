@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthLite - 个人财富管理系统</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="styles/transactions.css">
+    <!-- Chart.js 轻量图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Stagewise Toolbar Integration (Development Only) -->
+    <script>
+        // 检测是否为开发环境（本地服务器）
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1' ||
+                             window.location.hostname === '';
+        
+        if (isDevelopment) {
+            // 动态加载 stagewise 工具栏
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/@stagewise/toolbar@latest/dist/toolbar.min.js';
+            script.onload = function() {
+                if (window.stagewise) {
+                    window.stagewise.initToolbar({
+                        plugins: [],
+                        enabled: true
+                    });
+                }
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="navbar">
+            <div class="nav-left">
+                <div class="logo">
+                    <i data-lucide="wallet"></i>
+                    <span>WealthLite</span>
+                </div>
+                <nav class="nav-menu">
+                    <a href="#dashboard" class="nav-item active">
+                        <i data-lucide="home"></i>
+                        <span>仪表板</span>
+                    </a>
+                    <a href="#assets" class="nav-item">
+                        <i data-lucide="coins"></i>
+                        <span>资产管理</span>
+                    </a>
+                    <a href="#transactions" class="nav-item">
+                        <i data-lucide="receipt"></i>
+                        <span>交易记录</span>
+                    </a>
+                    <a href="#portfolio" class="nav-item">
+                        <i data-lucide="pie-chart"></i>
+                        <span>投资组合</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="nav-right">
+                <button class="btn-icon" title="搜索">
+                    <i data-lucide="search"></i>
+                </button>
+                <button class="btn-icon" title="通知">
+                    <i data-lucide="bell"></i>
+                </button>
+                <button class="btn-icon" title="设置">
+                    <i data-lucide="settings"></i>
+                </button>
+                <div class="currency-toggle">
+                    <button id="currencyToggle" class="btn-currency">CNY</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 仪表板页面 -->
+            <div id="dashboard" class="page active">
+                <!-- 主图表区域 -->
+                <section class="chart-section">
+                    <div class="chart-header">
+                        <h2>资产总览</h2>
+                        <div class="time-range">
+                            <button class="time-btn active" data-range="7d">7天</button>
+                            <button class="time-btn" data-range="1m">1月</button>
+                            <button class="time-btn" data-range="3m">3月</button>
+                            <button class="time-btn" data-range="1y">1年</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                        <!-- 数据悬浮卡片 -->
+                        <div class="chart-tooltip" id="chartTooltip">
+                            <div class="tooltip-date">4개월</div>
+                            <div class="tooltip-values">
+                                <div class="tooltip-item">
+                                    <span class="label">현금</span>
+                                    <span class="value">8,435,530원</span>
+                                </div>
+                                <div class="tooltip-item">
+                                    <span class="label">예금</span>
+                                    <span class="value">6,234,560원</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 统计卡片区域 -->
+                <section class="stats-section">
+                    <!-- 总资产卡片 -->
+                    <div class="total-assets-card">
+                        <div class="card-header">
+                            <span class="label">总资产价值</span>
+                            <span class="period">今日</span>
+                        </div>
+                        <div class="total-amount" id="totalAmount">
+                            2,341,270<span class="currency">元</span>
+                        </div>
+                        <div class="change-info">
+                            <span class="change positive" id="totalChange">+8,750</span>
+                            <span class="change-percent positive" id="totalChangePercent">+5.85%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 68%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 圆环图卡片 -->
+                    <div class="chart-card">
+                        <h3>现金类资产</h3>
+                        <div class="donut-chart-container">
+                            <canvas id="cashChart"></canvas>
+                            <div class="chart-center">
+                                <div class="center-amount" id="cashAmount">3,234,000</div>
+                                <div class="center-label">元</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 饼图卡片 -->
+                    <div class="chart-card">
+                        <h3>固定收益</h3>
+                        <div class="pie-chart-container">
+                            <canvas id="fixedIncomeChart"></canvas>
+                            <div class="chart-center">
+                                <div class="center-amount" id="fixedAmount">2,436,000</div>
+                                <div class="center-label">元</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 资产明细列表 -->
+                    <div class="assets-list-card">
+                        <div class="card-header">
+                            <h3>资产明细</h3>
+                            <button class="btn-more">
+                                <i data-lucide="more-horizontal"></i>
+                            </button>
+                        </div>
+                        <div class="assets-list" id="assetsList">
+                            <div class="asset-item">
+                                <div class="asset-icon cash">
+                                    <i data-lucide="banknote"></i>
+                                </div>
+                                <div class="asset-info">
+                                    <div class="asset-name">现金</div>
+                                    <div class="asset-desc">122-3567-8901-11</div>
+                                </div>
+                                <div class="asset-amount">
+                                    <div class="amount">65,000</div>
+                                    <div class="currency">元</div>
+                                </div>
+                            </div>
+                            <div class="asset-item">
+                                <div class="asset-icon deposit">
+                                    <i data-lucide="piggy-bank"></i>
+                                </div>
+                                <div class="asset-info">
+                                    <div class="asset-name">定期存款</div>
+                                    <div class="asset-desc">122-3567-8901-11</div>
+                                </div>
+                                <div class="asset-amount">
+                                    <div class="amount">84,600</div>
+                                    <div class="currency">元</div>
+                                </div>
+                            </div>
+                            <div class="asset-item">
+                                <div class="asset-icon investment">
+                                    <i data-lucide="trending-up"></i>
+                                </div>
+                                <div class="asset-info">
+                                    <div class="asset-name">理财产品</div>
+                                    <div class="asset-desc">122-3567-8901-11</div>
+                                </div>
+                                <div class="asset-amount">
+                                    <div class="amount">52,500</div>
+                                    <div class="currency">元</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 其他页面占位 -->
+            <div id="assets" class="page">
+                <h2>资产管理</h2>
+                <p>资产管理页面开发中...</p>
+            </div>
+
+            <!-- 交易记录页面 -->
+            <div id="transactions" class="page">
+                <div class="page-header">
+                    <h2>📋 交易记录</h2>
+                    <div class="page-actions">
+                        <button class="btn-primary" id="addTransactionBtn">
+                            <i data-lucide="plus"></i>
+                            新增交易
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 交易统计卡片 -->
+                <section class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="hash"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">本月交易笔数</div>
+                            <div class="stat-value" id="monthlyTransactionCount">156</div>
+                            <div class="stat-change positive">+23</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">本月交易金额</div>
+                            <div class="stat-value" id="monthlyTransactionAmount">1,234,567</div>
+                            <div class="stat-change positive">+15.6%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">本月收益</div>
+                            <div class="stat-value" id="monthlyReturn">23,456</div>
+                            <div class="stat-change positive">+12.3%</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 工具栏 -->
+                <section class="toolbar-section">
+                    <div class="toolbar-card">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <i data-lucide="search"></i>
+                                <input type="text" placeholder="搜索交易记录..." id="transactionSearch">
+                            </div>
+                            <div class="filter-group">
+                                <select id="transactionTypeFilter" class="filter-select">
+                                    <option value="">所有类型</option>
+                                    <option value="DEPOSIT">存入</option>
+                                    <option value="PURCHASE">购买</option>
+                                    <option value="REDEMPTION">赎回</option>
+                                    <option value="INTEREST">利息</option>
+                                </select>
+                                <select id="assetFilter" class="filter-select">
+                                    <option value="">所有资产</option>
+                                </select>
+                                <div class="date-range">
+                                    <input type="date" id="startDate" class="date-input">
+                                    <span class="date-separator">至</span>
+                                    <input type="date" id="endDate" class="date-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn-secondary" id="exportBtn">
+                                <i data-lucide="download"></i>
+                                导出
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 交易列表 -->
+                <section class="transactions-section">
+                    <div class="transactions-card">
+                        <div class="card-header">
+                            <h3>交易记录</h3>
+                            <div class="card-stats">
+                                <span class="badge" id="transactionCount">共 0 笔交易</span>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="date">日期 <i data-lucide="chevron-up-down"></i></th>
+                                        <th data-sort="asset">资产</th>
+                                        <th data-sort="type">交易类型</th>
+                                        <th data-sort="amount">金额</th>
+                                        <th data-sort="currency">币种</th>
+                                        <th>备注</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTableBody">
+                                    <!-- 交易记录将通过JavaScript动态填充 -->
+                                </tbody>
+                            </table>
+                            <div class="table-empty" id="transactionsEmpty" style="display: none;">
+                                <div class="empty-icon">
+                                    <i data-lucide="file-x"></i>
+                                </div>
+                                <div class="empty-text">暂无交易记录</div>
+                                <div class="empty-subtext">点击"新增交易"按钮开始记录您的第一笔交易</div>
+                            </div>
+                        </div>
+                        <div class="table-pagination" id="transactionsPagination">
+                            <div class="pagination-info">
+                                显示 <span id="paginationStart">1</span> - <span id="paginationEnd">10</span> 
+                                共 <span id="paginationTotal">0</span> 条记录
+                            </div>
+                            <div class="pagination-controls">
+                                <button class="btn-pagination" id="prevPage" disabled>
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+                                <button class="btn-pagination" id="nextPage" disabled>
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="portfolio" class="page">
+                <h2>投资组合</h2>
+                <p>投资组合页面开发中...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新增交易模态窗口 -->
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增交易</h3>
+                <button class="modal-close" id="closeTransactionModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="addTransactionForm" class="modal-body">
+                <!-- 资产选择器 -->
+                <div class="form-group">
+                    <label for="assetSelect" class="form-label">选择资产 *</label>
+                    <div class="asset-selector">
+                        <select id="assetSelect" class="form-select" required>
+                            <option value="">请选择资产...</option>
+                        </select>
+                        <button type="button" class="btn-link" id="createAssetBtn">
+                            <i data-lucide="plus"></i>
+                            创建新资产
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 交易类型 -->
+                <div class="form-group">
+                    <label for="transactionType" class="form-label">交易类型 *</label>
+                    <select id="transactionType" class="form-select" required>
+                        <option value="">请选择交易类型...</option>
+                        <option value="DEPOSIT">存入</option>
+                        <option value="PURCHASE">购买</option>
+                        <option value="REDEMPTION">赎回</option>
+                        <option value="INTEREST">利息</option>
+                    </select>
+                </div>
+
+                <!-- 交易金额和币种 -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transactionAmount" class="form-label">交易金额 *</label>
+                        <input type="number" id="transactionAmount" class="form-input" 
+                               step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionCurrency" class="form-label">币种 *</label>
+                        <select id="transactionCurrency" class="form-select" required>
+                            <option value="CNY">CNY - 人民币</option>
+                            <option value="USD">USD - 美元</option>
+                            <option value="HKD">HKD - 港币</option>
+                            <option value="EUR">EUR - 欧元</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 交易日期 -->
+                <div class="form-group">
+                    <label for="transactionDate" class="form-label">交易日期 *</label>
+                    <input type="date" id="transactionDate" class="form-input" required>
+                </div>
+
+                <!-- 汇率 (非基础货币时显示) -->
+                <div class="form-group" id="exchangeRateGroup" style="display: none;">
+                    <label for="exchangeRate" class="form-label">汇率 (1 外币 = ? CNY)</label>
+                    <input type="number" id="exchangeRate" class="form-input" 
+                           step="0.0001" min="0" placeholder="0.0000">
+                    <div class="form-help">
+                        请输入交易时的实际汇率，如不填写将使用系统默认汇率
+                    </div>
+                </div>
+
+                <!-- 备注 -->
+                <div class="form-group">
+                    <label for="transactionNotes" class="form-label">备注</label>
+                    <textarea id="transactionNotes" class="form-textarea" 
+                              placeholder="交易备注信息..." rows="3"></textarea>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelTransactionBtn">取消</button>
+                <button type="submit" class="btn-primary" form="addTransactionForm">保存交易</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增资产模态窗口 -->
+    <div id="addAssetModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>创建新资产</h3>
+                <button class="modal-close" id="closeAssetModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="addAssetForm" class="modal-body">
+                <!-- 资产名称 -->
+                <div class="form-group">
+                    <label for="assetName" class="form-label">资产名称 *</label>
+                    <input type="text" id="assetName" class="form-input" 
+                           placeholder="例如：招商银行储蓄账户" required>
+                </div>
+
+                <!-- 资产类型 -->
+                <div class="form-group">
+                    <label for="assetType" class="form-label">资产类型 *</label>
+                    <select id="assetType" class="form-select" required>
+                        <option value="">请选择资产类型...</option>
+                        <option value="CASH">现金及等价物</option>
+                        <option value="FIXED_INCOME">固定收益</option>
+                        <option value="EQUITY">权益类</option>
+                        <option value="ALTERNATIVE">另类投资</option>
+                    </select>
+                </div>
+
+                <!-- 币种 -->
+                <div class="form-group">
+                    <label for="assetCurrency" class="form-label">币种 *</label>
+                    <select id="assetCurrency" class="form-select" required>
+                        <option value="CNY">CNY - 人民币</option>
+                        <option value="USD">USD - 美元</option>
+                        <option value="HKD">HKD - 港币</option>
+                        <option value="EUR">EUR - 欧元</option>
+                    </select>
+                </div>
+
+                <!-- 描述 -->
+                <div class="form-group">
+                    <label for="assetDescription" class="form-label">描述</label>
+                    <textarea id="assetDescription" class="form-textarea" 
+                              placeholder="资产描述信息..." rows="2"></textarea>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAssetBtn">取消</button>
+                <button type="submit" class="btn-primary" form="addAssetForm">创建资产</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/transactions.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- 开发工具 (仅在开发环境加载) -->
+    <script>
+        // 检测是否为开发环境并加载开发工具
+        (function() {
+            const isDevEnv = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' ||
+                            window.location.hostname === '';
+            
+            if (isDevEnv) {
+                // 动态加载 Stagewise 开发工具
+                const script = document.createElement('script');
+                script.src = 'dev-tools/stagewise-toolbar.js';
+                script.onload = () => {
+                    console.log('🎯 Stagewise 开发工具已加载');
+                };
+                document.head.appendChild(script);
+            }
+        })();
+    </script>
+</body>
+</html> 

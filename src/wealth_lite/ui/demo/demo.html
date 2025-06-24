@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WealthLite - 演示界面</title>
+    <style>
+        /* 内联所有样式以便演示 */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-600);
+            --text-muted: var(--gray-500);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-primary);
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0 var(--spacing-lg);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xl);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: var(--spacing);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing);
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+        }
+
+        .btn-currency {
+            padding: var(--spacing-sm) var(--spacing);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-currency:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            padding: var(--spacing-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 图表区域 */
+        .chart-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chart-header h2 {
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .time-range {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .time-btn {
+            padding: var(--spacing-sm) var(--spacing);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .time-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+        }
+
+        .time-btn.active {
+            background: var(--white);
+            color: var(--text-primary);
+            border-color: var(--white);
+        }
+
+        .chart-container {
+            position: relative;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-xl);
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-chart {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.125rem;
+            border: 2px dashed var(--gray-300);
+        }
+
+        /* 悬浮提示框 */
+        .chart-tooltip {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(116, 75, 162, 0.95);
+            color: var(--white);
+            padding: var(--spacing);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+        }
+
+        .tooltip-date {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            text-align: center;
+        }
+
+        .tooltip-values {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .tooltip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tooltip-item .label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .tooltip-item .value {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* 统计卡片区域 */
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: var(--spacing-lg);
+            grid-template-areas: "total chart1 chart2 assets";
+        }
+
+        /* 总资产卡片 */
+        .total-assets-card {
+            grid-area: total;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .total-assets-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing);
+        }
+
+        .total-assets-card .label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .total-assets-card .period {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--gray-100);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+        }
+
+        .total-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+            font-family: var(--font-mono);
+        }
+
+        .total-amount .currency {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .change-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing);
+        }
+
+        .change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .change-percent {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--success);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+            width: 68%;
+            transition: width 0.3s ease;
+        }
+
+        /* 图表卡片 */
+        .chart-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card:nth-child(2) {
+            grid-area: chart1;
+        }
+
+        .chart-card:nth-child(3) {
+            grid-area: chart2;
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing);
+            text-align: center;
+        }
+
+        .donut-chart-container, .pie-chart-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-donut, .demo-pie {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-donut {
+            background: conic-gradient(#10b981 0deg 120deg, #4facfe 120deg 240deg, #3b82f6 240deg 360deg);
+        }
+
+        .demo-donut::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: var(--white);
+            border-radius: 50%;
+        }
+
+        .demo-pie {
+            background: conic-gradient(#667eea 0deg 140deg, #8b5cf6 140deg 280deg, #f59e0b 280deg 360deg);
+        }
+
+        .chart-center {
+            position: absolute;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .center-amount {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .center-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 资产明细列表 */
+        .assets-list-card {
+            grid-area: assets;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .assets-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing);
+        }
+
+        .asset-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing);
+            padding: var(--spacing);
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .asset-item:hover {
+            background: var(--gray-50);
+        }
+
+        .asset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: bold;
+        }
+
+        .asset-icon.cash {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .asset-icon.deposit {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .asset-icon.investment {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .asset-info {
+            flex: 1;
+        }
+
+        .asset-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .asset-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .asset-amount {
+            text-align: right;
+        }
+
+        .asset-amount .amount {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .asset-amount .currency {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .stats-section {
+                grid-template-columns: 1fr 1fr;
+                grid-template-areas: 
+                    "total total"
+                    "chart1 chart2"
+                    "assets assets";
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 var(--spacing);
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+            
+            .main-content {
+                padding: var(--spacing);
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                gap: var(--spacing);
+                align-items: flex-start;
+            }
+            
+            .time-range {
+                align-self: stretch;
+                justify-content: space-between;
+            }
+            
+            .time-btn {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "total"
+                    "chart1"
+                    "chart2"
+                    "assets";
+            }
+            
+            .total-amount {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .stats-section > * {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .stats-section > *:nth-child(1) { animation-delay: 0.1s; }
+        .stats-section > *:nth-child(2) { animation-delay: 0.2s; }
+        .stats-section > *:nth-child(3) { animation-delay: 0.3s; }
+        .stats-section > *:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="navbar">
+            <div class="nav-left">
+                <div class="logo">
+                    <span>💰</span>
+                    <span>WealthLite</span>
+                </div>
+                <nav class="nav-menu">
+                    <a href="#dashboard" class="nav-item active">
+                        <span>🏠</span>
+                        <span>仪表板</span>
+                    </a>
+                    <a href="#assets" class="nav-item">
+                        <span>🪙</span>
+                        <span>资产管理</span>
+                    </a>
+                    <a href="#transactions" class="nav-item">
+                        <span>📋</span>
+                        <span>交易记录</span>
+                    </a>
+                    <a href="#portfolio" class="nav-item">
+                        <span>📊</span>
+                        <span>投资组合</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="nav-right">
+                <button class="btn-icon" title="搜索">🔍</button>
+                <button class="btn-icon" title="通知">🔔</button>
+                <button class="btn-icon" title="设置">⚙️</button>
+                <div class="currency-toggle">
+                    <button class="btn-currency">CNY</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 主图表区域 -->
+            <section class="chart-section fade-in">
+                <div class="chart-header">
+                    <h2>资产总览</h2>
+                    <div class="time-range">
+                        <button class="time-btn active">7天</button>
+                        <button class="time-btn">1月</button>
+                        <button class="time-btn">3月</button>
+                        <button class="time-btn">1年</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="demo-chart">
+                        📈 主资产趋势图表区域
+                    </div>
+                    <!-- 数据悬浮卡片 -->
+                    <div class="chart-tooltip">
+                        <div class="tooltip-date">4个月</div>
+                        <div class="tooltip-values">
+                            <div class="tooltip-item">
+                                <span class="label">现金</span>
+                                <span class="value">8,435,530元</span>
+                            </div>
+                            <div class="tooltip-item">
+                                <span class="label">存款</span>
+                                <span class="value">6,234,560元</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 统计卡片区域 -->
+            <section class="stats-section">
+                <!-- 总资产卡片 -->
+                <div class="total-assets-card">
+                    <div class="card-header">
+                        <span class="label">总资产价值</span>
+                        <span class="period">今日</span>
+                    </div>
+                    <div class="total-amount">
+                        2,341,270<span class="currency">元</span>
+                    </div>
+                    <div class="change-info">
+                        <span class="change">+8,750</span>
+                        <span class="change-percent">+5.85%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                </div>
+
+                <!-- 圆环图卡片 -->
+                <div class="chart-card">
+                    <h3>现金类资产</h3>
+                    <div class="donut-chart-container">
+                        <div class="demo-donut"></div>
+                        <div class="chart-center">
+                            <div class="center-amount">3,234,000</div>
+                            <div class="center-label">元</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 饼图卡片 -->
+                <div class="chart-card">
+                    <h3>固定收益</h3>
+                    <div class="pie-chart-container">
+                        <div class="demo-pie"></div>
+                        <div class="chart-center">
+                            <div class="center-amount">2,436,000</div>
+                            <div class="center-label">元</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 资产明细列表 -->
+                <div class="assets-list-card">
+                    <div class="card-header">
+                        <h3>资产明细</h3>
+                        <button class="btn-icon">⋯</button>
+                    </div>
+                    <div class="assets-list">
+                        <div class="asset-item">
+                            <div class="asset-icon cash">💵</div>
+                            <div class="asset-info">
+                                <div class="asset-name">现金</div>
+                                <div class="asset-desc">122-3567-8901-11</div>
+                            </div>
+                            <div class="asset-amount">
+                                <div class="amount">65,000</div>
+                                <div class="currency">元</div>
+                            </div>
+                        </div>
+                        <div class="asset-item">
+                            <div class="asset-icon deposit">🏦</div>
+                            <div class="asset-info">
+                                <div class="asset-name">定期存款</div>
+                                <div class="asset-desc">122-3567-8901-11</div>
+                            </div>
+                            <div class="asset-amount">
+                                <div class="amount">84,600</div>
+                                <div class="currency">元</div>
+                            </div>
+                        </div>
+                        <div class="asset-item">
+                            <div class="asset-icon investment">📈</div>
+                            <div class="asset-info">
+                                <div class="asset-name">理财产品</div>
+                                <div class="asset-desc">122-3567-8901-11</div>
+                            </div>
+                            <div class="asset-amount">
+                                <div class="amount">52,500</div>
+                                <div class="currency">元</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 简单的交互演示
+        document.addEventListener('DOMContentLoaded', function() {
+            // 时间范围按钮切换
+            const timeButtons = document.querySelectorAll('.time-btn');
+            timeButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    timeButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // 币种切换
+            const currencyBtn = document.querySelector('.btn-currency');
+            const currencies = ['CNY', 'USD', 'HKD', 'EUR'];
+            let currentIndex = 0;
+            
+            currencyBtn.addEventListener('click', function() {
+                currentIndex = (currentIndex + 1) % currencies.length;
+                this.textContent = currencies[currentIndex];
+                
+                // 显示切换提示
+                showNotification(`已切换到 ${currencies[currentIndex]}`);
+            });
+
+            // 资产项目悬停效果
+            const assetItems = document.querySelectorAll('.asset-item');
+            assetItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(8px)';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+
+            function showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    background: rgba(255, 255, 255, 0.95);
+                    color: var(--text-primary);
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    box-shadow: var(--shadow-lg);
+                    z-index: 1000;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transform: translateX(100%);
+                    transition: transform 0.3s ease;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html> 

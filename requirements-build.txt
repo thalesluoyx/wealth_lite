@@ -1,0 +1,16 @@
+# WealthLite 打包构建依赖
+# 用于PyInstaller打包的依赖列表
+
+# 核心依赖
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# 打包工具
+pyinstaller==6.2.0
+
+# 数据库
+sqlite3  # Python内置，无需额外安装
+
+# 可选：其他打包工具
+# cx-Freeze==6.15.10
+# auto-py-to-exe==2.40.0 
