@@ -3,6 +3,17 @@
  * 使用 Chart.js 实现韩文仪表板风格的图表
  */
 
+// 非入侵性 Chart.js 兼容处理
+if (typeof Chart === 'undefined') {
+  try {
+    if (typeof require !== 'undefined') {
+      window.Chart = require('chart.js/auto');
+    }
+  } catch (e) {
+    // 忽略，Chart 依然未定义时会在开发环境报错
+  }
+}
+
 class ChartManager {
     constructor() {
         this.charts = {};

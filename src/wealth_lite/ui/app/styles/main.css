@@ -439,4 +439,182 @@ body {
   to {
     transform: rotate(360deg);
   }
-} 
+}
+
+/* ==========================================================================
+   持仓列表样式
+   ========================================================================== */
+
+.positions-section {
+  margin-top: var(--spacing-lg);
+}
+
+.positions-list-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--spacing-lg);
+}
+
+.positions-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing);
+}
+
+.positions-table th,
+.positions-table td {
+  padding: var(--spacing) var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.positions-table th {
+  background: var(--gray-50);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.positions-table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.positions-table .asset-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.positions-table .asset-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.positions-table .asset-icon.cash {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.positions-table .asset-icon.fixed_income {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.positions-table .asset-icon.equity {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.positions-table .asset-icon i {
+  width: 16px;
+  height: 16px;
+}
+
+.positions-table .asset-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.positions-table .asset-type {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.positions-table .asset-type.cash {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.positions-table .asset-type.fixed_income {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.positions-table .amount {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.positions-table .action-buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.positions-table .btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.positions-table .btn-action:hover {
+  background: var(--gray-50);
+  color: var(--text-primary);
+  border-color: var(--gray-400);
+}
+
+.positions-table .btn-action.withdraw {
+  border-color: var(--warning);
+  color: var(--warning);
+  background: var(--white);
+}
+
+.positions-table .btn-action.withdraw:hover {
+  background: var(--warning-light);
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.positions-table .btn-action i {
+  width: 12px;
+  height: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .positions-table {
+    font-size: 0.875rem;
+  }
+  
+  .positions-table th,
+  .positions-table td {
+    padding: var(--spacing-sm) var(--spacing-xs);
+  }
+  
+  .positions-table .asset-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .positions-table .asset-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .positions-table .asset-icon i {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+ 

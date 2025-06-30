@@ -1,0 +1,310 @@
+2025-06-30 07:32:03,587 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 07:32:03,587 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 07:32:03,588 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 07:32:03,588 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 07:32:03,588 INFO root 
+💡 提示:
+2025-06-30 07:32:03,589 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 07:32:03,589 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 07:32:03,590 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 07:32:03,590 INFO root 
+==================================================
+2025-06-30 07:32:03,595 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 07:32:03,674 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 07:32:03,675 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 07:32:03,676 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 07:32:03,677 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 07:32:03,678 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 07:32:03,679 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 07:32:03,679 INFO root ✅ 数据库服务初始化成功
+2025-06-30 07:32:06,674 ERROR root ❌ 获取仪表板数据失败: 'Position' object has no attribute 'quantity'
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 151, in get_dashboard_summary
+    "quantity": float(pos.quantity),
+                      ^^^^^^^^^^^^
+AttributeError: 'Position' object has no attribute 'quantity'
+2025-06-30 08:25:22,395 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:25:22,396 INFO root 📍 API服务器地址: http://127.0.0.1:8082
+2025-06-30 08:25:22,396 INFO root 📍 前端页面地址: http://127.0.0.1:8082/static/index.html
+2025-06-30 08:25:22,396 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:25:22,396 INFO root 
+💡 提示:
+2025-06-30 08:25:22,396 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:25:22,397 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:25:22,397 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:25:22,397 INFO root 
+==================================================
+2025-06-30 08:25:22,402 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:25:22,465 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:25:22,466 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:25:22,467 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:25:22,468 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:25:22,469 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:25:22,469 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:25:22,470 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:25:24,924 ERROR root ❌ 获取仪表板数据失败: 'Position' object has no attribute 'quantity'
+Traceback (most recent call last):
+  File "E:\Work\workspace\wealth_lite\main.py", line 151, in get_dashboard_summary
+    "quantity": float(pos.quantity),
+                      ^^^^^^^^^^^^
+AttributeError: 'Position' object has no attribute 'quantity'
+2025-06-30 08:25:40,623 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:25:40,623 INFO root 📍 API服务器地址: http://127.0.0.1:8083
+2025-06-30 08:25:40,623 INFO root 📍 前端页面地址: http://127.0.0.1:8083/static/index.html
+2025-06-30 08:25:40,624 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:25:40,624 INFO root 
+💡 提示:
+2025-06-30 08:25:40,624 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:25:40,625 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:25:40,625 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:25:40,625 INFO root 
+==================================================
+2025-06-30 08:25:40,630 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:25:40,693 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:25:40,694 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:25:40,694 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:25:40,695 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:25:40,696 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:25:40,697 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:25:40,697 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:25:42,925 ERROR root ❌ 获取仪表板数据失败: 'Position' object has no attribute 'quantity'
+Traceback (most recent call last):
+  File "E:\Work\workspace\wealth_lite\main.py", line 151, in get_dashboard_summary
+    "quantity": float(pos.quantity),
+                      ^^^^^^^^^^^^
+AttributeError: 'Position' object has no attribute 'quantity'
+2025-06-30 08:27:12,037 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:27:12,037 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 08:27:12,038 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 08:27:12,038 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:27:12,038 INFO root 
+💡 提示:
+2025-06-30 08:27:12,039 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:27:12,039 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:27:12,039 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:27:12,040 INFO root 
+==================================================
+2025-06-30 08:27:12,045 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:27:12,110 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:27:12,111 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:27:12,111 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:27:12,113 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:27:12,114 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:27:12,114 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:27:12,115 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:27:14,399 ERROR root ❌ 获取仪表板数据失败: 'Position' object has no attribute 'quantity'
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 151, in get_dashboard_summary
+    "quantity": float(pos.quantity),
+                      ^^^^^^^^^^^^
+AttributeError: 'Position' object has no attribute 'quantity'
+2025-06-30 08:27:44,692 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:27:44,692 INFO root 📍 API服务器地址: http://127.0.0.1:8082
+2025-06-30 08:27:44,692 INFO root 📍 前端页面地址: http://127.0.0.1:8082/static/index.html
+2025-06-30 08:27:44,693 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:27:44,693 INFO root 
+💡 提示:
+2025-06-30 08:27:44,693 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:27:44,693 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:27:44,693 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:27:44,693 INFO root 
+==================================================
+2025-06-30 08:27:44,698 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:27:44,774 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:27:44,775 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:27:44,776 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:27:44,777 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:27:44,778 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:27:44,778 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:27:44,779 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:36:29,901 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:36:29,902 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 08:36:29,902 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 08:36:29,902 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:36:29,902 INFO root 
+💡 提示:
+2025-06-30 08:36:29,902 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:36:29,903 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:36:29,903 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:36:29,903 INFO root 
+==================================================
+2025-06-30 08:36:29,907 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:36:29,965 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:36:29,966 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:36:29,966 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:36:29,967 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:36:29,969 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:36:29,970 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:36:29,970 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:37:14,513 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:37:14,513 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 08:37:14,514 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 08:37:14,514 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:37:14,515 INFO root 
+💡 提示:
+2025-06-30 08:37:14,515 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:37:14,516 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:37:14,516 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:37:14,516 INFO root 
+==================================================
+2025-06-30 08:37:14,522 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:37:14,589 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:37:14,590 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:37:14,590 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:37:14,592 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:37:14,593 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:37:14,593 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:37:14,594 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:38:08,669 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:38:08,670 INFO root 📍 API服务器地址: http://127.0.0.1:8082
+2025-06-30 08:38:08,670 INFO root 📍 前端页面地址: http://127.0.0.1:8082/static/index.html
+2025-06-30 08:38:08,671 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:38:08,671 INFO root 
+💡 提示:
+2025-06-30 08:38:08,671 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:38:08,672 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:38:08,672 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:38:08,672 INFO root 
+==================================================
+2025-06-30 08:38:08,677 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:38:08,743 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:38:08,744 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:38:08,744 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:38:08,746 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:38:08,746 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:38:08,747 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:38:08,747 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:44:00,434 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:44:00,434 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 08:44:00,435 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 08:44:00,435 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:44:00,435 INFO root 
+💡 提示:
+2025-06-30 08:44:00,436 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:44:00,436 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:44:00,436 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:44:00,437 INFO root 
+==================================================
+2025-06-30 08:44:00,442 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:44:00,503 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:44:00,504 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:44:00,504 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:44:00,507 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:44:00,509 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:44:00,510 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:44:00,511 INFO root ✅ 数据库服务初始化成功
+2025-06-30 08:50:21,000 INFO root ✅ 使用指定端口: 8080
+2025-06-30 08:50:21,008 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 08:50:21,008 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 08:50:21,008 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 08:50:21,009 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 08:50:21,009 INFO root 
+💡 提示:
+2025-06-30 08:50:21,009 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 08:50:21,010 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 08:50:21,010 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 08:50:21,010 INFO root 
+==================================================
+2025-06-30 08:50:21,015 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 08:50:21,074 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:50:21,075 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:50:21,075 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:50:21,077 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 08:50:21,078 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 08:50:21,078 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 08:50:21,079 INFO root ✅ 数据库服务初始化成功
+2025-06-30 09:00:10,473 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 09:00:10,473 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 09:00:10,474 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 09:00:10,475 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 09:00:10,475 INFO root 
+💡 提示:
+2025-06-30 09:00:10,475 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 09:00:10,476 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 09:00:10,476 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 09:00:10,476 INFO root 
+==================================================
+2025-06-30 09:00:10,481 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 09:00:10,540 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 09:00:10,541 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 09:00:10,541 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 09:00:10,543 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 09:00:10,544 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 09:00:10,544 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 09:00:10,544 INFO root ✅ 数据库服务初始化成功
+2025-06-30 10:13:55,363 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 10:13:55,363 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 10:13:55,363 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 10:13:55,364 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 10:13:55,365 INFO root 
+💡 提示:
+2025-06-30 10:13:55,365 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 10:13:55,366 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 10:13:55,366 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 10:13:55,366 INFO root 
+==================================================
+2025-06-30 10:13:55,372 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 10:13:55,435 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:13:55,437 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:13:55,438 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:13:55,440 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:13:55,441 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:13:55,441 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:13:55,442 INFO root ✅ 数据库服务初始化成功
+2025-06-30 10:16:16,675 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 10:16:16,675 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 10:16:16,676 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 10:16:16,676 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 10:16:16,677 INFO root 
+💡 提示:
+2025-06-30 10:16:16,677 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 10:16:16,677 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 10:16:16,678 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 10:16:16,678 INFO root 
+==================================================
+2025-06-30 10:16:16,683 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 10:16:16,742 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:16:16,743 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:16:16,743 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:16:16,745 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:16:16,746 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:16:16,746 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:16:16,747 INFO root ✅ 数据库服务初始化成功
+2025-06-30 10:37:22,614 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 10:37:22,614 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 10:37:22,615 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 10:37:22,615 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 10:37:22,615 INFO root 
+💡 提示:
+2025-06-30 10:37:22,615 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 10:37:22,615 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 10:37:22,616 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 10:37:22,616 INFO root 
+==================================================
+2025-06-30 10:37:22,621 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 10:37:22,682 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:37:22,683 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:37:22,684 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:37:22,685 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:37:22,686 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:37:22,686 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:37:22,687 INFO root ✅ 数据库服务初始化成功
+2025-06-30 10:46:13,014 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 10:46:13,014 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 10:46:13,015 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 10:46:13,015 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 10:46:13,015 INFO root 
+💡 提示:
+2025-06-30 10:46:13,016 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 10:46:13,016 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 10:46:13,016 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 10:46:13,017 INFO root 
+==================================================
+2025-06-30 10:46:13,022 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 10:46:13,080 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:46:13,081 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:46:13,082 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:46:13,083 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 10:46:13,084 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 10:46:13,085 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 10:46:13,085 INFO root ✅ 数据库服务初始化成功

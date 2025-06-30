@@ -305,12 +305,7 @@
     color: white;
 }
 
-.transaction-type.purchase {
-    background: var(--info);
-    color: white;
-}
-
-.transaction-type.redemption {
+.transaction-type.withdraw {
     background: var(--warning);
     color: white;
 }
@@ -576,6 +571,27 @@
     flex: 1;
 }
 
+/* 资产类型显示 */
+.asset-type-display {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--gray-50);
+    border-radius: 0.25rem;
+    border-left: 3px solid var(--primary);
+    font-size: 0.875rem;
+}
+
+.asset-type-label {
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.asset-type-value {
+    color: var(--primary);
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
 .btn-link {
     background: none;
     border: none;
@@ -630,6 +646,79 @@
 .btn-secondary:hover {
     background: var(--gray-200);
     border-color: var(--gray-400);
+}
+
+/* 锁定字段样式 */
+.field-locked {
+    background: var(--gray-100) !important;
+    color: var(--gray-500) !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+.field-locked:focus {
+    border-color: var(--gray-300) !important;
+    box-shadow: none !important;
+}
+
+/* 取回确认模态窗口样式 */
+.withdraw-info {
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item .label {
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+.info-item .value {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.info-item .value.amount {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.withdraw-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--warning-light);
+    border: 1px solid var(--warning);
+    border-radius: 0.5rem;
+    color: var(--warning-dark);
+    font-size: 0.875rem;
+}
+
+.withdraw-warning i {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* 取回按钮样式 */
+.btn-action.withdraw {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-action.withdraw:hover {
+    background: var(--warning-dark);
 }
 
 /* 响应式设计 */

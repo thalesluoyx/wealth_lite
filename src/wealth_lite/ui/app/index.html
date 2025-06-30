@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/transactions.css">
     <!-- Chart.js 轻量图表库 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/chart.umd.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
@@ -50,13 +50,13 @@
                         <i data-lucide="home"></i>
                         <span>仪表板</span>
                     </a>
-                    <a href="#assets" class="nav-item">
-                        <i data-lucide="coins"></i>
-                        <span>资产管理</span>
-                    </a>
                     <a href="#transactions" class="nav-item">
                         <i data-lucide="receipt"></i>
                         <span>交易记录</span>
+                    </a>
+                    <a href="#assets" class="nav-item">
+                        <i data-lucide="coins"></i>
+                        <span>资产管理</span>
                     </a>
                     <a href="#portfolio" class="nav-item">
                         <i data-lucide="pie-chart"></i>
@@ -114,6 +114,42 @@
                     </div>
                 </section>
 
+                <!-- 持仓明细列表 -->
+                <section class="positions-section">
+                    <div class="positions-list-card">
+                        <div class="card-header">
+                            <h3>持仓明细</h3>
+                            <div class="card-stats">
+                                <span class="badge" id="positionCount">共 0 笔持仓</span>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="positions-table">
+                                <thead>
+                                    <tr>
+                                        <th>资产名称</th>
+                                        <th>资产类型</th>
+                                        <th>当前价值</th>
+                                        <th>币种</th>
+                                        <th>持有天数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionsTableBody">
+                                    <!-- 持仓记录将通过JavaScript动态填充 -->
+                                </tbody>
+                            </table>
+                            <div class="table-empty" id="positionsEmpty" style="display: none;">
+                                <div class="empty-icon">
+                                    <i data-lucide="wallet"></i>
+                                </div>
+                                <div class="empty-text">暂无持仓</div>
+                                <div class="empty-subtext">开始记录您的第一笔交易来建立持仓</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- 统计卡片区域 -->
                 <section class="stats-section">
                     <!-- 总资产卡片 -->
@@ -154,57 +190,6 @@
                             <div class="chart-center">
                                 <div class="center-amount" id="fixedAmount">2,436,000</div>
                                 <div class="center-label">元</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 资产明细列表 -->
-                    <div class="assets-list-card">
-                        <div class="card-header">
-                            <h3>资产明细</h3>
-                            <button class="btn-more">
-                                <i data-lucide="more-horizontal"></i>
-                            </button>
-                        </div>
-                        <div class="assets-list" id="assetsList">
-                            <div class="asset-item">
-                                <div class="asset-icon cash">
-                                    <i data-lucide="banknote"></i>
-                                </div>
-                                <div class="asset-info">
-                                    <div class="asset-name">现金</div>
-                                    <div class="asset-desc">122-3567-8901-11</div>
-                                </div>
-                                <div class="asset-amount">
-                                    <div class="amount">65,000</div>
-                                    <div class="currency">元</div>
-                                </div>
-                            </div>
-                            <div class="asset-item">
-                                <div class="asset-icon deposit">
-                                    <i data-lucide="piggy-bank"></i>
-                                </div>
-                                <div class="asset-info">
-                                    <div class="asset-name">定期存款</div>
-                                    <div class="asset-desc">122-3567-8901-11</div>
-                                </div>
-                                <div class="asset-amount">
-                                    <div class="amount">84,600</div>
-                                    <div class="currency">元</div>
-                                </div>
-                            </div>
-                            <div class="asset-item">
-                                <div class="asset-icon investment">
-                                    <i data-lucide="trending-up"></i>
-                                </div>
-                                <div class="asset-info">
-                                    <div class="asset-name">理财产品</div>
-                                    <div class="asset-desc">122-3567-8901-11</div>
-                                </div>
-                                <div class="asset-amount">
-                                    <div class="amount">52,500</div>
-                                    <div class="currency">元</div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -379,6 +364,11 @@
                             创建新资产
                         </button>
                     </div>
+                    <!-- 资产类型显示 -->
+                    <div class="asset-type-display" id="assetTypeDisplay" style="display: none;">
+                        <span class="asset-type-label">资产类型：</span>
+                        <span class="asset-type-value" id="assetTypeValue">-</span>
+                    </div>
                 </div>
 
                 <!-- 交易类型 -->
@@ -387,8 +377,7 @@
                     <select id="transactionType" class="form-select" required>
                         <option value="">请选择交易类型...</option>
                         <option value="DEPOSIT">存入</option>
-                        <option value="PURCHASE">购买</option>
-                        <option value="REDEMPTION">赎回</option>
+                        <option value="WITHDRAW">提取</option>
                         <option value="INTEREST">利息</option>
                     </select>
                 </div>
@@ -494,6 +483,8 @@
             </div>
         </div>
     </div>
+
+
 
     <!-- JavaScript -->
     <script src="js/transactions.js"></script>

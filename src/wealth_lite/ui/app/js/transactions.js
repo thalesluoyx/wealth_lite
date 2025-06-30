@@ -23,6 +23,8 @@ class TransactionManager {
         this.pageSize = 10;
         this.initialized = false;
         this.editingTransactionId = null; // 编辑状态标识
+        this.isWithdrawMode = false; // 提取模式标识
+        this.lockedAssetId = null; // 锁定的资产ID
         
         // 延迟初始化，确保DOM元素存在
         setTimeout(() => {
@@ -129,6 +131,11 @@ class TransactionManager {
             this.handleCurrencyChange(e.target.value);
         });
 
+        // 资产选择变化时显示资产类型
+        document.getElementById('assetSelect')?.addEventListener('change', (e) => {
+            this.handleAssetSelectionChange(e.target.value);
+        });
+
         // 表格排序
         document.querySelectorAll('[data-sort]').forEach(th => {
             th.addEventListener('click', () => {
@@ -150,18 +157,7 @@ class TransactionManager {
             this.handleExport();
         });
 
-        // 模态窗口背景点击关闭
-        document.getElementById('addTransactionModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'addTransactionModal') {
-                this.closeAddTransactionModal();
-            }
-        });
-
-        document.getElementById('addAssetModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'addAssetModal') {
-                this.closeAddAssetModal();
-            }
-        });
+        // 模态窗口背景点击关闭功能已移除，避免误操作
     }
 
     async loadInitialData() {
@@ -295,6 +291,7 @@ class TransactionManager {
                             <i data-lucide="edit-2"></i>
                             编辑
                         </button>
+
                         <button class="btn-action delete" data-action="delete" data-id="${transaction.id}">
                             <i data-lucide="trash-2"></i>
                             删除
@@ -416,6 +413,8 @@ class TransactionManager {
     openAddTransactionModal() {
         // 重置编辑状态
         this.editingTransactionId = null;
+        this.isWithdrawMode = false;
+        this.lockedAssetId = null;
         
         // 重置模态窗口标题和按钮文本 - 添加安全检查
         const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
@@ -429,7 +428,52 @@ class TransactionManager {
         }
         
         this.populateAssetSelect();
+        this.populateTransactionTypes();
         this.setDefaultTransactionDate();
+        document.getElementById('addTransactionModal').classList.add('show');
+    }
+
+    // 新增方法：从持仓明细触发的提取操作
+    openWithdrawTransactionModal(assetId) {
+        // 设置提取模式
+        this.editingTransactionId = null;
+        this.isWithdrawMode = true;
+        this.lockedAssetId = assetId;
+        
+        // 设置模态窗口标题
+        const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = '提取资金';
+        }
+        
+        const submitBtn = document.querySelector('#addTransactionModal .modal-footer .btn-primary');
+        if (submitBtn) {
+            submitBtn.textContent = '确认提取';
+        }
+        
+        this.populateAssetSelect();
+        this.populateTransactionTypes();
+        this.setDefaultTransactionDate();
+        
+        // 设置并锁定资产选择
+        const assetSelect = document.getElementById('assetSelect');
+        if (assetSelect) {
+            assetSelect.value = assetId;
+            assetSelect.disabled = true;
+            assetSelect.classList.add('field-locked');
+            
+            // 触发资产选择变化事件
+            this.handleAssetSelectionChange(assetId);
+        }
+        
+        // 设置并锁定交易类型为提取
+        const transactionTypeSelect = document.getElementById('transactionType');
+        if (transactionTypeSelect) {
+            transactionTypeSelect.value = 'WITHDRAW';
+            transactionTypeSelect.disabled = true;
+            transactionTypeSelect.classList.add('field-locked');
+        }
+        
         document.getElementById('addTransactionModal').classList.add('show');
     }
 
@@ -437,8 +481,13 @@ class TransactionManager {
         document.getElementById('addTransactionModal').classList.remove('show');
         this.resetTransactionForm();
         
-        // 重置编辑状态
+        // 重置编辑状态和提取模式
         this.editingTransactionId = null;
+        this.isWithdrawMode = false;
+        this.lockedAssetId = null;
+        
+        // 重置字段锁定状态
+        this.resetFieldLocks();
         
         // 重置模态窗口标题和按钮文本 - 添加安全检查
         const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
@@ -461,6 +510,8 @@ class TransactionManager {
         this.resetAssetForm();
     }
 
+
+
     populateAssetSelect() {
         const select = document.getElementById('assetSelect');
         select.innerHTML = '<option value="">请选择资产...</option>';
@@ -471,6 +522,25 @@ class TransactionManager {
             option.textContent = asset.name;
             select.appendChild(option);
         });
+    }
+
+    populateTransactionTypes() {
+        const select = document.getElementById('transactionType');
+        
+        if (this.isWithdrawMode) {
+            // 提取模式：只显示提取选项
+            select.innerHTML = `
+                <option value="">请选择交易类型...</option>
+                <option value="WITHDRAW">提取</option>
+            `;
+        } else {
+            // 普通模式：显示存入和利息选项
+            select.innerHTML = `
+                <option value="">请选择交易类型...</option>
+                <option value="DEPOSIT">存入</option>
+                <option value="INTEREST">利息</option>
+            `;
+        }
     }
 
     populateAssetFilters() {
@@ -504,6 +574,39 @@ class TransactionManager {
             };
             document.getElementById('exchangeRate').value = defaultRates[currency] || '';
         }
+    }
+
+    handleAssetSelectionChange(assetId) {
+        const assetTypeDisplay = document.getElementById('assetTypeDisplay');
+        const assetTypeValue = document.getElementById('assetTypeValue');
+        
+        if (!assetId) {
+            // 没有选择资产时隐藏资产类型显示
+            assetTypeDisplay.style.display = 'none';
+            return;
+        }
+        
+        // 根据资产ID查找资产信息
+        const selectedAsset = this.assets.find(asset => asset.id === assetId);
+        if (selectedAsset) {
+            // 显示资产类型
+            const assetTypeDisplayName = this.getAssetTypeDisplayName(selectedAsset.type);
+            assetTypeValue.textContent = assetTypeDisplayName;
+            assetTypeDisplay.style.display = 'block';
+        } else {
+            assetTypeDisplay.style.display = 'none';
+        }
+    }
+
+    getAssetTypeDisplayName(assetType) {
+        const typeMap = {
+            'CASH': '现金及等价物',
+            'FIXED_INCOME': '固定收益',
+            'EQUITY': '权益类',
+            'ALTERNATIVE': '另类投资',
+            'REAL_ESTATE': '不动产'
+        };
+        return typeMap[assetType] || assetType;
     }
 
     async handleTransactionSubmit() {
@@ -702,10 +805,24 @@ class TransactionManager {
     resetTransactionForm() {
         document.getElementById('addTransactionForm').reset();
         document.getElementById('exchangeRateGroup').style.display = 'none';
+        // 隐藏资产类型显示
+        document.getElementById('assetTypeDisplay').style.display = 'none';
     }
 
     resetAssetForm() {
         document.getElementById('addAssetForm').reset();
+    }
+
+    resetFieldLocks() {
+        // 解除字段锁定
+        const fieldsToUnlock = ['assetSelect', 'transactionType', 'transactionCurrency'];
+        fieldsToUnlock.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = false;
+                field.classList.remove('field-locked');
+            }
+        });
     }
 
     // 筛选和排序处理
@@ -775,6 +892,12 @@ class TransactionManager {
 
         console.log('找到交易记录:', transaction);
 
+        // 标记为编辑模式
+        this.editingTransactionId = id;
+        
+        // 填充资产选择器（但不重置）
+        this.populateAssetSelect();
+        
         // 填充表单数据
         document.getElementById('assetSelect').value = transaction.asset_id;
         document.getElementById('transactionType').value = transaction.type;
@@ -783,14 +906,24 @@ class TransactionManager {
         document.getElementById('transactionDate').value = transaction.date;
         document.getElementById('transactionNotes').value = transaction.description || transaction.notes || '';
         
+        // 显示资产类型
+        this.handleAssetSelectionChange(transaction.asset_id);
+        
+        // 锁定不可编辑的字段
+        document.getElementById('assetSelect').disabled = true;
+        document.getElementById('transactionType').disabled = true;
+        document.getElementById('transactionCurrency').disabled = true;
+        
+        // 添加锁定样式
+        document.getElementById('assetSelect').classList.add('field-locked');
+        document.getElementById('transactionType').classList.add('field-locked');
+        document.getElementById('transactionCurrency').classList.add('field-locked');
+        
         // 处理汇率显示
         this.handleCurrencyChange(transaction.currency);
         if (transaction.currency !== 'CNY') {
             document.getElementById('exchangeRate').value = transaction.exchange_rate || 1.0;
         }
-
-        // 标记为编辑模式
-        this.editingTransactionId = id;
         
         // 更改模态窗口标题和按钮文本 - 添加安全检查
         const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
@@ -803,9 +936,11 @@ class TransactionManager {
             submitBtn.textContent = '更新交易';
         }
         
-        // 打开模态窗口
-        this.openAddTransactionModal();
+        // 直接显示模态窗口，不调用openAddTransactionModal()
+        document.getElementById('addTransactionModal').classList.add('show');
     }
+
+
 
     async handleDeleteTransaction(id) {
         if (confirm('确定要删除这笔交易吗？')) {
@@ -846,8 +981,7 @@ class TransactionManager {
     getTransactionTypeText(type) {
         const types = {
             'DEPOSIT': '存入',
-            'PURCHASE': '购买',
-            'REDEMPTION': '赎回',
+            'WITHDRAW': '提取',
             'INTEREST': '利息'
         };
         return types[type] || type;
@@ -891,6 +1025,8 @@ class TransactionManager {
         }, 3000);
     }
 
+
+
     showValidationError(message) {
         // 创建验证错误提示
         const notification = document.createElement('div');
@@ -933,4 +1069,7 @@ class TransactionManager {
 // 导出类
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TransactionManager;
-} 
+}
+
+// 全局暴露实例，供模态窗口按钮调用
+window.transactionManager = null; 

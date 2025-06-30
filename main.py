@@ -88,10 +88,23 @@ class WealthLiteApp:
         # 注册API路由
         self.register_api_routes(app)
         
-        # 静态文件服务
+        # 静态文件服务（开发环境禁用缓存）
         ui_path = Path(__file__).parent / "src" / "wealth_lite" / "ui" / "app"
         if ui_path.exists():
-            app.mount("/static", StaticFiles(directory=str(ui_path), html=True), name="static")
+            # 创建自定义静态文件类，禁用缓存
+            class NoCacheStaticFiles(StaticFiles):
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                
+                def file_response(self, *args, **kwargs):
+                    response = super().file_response(*args, **kwargs)
+                    # 添加禁用缓存的响应头
+                    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                    response.headers["Pragma"] = "no-cache"
+                    response.headers["Expires"] = "0"
+                    return response
+            
+            app.mount("/static", NoCacheStaticFiles(directory=str(ui_path), html=True), name="static")
         
         # 根路径重定向到主页
         @app.get("/")
@@ -121,21 +134,21 @@ class WealthLiteApp:
         async def get_dashboard_summary():
             """获取仪表板总览数据"""
             try:
-                portfolio = self.wealth_service.get_current_portfolio()
+                portfolio = self.wealth_service.get_portfolio()
                 
                 # 计算总资产
-                total_assets = sum(pos.current_market_value() for pos in portfolio.positions)
+                total_assets = sum(pos.current_book_value for pos in portfolio.positions)
                 
                 # 按资产类型分组
                 cash_assets = sum(
-                    pos.current_market_value() 
-                    for pos in portfolio.positions 
+                    pos.current_book_value
+                    for pos in portfolio.positions
                     if pos.asset.asset_type.name == "CASH"
                 )
                 
                 fixed_income_assets = sum(
-                    pos.current_market_value() 
-                    for pos in portfolio.positions 
+                    pos.current_book_value
+                    for pos in portfolio.positions
                     if pos.asset.asset_type.name == "FIXED_INCOME"
                 )
                 
@@ -144,11 +157,11 @@ class WealthLiteApp:
                 for pos in portfolio.positions[:10]:  # 只返回前10个
                     assets_list.append({
                         "id": pos.asset.asset_id,
-                        "name": pos.asset.name,
+                        "name": pos.asset.asset_name,
                         "type": pos.asset.asset_type.name.lower(),
                         "symbol": pos.asset.symbol or "",
-                        "amount": float(pos.current_market_value()),
-                        "quantity": float(pos.quantity),
+                        "amount": float(pos.current_book_value),
+                        "quantity": float(pos.current_book_value),  # 对于现金类资产，数量等于金额
                         "currency": pos.asset.currency.name
                     })
                 
@@ -159,7 +172,7 @@ class WealthLiteApp:
                     "cash_assets": float(cash_assets),
                     "fixed_income_assets": float(fixed_income_assets),
                     "assets": assets_list,
-                    "last_updated": portfolio.last_updated.isoformat() if portfolio.last_updated else None
+                    "last_updated": datetime.now().isoformat()  # 使用当前时间
                 }
                 
             except Exception as e:
@@ -200,7 +213,7 @@ class WealthLiteApp:
                             "currency": "CNY"
                         }
                     ],
-                    "last_updated": None
+                    "last_updated": datetime.now().isoformat()
                 }
         
         @app.get("/api/assets")
@@ -398,6 +411,58 @@ class WealthLiteApp:
                 logging.error(f"❌ 更新交易失败: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=f"更新交易失败: {str(e)}")
 
+        @app.post("/api/transactions/{tx_id}/withdraw")
+        async def withdraw_transaction(tx_id: str):
+            """取回交易（创建反向交易）"""
+            try:
+                # 获取原交易
+                original_tx = self.wealth_service.get_transaction(tx_id)
+                if not original_tx:
+                    raise HTTPException(status_code=404, detail="交易不存在")
+                
+                # 创建反向交易
+                from wealth_lite.models.enums import TransactionType
+                from decimal import Decimal
+                import datetime
+                
+                # 确定反向交易类型
+                reverse_type_map = {
+                    TransactionType.DEPOSIT: TransactionType.WITHDRAW,
+                    TransactionType.INTEREST: TransactionType.WITHDRAW,
+                }
+                
+                reverse_type = reverse_type_map.get(original_tx.transaction_type)
+                if not reverse_type:
+                    raise HTTPException(status_code=400, detail="该交易类型不支持取回操作")
+                
+                # 创建反向交易
+                reverse_tx = self.wealth_service.create_cash_transaction(
+                    asset_id=original_tx.asset_id,
+                    transaction_type=reverse_type,
+                    amount=original_tx.amount,
+                    transaction_date=datetime.date.today(),
+                    currency=original_tx.currency,
+                    exchange_rate=original_tx.exchange_rate,
+                    notes=f"取回交易: {original_tx.notes or ''}"
+                )
+                
+                # 更新原交易状态（如果有状态字段的话）
+                # 这里可以添加状态更新逻辑
+                
+                return {
+                    "success": True,
+                    "message": "交易已成功取回",
+                    "original_transaction_id": tx_id,
+                    "reverse_transaction_id": reverse_tx.transaction_id,
+                    "reverse_amount": float(reverse_tx.amount)
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                logging.error(f"❌ 取回交易失败: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"取回交易失败: {str(e)}")
+
         @app.delete("/api/transactions/{tx_id}")
         async def delete_transaction(tx_id: str):
             """删除交易"""
@@ -429,11 +494,11 @@ class WealthLiteApp:
         """延迟打开浏览器"""
         import time
         time.sleep(1.5)  # 等待服务器启动
-        url = f"http://{self.host}:{self.port}"
+        url = f"http://{self.host}:{self.port}/static/index.html"
         print(f"🌐 正在打开浏览器: {url}")
         webbrowser.open(url)
     
-    def run(self, auto_open_browser: bool = True):
+    def run(self, auto_open_browser: bool = True):  # 默认改回True
         """运行应用"""
         try:
             # 寻找可用端口
@@ -443,7 +508,8 @@ class WealthLiteApp:
             self.app = self.create_app()
             
             logging.info("🚀 启动 WealthLite 应用...")
-            logging.info(f"📍 服务器地址: http://{self.host}:{self.port}")
+            logging.info(f"📍 API服务器地址: http://{self.host}:{self.port}")
+            logging.info(f"📍 前端页面地址: http://{self.host}:{self.port}/static/index.html")
             logging.info(f"📁 工作目录: {Path.cwd()}")
             logging.info("\n💡 提示:")
             logging.info("  - 应用将自动在浏览器中打开")

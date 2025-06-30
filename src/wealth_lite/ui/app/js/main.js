@@ -35,6 +35,8 @@ class WealthLiteApp {
         // 初始化交易管理器
         if (typeof TransactionManager !== 'undefined') {
             this.transactionManager = new TransactionManager(this);
+            // 设置全局实例供模态窗口调用
+            window.transactionManager = this.transactionManager;
         }
     }
 
@@ -133,6 +135,8 @@ class WealthLiteApp {
             }
         });
     }
+
+
 
     navigateToPage(pageId) {
         // 隐藏所有页面
@@ -370,32 +374,102 @@ class WealthLiteApp {
             fixedAmountElement.dataset.amount = data.fixedIncomeAssets;
         }
         
-        // 更新资产列表
-        this.updateAssetsList(data.assets);
+        // 更新持仓列表
+        this.updatePositionsList(data.assets);
     }
 
-    updateAssetsList(assets) {
-        const assetsListElement = document.getElementById('assetsList');
-        if (!assetsListElement) return;
+    updatePositionsList(positions) {
+        const positionsTableBody = document.getElementById('positionsTableBody');
+        const positionsEmpty = document.getElementById('positionsEmpty');
+        const positionCount = document.getElementById('positionCount');
         
-        assetsListElement.innerHTML = assets.map(asset => `
-            <div class="asset-item">
-                <div class="asset-icon ${asset.type}">
-                    <i data-lucide="${this.getAssetIcon(asset.type)}"></i>
-                </div>
-                <div class="asset-info">
-                    <div class="asset-name">${asset.name}</div>
-                    <div class="asset-desc">${asset.desc}</div>
-                </div>
-                <div class="asset-amount">
-                    <div class="amount" data-amount="${asset.amount}">${this.formatAmount(asset.amount)}</div>
-                    <div class="currency">${this.getCurrencySymbol(this.currentCurrency)}</div>
-                </div>
-            </div>
+        if (!positionsTableBody) return;
+        
+        if (!positions || positions.length === 0) {
+            positionsTableBody.innerHTML = '';
+            if (positionsEmpty) positionsEmpty.style.display = 'block';
+            if (positionCount) positionCount.textContent = '共 0 笔持仓';
+            return;
+        }
+        
+        if (positionsEmpty) positionsEmpty.style.display = 'none';
+        if (positionCount) positionCount.textContent = `共 ${positions.length} 笔持仓`;
+        
+        positionsTableBody.innerHTML = positions.map(position => `
+            <tr data-position-id="${position.id}">
+                <td>
+                    <div class="asset-info">
+                        <div class="asset-icon ${position.type}">
+                            <i data-lucide="${this.getAssetIcon(position.type)}"></i>
+                        </div>
+                        <span class="asset-name">${position.name}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="asset-type ${position.type}">${this.getAssetTypeText(position.type)}</span>
+                </td>
+                <td>
+                    <span class="amount" data-amount="${position.amount}">${this.formatAmount(position.amount)}</span>
+                </td>
+                <td>${position.currency}</td>
+                <td>${this.calculateHoldingDays(position.firstTransactionDate)} 天</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-action withdraw" data-action="withdraw" data-asset-id="${position.id}">
+                            <i data-lucide="minus-circle"></i>
+                            提取
+                        </button>
+                    </div>
+                </td>
+            </tr>
         `).join('');
+        
+        // 绑定提取按钮事件
+        this.bindPositionActions();
         
         // 重新初始化图标
         this.initializeIcons();
+    }
+    
+    getAssetTypeText(type) {
+        const typeMap = {
+            'cash': '现金及等价物',
+            'fixed_income': '固定收益',
+            'equity': '权益类',
+            'alternative': '另类投资',
+            'real_estate': '不动产'
+        };
+        return typeMap[type] || type;
+    }
+    
+    calculateHoldingDays(firstTransactionDate) {
+        if (!firstTransactionDate) return 0;
+        const firstDate = new Date(firstTransactionDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - firstDate);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+    
+    bindPositionActions() {
+        // 绑定提取按钮事件
+        document.querySelectorAll('[data-action="withdraw"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const assetId = e.target.closest('[data-asset-id]').dataset.assetId;
+                this.handlePositionWithdraw(assetId);
+            });
+        });
+    }
+    
+    handlePositionWithdraw(assetId) {
+        // 切换到交易记录页面
+        this.navigateToPage('transactions');
+        
+        // 等待页面加载完成后打开提取交易模态窗口
+        setTimeout(() => {
+            if (this.transactionManager) {
+                this.transactionManager.openWithdrawTransactionModal(assetId);
+            }
+        }, 300);
     }
 
     getAssetIcon(type) {
