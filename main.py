@@ -225,8 +225,8 @@ class WealthLiteApp:
                     {
                         "id": asset.asset_id,
                         "name": asset.asset_name,
-                        "type": asset.asset_type.value,
-                        "currency": asset.currency.value,
+                        "type": asset.asset_type.name,
+                        "currency": asset.currency.name,
                         "description": asset.description,
                         "primary_category": asset.primary_category,
                         "secondary_category": asset.secondary_category,
@@ -291,8 +291,8 @@ class WealthLiteApp:
                 return {
                     "id": asset.asset_id,
                     "name": asset.asset_name,
-                    "type": asset.asset_type.value,
-                    "currency": asset.currency.value,
+                    "type": asset.asset_type.name,
+                    "currency": asset.currency.name,
                     "description": asset.description,
                     "primary_category": asset.primary_category,
                     "secondary_category": asset.secondary_category,

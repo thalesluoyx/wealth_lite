@@ -308,3 +308,179 @@ AttributeError: 'Position' object has no attribute 'quantity'
 2025-06-30 10:46:13,084 INFO wealth_lite.data.database 索引创建完成
 2025-06-30 10:46:13,085 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
 2025-06-30 10:46:13,085 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:30:33,160 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:30:33,160 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 12:30:33,160 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 12:30:33,160 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:30:33,161 INFO root 
+💡 提示:
+2025-06-30 12:30:33,161 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:30:33,161 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:30:33,161 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:30:33,161 INFO root 
+==================================================
+2025-06-30 12:30:33,166 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:30:33,228 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:30:33,229 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:30:33,229 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:30:33,231 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:30:33,232 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:30:33,232 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:30:33,232 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:31:07,959 DEBUG root [create_asset] 参数: name=工行外汇存款, type=AssetType.FIXED_INCOME, primary=, secondary=, currency=Currency.CNY, desc=, issuer=, credit=, ext={}
+2025-06-30 12:31:07,959 INFO root [create_asset] 创建资产对象: Asset(工行外汇存款, 固定收益类)
+2025-06-30 12:31:07,960 DEBUG root [AssetRepository.create] SQL: INSERT INTO assets (
+                    asset_id, asset_name, asset_type, primary_category, 
+                    secondary_category, currency, description, issuer, 
+                    credit_rating, extended_attributes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) | params: ('50b1805e-bb23-468a-97fc-f5c3e6801f31', '工行外汇存款', '固定收益类', '固定收益类', '', '人民币', '', '', '', None)
+2025-06-30 12:31:08,036 INFO root [AssetRepository.create] 资产插入成功: 50b1805e-bb23-468a-97fc-f5c3e6801f31
+2025-06-30 12:31:08,037 INFO root [create_asset] 资产已保存到数据库: 50b1805e-bb23-468a-97fc-f5c3e6801f31
+2025-06-30 12:36:04,990 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:36:04,990 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 12:36:04,991 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 12:36:04,991 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:36:04,991 INFO root 
+💡 提示:
+2025-06-30 12:36:04,991 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:36:04,992 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:36:04,992 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:36:04,992 INFO root 
+==================================================
+2025-06-30 12:36:04,997 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:36:05,057 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:36:05,058 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:36:05,058 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:36:05,059 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:36:05,060 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:36:05,061 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:36:05,061 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:38:33,492 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:38:33,492 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 12:38:33,492 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 12:38:33,493 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:38:33,493 INFO root 
+💡 提示:
+2025-06-30 12:38:33,493 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:38:33,493 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:38:33,493 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:38:33,494 INFO root 
+==================================================
+2025-06-30 12:38:33,498 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:38:33,556 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:38:33,557 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:38:33,557 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:38:33,559 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:38:33,560 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:38:33,560 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:38:33,560 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:39:44,235 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:39:44,236 INFO root 📍 API服务器地址: http://127.0.0.1:8081
+2025-06-30 12:39:44,236 INFO root 📍 前端页面地址: http://127.0.0.1:8081/static/index.html
+2025-06-30 12:39:44,237 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:39:44,237 INFO root 
+💡 提示:
+2025-06-30 12:39:44,237 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:39:44,238 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:39:44,238 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:39:44,238 INFO root 
+==================================================
+2025-06-30 12:39:44,243 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:39:44,310 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:39:44,311 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:39:44,311 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:39:44,312 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:39:44,313 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:39:44,314 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:39:44,314 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:40:06,722 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:40:06,723 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 12:40:06,724 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 12:40:06,724 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:40:06,724 INFO root 
+💡 提示:
+2025-06-30 12:40:06,725 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:40:06,725 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:40:06,726 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:40:06,726 INFO root 
+==================================================
+2025-06-30 12:40:06,731 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:40:06,802 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:40:06,803 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:40:06,804 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:40:06,805 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:40:06,806 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:40:06,806 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:40:06,807 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:44:57,039 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 12:44:57,039 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 12:44:57,039 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 12:44:57,039 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 12:44:57,040 INFO root 
+💡 提示:
+2025-06-30 12:44:57,040 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 12:44:57,040 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 12:44:57,041 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 12:44:57,041 INFO root 
+==================================================
+2025-06-30 12:44:57,046 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 12:44:57,117 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:44:57,118 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:44:57,118 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:44:57,120 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 12:44:57,121 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 12:44:57,121 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 12:44:57,121 INFO root ✅ 数据库服务初始化成功
+2025-06-30 12:46:11,715 DEBUG root [create_asset] 参数: name=工行外汇存款, type=AssetType.FIXED_INCOME, primary=, secondary=, currency=Currency.HKD, desc=, issuer=, credit=, ext={}
+2025-06-30 12:46:11,716 INFO root [create_asset] 创建资产对象: Asset(工行外汇存款, 固定收益类)
+2025-06-30 12:46:11,716 DEBUG root [AssetRepository.create] SQL: INSERT INTO assets (
+                    asset_id, asset_name, asset_type, primary_category, 
+                    secondary_category, currency, description, issuer, 
+                    credit_rating, extended_attributes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) | params: ('7f112f7c-a65b-4eb4-9696-b78bc4127b6e', '工行外汇存款', '固定收益类', '固定收益类', '', '港币', '', '', '', None)
+2025-06-30 12:46:11,806 INFO root [AssetRepository.create] 资产插入成功: 7f112f7c-a65b-4eb4-9696-b78bc4127b6e
+2025-06-30 12:46:11,806 INFO root [create_asset] 资产已保存到数据库: 7f112f7c-a65b-4eb4-9696-b78bc4127b6e
+2025-06-30 13:02:00,058 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "E:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-06-30 13:05:34,509 DEBUG root [create_asset] 参数: name=工行外汇存款12, type=AssetType.FIXED_INCOME, primary=, secondary=, currency=Currency.HKD, desc=, issuer=, credit=, ext={}
+2025-06-30 13:05:34,509 INFO root [create_asset] 创建资产对象: Asset(工行外汇存款12, 固定收益类)
+2025-06-30 13:05:34,510 DEBUG root [AssetRepository.create] SQL: INSERT INTO assets (
+                    asset_id, asset_name, asset_type, primary_category, 
+                    secondary_category, currency, description, issuer, 
+                    credit_rating, extended_attributes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) | params: ('1bca098b-3266-4747-a8a9-13c044ce9f5d', '工行外汇存款12', '固定收益类', '固定收益类', '', '港币', '', '', '', None)
+2025-06-30 13:05:34,598 INFO root [AssetRepository.create] 资产插入成功: 1bca098b-3266-4747-a8a9-13c044ce9f5d
+2025-06-30 13:05:34,599 INFO root [create_asset] 资产已保存到数据库: 1bca098b-3266-4747-a8a9-13c044ce9f5d
+2025-06-30 13:10:10,264 INFO root 🚀 启动 WealthLite 应用...
+2025-06-30 13:10:10,264 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-06-30 13:10:10,265 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-06-30 13:10:10,265 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-06-30 13:10:10,265 INFO root 
+💡 提示:
+2025-06-30 13:10:10,266 INFO root   - 应用将自动在浏览器中打开
+2025-06-30 13:10:10,266 INFO root   - 按 Ctrl+C 停止应用
+2025-06-30 13:10:10,266 INFO root   - 数据保存在 user_data/ 目录
+2025-06-30 13:10:10,267 INFO root 
+==================================================
+2025-06-30 13:10:10,271 DEBUG asyncio Using proactor: IocpProactor
+2025-06-30 13:10:10,332 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 13:10:10,333 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 13:10:10,334 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 13:10:10,335 INFO wealth_lite.data.database 数据表创建完成
+2025-06-30 13:10:10,336 INFO wealth_lite.data.database 索引创建完成
+2025-06-30 13:10:10,336 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-06-30 13:10:10,337 INFO root ✅ 数据库服务初始化成功
+2025-06-30 13:11:53,889 ERROR asyncio Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "E:\Installed\anaconda3\envs\stock_analysis\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "E:\Installed\anaconda3\envs\stock_analysis\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。

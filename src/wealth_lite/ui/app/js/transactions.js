@@ -26,6 +26,9 @@ class TransactionManager {
         this.isWithdrawMode = false; // 提取模式标识
         this.lockedAssetId = null; // 锁定的资产ID
         
+        // 固定收益产品管理器
+        this.fixedIncomeManager = null;
+        
         // 延迟初始化，确保DOM元素存在
         setTimeout(() => {
             this.init();
@@ -35,9 +38,32 @@ class TransactionManager {
     init() {
         if (this.initialized) return;
         
+        this.initializeFixedIncomeManagers();
         this.bindEvents();
         this.loadInitialData();
         this.initialized = true;
+    }
+
+    /**
+     * 初始化固定收益产品管理器
+     */
+    initializeFixedIncomeManagers() {
+        console.log('🔧 开始初始化固定收益管理器...');
+        
+        // 检查FixedIncomeManager是否存在
+        if (typeof FixedIncomeManager === 'undefined') {
+            console.error('❌ FixedIncomeManager类未找到，请检查fixed-income-manager.js是否正确加载');
+            return;
+        }
+        
+        try {
+            // 初始化统一的固定收益管理器
+            this.fixedIncomeManager = new FixedIncomeManager(this);
+            console.log('✅ 固定收益产品管理器初始化完成');
+            console.log('🏦 FixedIncomeManager实例:', this.fixedIncomeManager);
+        } catch (error) {
+            console.error('❌ 固定收益管理器初始化失败:', error);
+        }
     }
 
     bindEvents() {
@@ -134,6 +160,13 @@ class TransactionManager {
         // 资产选择变化时显示资产类型
         document.getElementById('assetSelect')?.addEventListener('change', (e) => {
             this.handleAssetSelectionChange(e.target.value);
+        });
+
+        // 交易类型变化时通知固定收益管理器
+        document.getElementById('transactionType')?.addEventListener('change', (e) => {
+            if (this.fixedIncomeManager) {
+                this.fixedIncomeManager.handleTransactionTypeChange(e.target.value);
+            }
         });
 
         // 表格排序
@@ -510,8 +543,6 @@ class TransactionManager {
         this.resetAssetForm();
     }
 
-
-
     populateAssetSelect() {
         const select = document.getElementById('assetSelect');
         select.innerHTML = '<option value="">请选择资产...</option>';
@@ -520,6 +551,7 @@ class TransactionManager {
             const option = document.createElement('option');
             option.value = asset.id;
             option.textContent = asset.name;
+            option.dataset.assetType = asset.type; // 添加资产类型数据属性
             select.appendChild(option);
         });
     }
@@ -577,24 +609,55 @@ class TransactionManager {
     }
 
     handleAssetSelectionChange(assetId) {
+        console.log('🔄 资产选择变化:', assetId);
+        
         const assetTypeDisplay = document.getElementById('assetTypeDisplay');
         const assetTypeValue = document.getElementById('assetTypeValue');
         
         if (!assetId) {
             // 没有选择资产时隐藏资产类型显示
             assetTypeDisplay.style.display = 'none';
+            
+            // 通知固定收益管理器
+            if (this.fixedIncomeManager) {
+                console.log('📢 通知固定收益管理器: 资产类型变化为 null');
+                this.fixedIncomeManager.handleAssetTypeChange(null);
+            } else {
+                console.warn('⚠️ 固定收益管理器未初始化');
+            }
             return;
         }
         
         // 根据资产ID查找资产信息
         const selectedAsset = this.assets.find(asset => asset.id === assetId);
+        console.log('🔍 查找到的资产:', selectedAsset);
+        
         if (selectedAsset) {
             // 显示资产类型
             const assetTypeDisplayName = this.getAssetTypeDisplayName(selectedAsset.type);
             assetTypeValue.textContent = assetTypeDisplayName;
             assetTypeDisplay.style.display = 'block';
+            
+            console.log('📊 资产类型:', selectedAsset.type, '显示名称:', assetTypeDisplayName);
+            
+            // 通知固定收益管理器资产类型变化
+            if (this.fixedIncomeManager) {
+                console.log('📢 通知固定收益管理器: 资产类型变化为', selectedAsset.type);
+                this.fixedIncomeManager.handleAssetTypeChange(selectedAsset.type);
+            } else {
+                console.warn('⚠️ 固定收益管理器未初始化');
+            }
         } else {
+            console.warn('⚠️ 未找到对应的资产信息');
             assetTypeDisplay.style.display = 'none';
+            
+            // 通知固定收益管理器
+            if (this.fixedIncomeManager) {
+                console.log('📢 通知固定收益管理器: 资产类型变化为 null (未找到资产)');
+                this.fixedIncomeManager.handleAssetTypeChange(null);
+            } else {
+                console.warn('⚠️ 固定收益管理器未初始化');
+            }
         }
     }
 
@@ -610,41 +673,103 @@ class TransactionManager {
     }
 
     async handleTransactionSubmit() {
-        const formData = this.getTransactionFormData();
+        console.log('🚀 开始处理交易提交...');
         
-        if (!this.validateTransactionForm(formData)) {
-            return;
-        }
-
         try {
-            if (this.editingTransactionId) {
-                // 编辑模式：调用PUT API
-                const response = await fetch(`/api/transactions/${this.editingTransactionId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-
-                this.showSuccessMessage('交易记录已更新');
-            } else {
-                // 新增模式：调用POST API
-                await this.saveTransaction(formData);
-                this.showSuccessMessage('交易记录已成功保存');
+            const formData = this.getTransactionFormData();
+            console.log('📝 表单数据:', formData);
+            
+            // 检查是否为固定收益产品交易
+            if (this.isFixedIncomeTransaction(formData)) {
+                console.log('🏦 检测到固定收益产品交易');
+                return await this.handleFixedIncomeTransactionSubmit(formData);
             }
             
-            this.closeAddTransactionModal();
-            this.loadInitialData(); // 重新加载数据
+            console.log('💰 普通交易处理');
+            if (!this.validateTransactionForm(formData)) {
+                console.log('❌ 表单验证失败');
+                return;
+            }
+
+            try {
+                if (this.editingTransactionId) {
+                    console.log('✏️ 编辑模式');
+                    // 编辑模式：调用PUT API
+                    const response = await fetch(`/api/transactions/${this.editingTransactionId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+
+                    this.showSuccessMessage('交易记录已更新');
+                } else {
+                    console.log('➕ 新增模式');
+                    // 新增模式：调用POST API
+                    await this.saveTransaction(formData);
+                    this.showSuccessMessage('交易记录已成功保存');
+                }
+                
+                this.closeAddTransactionModal();
+                this.loadInitialData(); // 重新加载数据
+            } catch (error) {
+                console.error('💥 API调用失败:', error);
+                this.showValidationError('保存失败: ' + error.message);
+            }
         } catch (error) {
-            console.error('保存交易失败:', error);
-            this.app.showErrorMessage('保存失败，请稍后重试');
+            console.error('💥 交易提交处理失败:', error);
+            this.showValidationError('处理失败: ' + error.message);
         }
+    }
+
+    /**
+     * 处理固定收益产品交易提交
+     */
+    async handleFixedIncomeTransactionSubmit(formData) {
+        try {
+            if (!this.fixedIncomeManager) {
+                throw new Error('固定收益管理器未初始化');
+            }
+
+            // 合并固定收益特有数据
+            const fixedIncomeData = this.fixedIncomeManager.getFixedIncomeFormData();
+            const completeFormData = { ...formData, ...fixedIncomeData };
+
+            console.log('🏦 固定收益交易数据:', completeFormData);
+
+            // 使用固定收益管理器处理交易
+            const result = await this.fixedIncomeManager.handleFixedIncomeTransaction(completeFormData);
+
+            this.showSuccessMessage(this.editingTransactionId ? '固定收益交易更新成功！' : '固定收益交易添加成功！');
+            this.closeAddTransactionModal();
+            await this.loadInitialData(); // 重新加载数据
+
+        } catch (error) {
+            console.error('❌ 固定收益交易提交失败:', error);
+            this.showValidationError('固定收益交易提交失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 检查是否为固定收益产品交易
+     */
+    isFixedIncomeTransaction(formData) {
+        // 检查选中的资产类型
+        const selectedAsset = this.assets.find(asset => asset.id === formData.asset_id);
+        
+        console.log('🔍 检查固定收益交易:', {
+            assetId: formData.asset_id,
+            assetType: selectedAsset?.type,
+            isFixedIncome: selectedAsset?.type === 'FIXED_INCOME'
+        });
+        
+        return selectedAsset?.type === 'FIXED_INCOME';
     }
 
     async handleAssetSubmit() {
@@ -680,17 +805,25 @@ class TransactionManager {
     }
 
     getTransactionFormData() {
-        // 组装表单数据，字段名与后端保持一致
-        // 交易类型直接取下拉框的value（如DEPOSIT、PURCHASE等枚举名）
-        return {
-            asset_id: document.getElementById('assetSelect').value,
-            transaction_type: document.getElementById('transactionType').value, // 保证为枚举名
-            amount: parseFloat(document.getElementById('transactionAmount').value),
-            currency: document.getElementById('transactionCurrency').value,
-            transaction_date: document.getElementById('transactionDate').value,
-            exchange_rate: parseFloat(document.getElementById('exchangeRate').value) || 1.0,
-            notes: document.getElementById('transactionNotes').value.trim()
-        };
+        try {
+            // 组装表单数据，字段名与后端保持一致
+            // 交易类型直接取下拉框的value（如DEPOSIT、PURCHASE等枚举名）
+            const data = {
+                asset_id: document.getElementById('assetSelect')?.value || '',
+                transaction_type: document.getElementById('transactionType')?.value || '',
+                amount: parseFloat(document.getElementById('transactionAmount')?.value || '0'),
+                currency: document.getElementById('transactionCurrency')?.value || '',
+                transaction_date: document.getElementById('transactionDate')?.value || '',
+                exchange_rate: parseFloat(document.getElementById('exchangeRate')?.value || '1.0'),
+                notes: document.getElementById('transactionNotes')?.value?.trim() || ''
+            };
+            
+            console.log('📊 获取的表单数据:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ 获取表单数据失败:', error);
+            throw new Error('获取表单数据失败: ' + error.message);
+        }
     }
 
     getAssetFormData() {
@@ -807,6 +940,11 @@ class TransactionManager {
         document.getElementById('exchangeRateGroup').style.display = 'none';
         // 隐藏资产类型显示
         document.getElementById('assetTypeDisplay').style.display = 'none';
+        
+        // 重置固定收益字段
+        if (this.fixedIncomeManager) {
+            this.fixedIncomeManager.resetFixedIncomeFields();
+        }
     }
 
     resetAssetForm() {
@@ -940,8 +1078,6 @@ class TransactionManager {
         document.getElementById('addTransactionModal').classList.add('show');
     }
 
-
-
     async handleDeleteTransaction(id) {
         if (confirm('确定要删除这笔交易吗？')) {
             try {
@@ -1024,8 +1160,6 @@ class TransactionManager {
             }, 300);
         }, 3000);
     }
-
-
 
     showValidationError(message) {
         // 创建验证错误提示
