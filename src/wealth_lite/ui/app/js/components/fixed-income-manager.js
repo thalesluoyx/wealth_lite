@@ -152,7 +152,7 @@ class FixedIncomeManager {
             <div class="input-group">
                 <input type="number" 
                        id="annualRate" 
-                       name="annualRate" 
+                       name="annual_rate" 
                        step="0.01" 
                        min="0" 
                        max="50" 
@@ -171,10 +171,10 @@ class FixedIncomeManager {
         startDateGroup.className = 'form-group';
         startDateGroup.id = 'startDateGroup';
         startDateGroup.innerHTML = `
-            <label for="startDate" class="form-label">起息日期<span class="required">*</span></label>
+            <label for="fiStartDate" class="form-label">起息日期<span class="required">*</span></label>
             <input type="date" 
-                   id="startDate" 
-                   name="startDate" 
+                   id="fiStartDate" 
+                   name="start_date" 
                    class="form-input">
             <small class="form-help">产品开始计息的日期</small>
         `;
@@ -188,7 +188,7 @@ class FixedIncomeManager {
             <label for="maturityDate" class="form-label">到期日期<span class="required">*</span></label>
             <input type="date" 
                    id="maturityDate" 
-                   name="maturityDate" 
+                   name="maturity_date" 
                    class="form-input">
             <small class="form-help">产品到期日期，可根据存款期限自动计算</small>
         `;
@@ -201,7 +201,7 @@ class FixedIncomeManager {
         termGroup.id = 'depositTermGroup';
         termGroup.innerHTML = `
             <label for="depositTerm" class="form-label">存款期限</label>
-            <select id="depositTerm" name="depositTerm" class="form-select">
+            <select id="depositTerm" name="deposit_term" class="form-select">
                 <option value="">请选择期限</option>
                 <option value="1">1个月</option>
                 <option value="3">3个月</option>
@@ -222,7 +222,7 @@ class FixedIncomeManager {
         interestTypeGroup.id = 'interestTypeGroup';
         interestTypeGroup.innerHTML = `
             <label for="interestType" class="form-label">利息类型</label>
-            <select id="interestType" name="interestType" class="form-select">
+            <select id="interestType" name="interest_type" class="form-select">
                 <option value="SIMPLE">单利</option>
                 <option value="COMPOUND">复利</option>
             </select>
@@ -237,7 +237,7 @@ class FixedIncomeManager {
         frequencyGroup.id = 'paymentFrequencyGroup';
         frequencyGroup.innerHTML = `
             <label for="paymentFrequency" class="form-label">付息频率</label>
-            <select id="paymentFrequency" name="paymentFrequency" class="form-select">
+            <select id="paymentFrequency" name="payment_frequency" class="form-select">
                 <option value="MATURITY">到期一次性付息</option>
                 <option value="ANNUALLY">年付</option>
                 <option value="SEMI_ANNUALLY">半年付</option>
@@ -268,18 +268,25 @@ class FixedIncomeManager {
             // 注意：不要直接绑定全局元素（assetSelect, transactionType）的事件
             // 这些事件由TransactionManager处理，然后调用相应的方法
             
+            // 注意：交易日期变化事件由TransactionManager统一处理，会调用handleTransactionDateChange方法
+            
             // 存款期限变化自动计算到期日
             document.getElementById('depositTerm')?.addEventListener('change', () => {
                 this.calculateMaturityDate();
             });
 
             // 起息日期变化重新计算到期日
-            document.getElementById('startDate')?.addEventListener('change', () => {
+            document.getElementById('fiStartDate')?.addEventListener('change', () => {
+                // 标记用户已手动设置起息日期
+                const startDateField = document.getElementById('fiStartDate');
+                if (startDateField && startDateField.value) {
+                    startDateField.setAttribute('data-user-set', 'true');
+                }
                 this.calculateMaturityDate();
             });
 
             // 字段变化时计算利息预览
-            ['annualRate', 'startDate', 'maturityDate', 'interestType'].forEach(fieldId => {
+            ['annualRate', 'fiStartDate', 'maturityDate', 'interestType'].forEach(fieldId => {
                 document.getElementById(fieldId)?.addEventListener('input', () => {
                     this.calculateInterestPreview();
                 });
@@ -289,7 +296,7 @@ class FixedIncomeManager {
             });
 
             // 实时验证
-            ['annualRate', 'startDate', 'maturityDate'].forEach(fieldId => {
+            ['annualRate', 'fiStartDate', 'maturityDate'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) {
                     field.addEventListener('blur', () => this.validateFieldRealTime(field));
@@ -305,8 +312,58 @@ class FixedIncomeManager {
 
     // ==================== 状态管理 ====================
 
+    /**
+     * 处理交易日期变化，自动同步起息日期
+     */
+    handleTransactionDateChange() {
+        console.log('🎯 handleTransactionDateChange 被调用');
+        
+        // 只在固定收益模式下处理
+        if (!this.uiState.isFixedIncomeMode) {
+            console.log('⏭️ 跳过：不是固定收益模式, isFixedIncomeMode:', this.uiState.isFixedIncomeMode);
+            return;
+        }
+        
+        const transactionDateField = document.getElementById('transactionDate');
+        const startDateField = document.getElementById('fiStartDate');
+        
+        console.log('🔍 元素检查:', {
+            transactionDateField: !!transactionDateField,
+            startDateField: !!startDateField,
+            transactionDate: transactionDateField?.value,
+            startDate: startDateField?.value,
+            hasUserSetAttr: startDateField?.hasAttribute('data-user-set')
+        });
+        
+        if (!transactionDateField || !startDateField) {
+            console.log('⏭️ 跳过：必要元素不存在');
+            return;
+        }
+        
+        const transactionDate = transactionDateField.value;
+        
+        // 如果交易日期有值，且起息日期为空或者用户未手动设置过起息日期
+        if (transactionDate && 
+            (!startDateField.value || !startDateField.hasAttribute('data-user-set'))) {
+            
+            console.log('📅 交易日期变化，自动更新起息日期:', transactionDate);
+            startDateField.value = transactionDate;
+            
+            // 重新计算到期日期和利息预览
+            this.calculateMaturityDate();
+            this.calculateInterestPreview();
+        } else {
+            console.log('⏭️ 跳过自动设置，原因:', {
+                hasTransactionDate: !!transactionDate,
+                hasStartDate: !!startDateField.value,
+                userHasSet: startDateField.hasAttribute('data-user-set')
+            });
+        }
+    }
+
     handleAssetTypeChange(assetType) {
         console.log('🏦 FixedIncomeManager: 收到资产类型变化通知:', assetType);
+        console.log('🔍 当前起息日期值:', document.getElementById('fiStartDate')?.value);
         
         if (assetType === 'FIXED_INCOME') {
             console.log('✅ 显示固定收益字段');
@@ -315,21 +372,23 @@ class FixedIncomeManager {
             console.log('❌ 隐藏固定收益字段');
             this.hideFixedIncomeFields();
         }
+        
+        console.log('🔍 处理后起息日期值:', document.getElementById('fiStartDate')?.value);
     }
 
-    handleTransactionTypeChange(transactionType) {
-        this.uiState.currentTransactionType = transactionType;
-        this.adjustFieldsForTransactionType(transactionType);
+    handleTransactionTypeChange(transaction_type) {
+        this.uiState.currentTransactionType = transaction_type;
+        this.adjustFieldsForTransactionType(transaction_type);
     }
 
-    adjustFieldsForTransactionType(transactionType) {
+    adjustFieldsForTransactionType(transaction_type) {
         const container = document.getElementById('fixedIncomeFieldsContainer');
         if (!container || !this.uiState.isFixedIncomeMode) return;
 
-        console.log('🔧 根据交易类型调整字段显示:', transactionType);
+        console.log('🔧 根据交易类型调整字段显示:', transaction_type);
 
         // 根据交易类型调整字段显示
-        switch (transactionType) {
+        switch (transaction_type) {
             case 'DEPOSIT':
                 // 存入交易显示所有字段
                 console.log('📋 显示所有固定收益字段 (存入交易)');
@@ -365,6 +424,10 @@ class FixedIncomeManager {
             
             // 设置必填字段的required属性
             this.setFixedIncomeFieldsRequired(true);
+            
+            // 自动同步交易日期到起息日期
+            this.handleTransactionDateChange();
+            
             console.log('✅ 固定收益字段显示完成');
         } else {
             console.error('❌ 固定收益字段容器未找到');
@@ -394,7 +457,7 @@ class FixedIncomeManager {
      * @param {boolean} isRequired - 是否设置为必填
      */
     setFixedIncomeFieldsRequired(isRequired) {
-        const requiredFields = ['annualRate', 'startDate', 'maturityDate'];
+        const requiredFields = ['annualRate', 'fiStartDate', 'maturityDate'];
         requiredFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
@@ -417,7 +480,14 @@ class FixedIncomeManager {
     }
 
     showBasicFixedIncomeFields() {
-        // 隐藏复杂字段，只显示基本字段
+        // 首先显示基本字段（年利率、起息日期、到期日期）
+        const showFields = ['annualRateGroup', 'startDateGroup', 'maturityDateGroup'];
+        showFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) field.style.display = 'block';
+        });
+        
+        // 然后隐藏复杂字段，只显示基本字段
         const hideFields = ['depositTermGroup', 'interestTypeGroup', 'paymentFrequencyGroup'];
         hideFields.forEach(id => {
             const field = document.getElementById(id);
@@ -430,7 +500,7 @@ class FixedIncomeManager {
     calculateMaturityDate() {
         try {
             const termSelect = document.getElementById('depositTerm');
-            const startDateInput = document.getElementById('startDate');
+            const startDateInput = document.getElementById('fiStartDate');
             const maturityDateInput = document.getElementById('maturityDate');
 
             if (!termSelect?.value || !startDateInput?.value) return;
@@ -507,7 +577,7 @@ class FixedIncomeManager {
             // 获取当前表单数据
             const amount = parseFloat(document.getElementById('transactionAmount')?.value);
             const annualRate = parseFloat(document.getElementById('annualRate')?.value);
-            const startDate = document.getElementById('startDate')?.value;
+            const startDate = document.getElementById('fiStartDate')?.value;
             const maturityDate = document.getElementById('maturityDate')?.value;
             const interestType = document.getElementById('interestType')?.value || 'SIMPLE';
 
@@ -581,7 +651,7 @@ class FixedIncomeManager {
             }
 
             // 根据交易类型处理
-            switch (formData.transactionType) {
+            switch (formData.transaction_type) {
                 case 'DEPOSIT':
                     return await this.handleDepositTransaction(formData);
                 case 'INTEREST':
@@ -602,24 +672,24 @@ class FixedIncomeManager {
         const transactionData = {
             ...formData,
             transaction_type: 'DEPOSIT',
-            annual_rate: parseFloat(formData.annualRate),
-            start_date: formData.startDate,
-            maturity_date: formData.maturityDate,
-            interest_type: formData.interestType || 'SIMPLE',
-            payment_frequency: formData.paymentFrequency || 'MATURITY',
+            annual_rate: parseFloat(formData.annual_rate),
+            start_date: formData.start_date,
+            maturity_date: formData.maturity_date,
+            interest_type: formData.interest_type || 'SIMPLE',
+            payment_frequency: formData.payment_frequency || 'MATURITY',
             face_value: parseFloat(formData.amount),
-            coupon_rate: parseFloat(formData.annualRate)
+            coupon_rate: parseFloat(formData.annual_rate)
         };
 
         // 计算预期收益并添加到备注
-        if (formData.annualRate && formData.startDate && formData.maturityDate) {
+        if (formData.annual_rate && formData.start_date && formData.maturity_date) {
             try {
                 const interestInfo = this.calculateInterest({
                     principal: parseFloat(formData.amount),
-                    annualRate: parseFloat(formData.annualRate),
-                    startDate: new Date(formData.startDate),
-                    endDate: new Date(formData.maturityDate),
-                    interestType: formData.interestType || 'SIMPLE'
+                    annualRate: parseFloat(formData.annual_rate),
+                    startDate: new Date(formData.start_date),
+                    endDate: new Date(formData.maturity_date),
+                    interestType: formData.interest_type || 'SIMPLE'
                 });
 
                 const originalNotes = formData.notes || '';
@@ -661,37 +731,37 @@ class FixedIncomeManager {
             errors.push('交易金额必须大于0');
         }
 
-        if (!formData.transactionDate) {
+        if (!formData.transaction_date) {
             errors.push('交易日期不能为空');
         }
 
         // 存入交易的特殊验证
-        if (formData.transactionType === 'DEPOSIT') {
-            if (!formData.annualRate || parseFloat(formData.annualRate) <= 0) {
+        if (formData.transaction_type === 'DEPOSIT') {
+            if (!formData.annual_rate || parseFloat(formData.annual_rate) <= 0) {
                 errors.push('年利率必须大于0');
             }
 
-            if (formData.annualRate && parseFloat(formData.annualRate) > 50) {
+            if (formData.annual_rate && parseFloat(formData.annual_rate) > 50) {
                 errors.push('年利率不能超过50%');
             }
 
-            if (!formData.startDate) {
+            if (!formData.start_date) {
                 errors.push('起息日期不能为空');
             }
 
-            if (!formData.maturityDate) {
+            if (!formData.maturity_date) {
                 errors.push('到期日期不能为空');
             }
 
-            if (formData.startDate && formData.maturityDate && 
-                new Date(formData.maturityDate) <= new Date(formData.startDate)) {
+            if (formData.start_date && formData.maturity_date && 
+                new Date(formData.maturity_date) <= new Date(formData.start_date)) {
                 errors.push('到期日期必须晚于起息日期');
             }
 
             // 日期合理性验证
-            if (formData.startDate && new Date(formData.startDate) > new Date()) {
+            if (formData.start_date && new Date(formData.start_date) > new Date()) {
                 const today = new Date().toISOString().split('T')[0];
-                if (formData.startDate > today) {
+                if (formData.start_date > today) {
                     errors.push('起息日期不能晚于今天');
                 }
             }
@@ -729,7 +799,7 @@ class FixedIncomeManager {
                 }
                 break;
             
-            case 'startDate':
+            case 'fiStartDate':
                 if (field.value) {
                     const maturityDate = document.getElementById('maturityDate')?.value;
                     if (maturityDate && new Date(field.value) >= new Date(maturityDate)) {
@@ -740,7 +810,7 @@ class FixedIncomeManager {
             
             case 'maturityDate':
                 if (field.value) {
-                    const startDate = document.getElementById('startDate')?.value;
+                    const startDate = document.getElementById('fiStartDate')?.value;
                     if (startDate && new Date(field.value) <= new Date(startDate)) {
                         this.showFieldError(fieldGroup, '到期日期必须晚于起息日期');
                     }
@@ -776,7 +846,7 @@ class FixedIncomeManager {
 
     isFixedIncomeField(element) {
         const fixedIncomeFieldIds = [
-            'annualRate', 'startDate', 'maturityDate', 
+            'annualRate', 'fiStartDate', 'maturityDate', 
             'depositTerm', 'interestType', 'paymentFrequency'
         ];
         return fixedIncomeFieldIds.includes(element.id);
@@ -785,26 +855,34 @@ class FixedIncomeManager {
     getFixedIncomeFormData() {
         if (!this.uiState.isFixedIncomeMode) return {};
 
-        return {
-            annualRate: document.getElementById('annualRate')?.value,
-            startDate: document.getElementById('startDate')?.value,
-            maturityDate: document.getElementById('maturityDate')?.value,
-            depositTerm: document.getElementById('depositTerm')?.value,
-            interestType: document.getElementById('interestType')?.value || 'SIMPLE',
-            paymentFrequency: document.getElementById('paymentFrequency')?.value || 'MATURITY'
+        const data = {
+            annual_rate: document.getElementById('annualRate')?.value,
+            start_date: document.getElementById('fiStartDate')?.value,
+            maturity_date: document.getElementById('maturityDate')?.value,
+            deposit_term: document.getElementById('depositTerm')?.value,
+            interest_type: document.getElementById('interestType')?.value || 'SIMPLE',
+            payment_frequency: document.getElementById('paymentFrequency')?.value || 'MATURITY',
+            transaction_type: document.getElementById('transactionType')?.value || ''
         };
+
+        return data;
     }
 
     resetFixedIncomeFields() {
+        console.log('🔄 开始重置固定收益字段');
+        console.trace('resetFixedIncomeFields 调用堆栈');
+        
         const fixedIncomeFields = [
-            'annualRate', 'startDate', 'maturityDate', 
+            'annualRate', 'fiStartDate', 'maturityDate', 
             'depositTerm', 'interestType', 'paymentFrequency'
         ];
 
         fixedIncomeFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
+                console.log(`🗑️ 重置字段 ${fieldId}: ${field.value} → ''`);
                 field.value = '';
+                field.removeAttribute('data-user-set'); // 清除用户设置标记
                 this.clearFieldError(field);
             }
         });
@@ -818,6 +896,8 @@ class FixedIncomeManager {
         // 重置UI状态
         this.uiState.isFixedIncomeMode = false;
         this.uiState.currentTransactionType = null;
+        
+        console.log('✅ 固定收益字段重置完成');
     }
 }
 

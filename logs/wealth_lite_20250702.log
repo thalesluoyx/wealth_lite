@@ -1,0 +1,218 @@
+2025-07-02 22:03:33,983 INFO root 🚀 启动 WealthLite 应用...
+2025-07-02 22:03:33,983 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-07-02 22:03:33,983 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-07-02 22:03:33,984 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-07-02 22:03:33,984 INFO root 
+💡 提示:
+2025-07-02 22:03:33,984 INFO root   - 应用将自动在浏览器中打开
+2025-07-02 22:03:33,985 INFO root   - 按 Ctrl+C 停止应用
+2025-07-02 22:03:33,985 INFO root   - 数据保存在 user_data/ 目录
+2025-07-02 22:03:33,985 INFO root 
+==================================================
+2025-07-02 22:03:33,990 DEBUG asyncio Using proactor: IocpProactor
+2025-07-02 22:03:34,080 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 22:03:34,081 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 22:03:34,081 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 22:03:34,083 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 22:03:34,084 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 22:03:34,084 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 22:03:34,084 INFO root ✅ 数据库服务初始化成功
+2025-07-02 22:05:46,334 DEBUG root [create_asset] 参数: name=浦发定期三年, type=AssetType.FIXED_INCOME, primary=, secondary=, currency=Currency.CNY, desc=, issuer=, credit=, ext={}
+2025-07-02 22:05:46,334 INFO root [create_asset] 创建资产对象: Asset(浦发定期三年, 固定收益类)
+2025-07-02 22:05:46,335 DEBUG root [AssetRepository.create] SQL: INSERT INTO assets (
+                    asset_id, asset_name, asset_type, primary_category, 
+                    secondary_category, currency, description, issuer, 
+                    credit_rating, extended_attributes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) | params: ('ecbd0d5c-6d33-49a6-bafc-b274ba810565', '浦发定期三年', '固定收益类', '固定收益类', '', '人民币', '', '', '', None)
+2025-07-02 22:05:46,441 INFO root [AssetRepository.create] 资产插入成功: ecbd0d5c-6d33-49a6-bafc-b274ba810565
+2025-07-02 22:05:46,441 INFO root [create_asset] 资产已保存到数据库: ecbd0d5c-6d33-49a6-bafc-b274ba810565
+2025-07-02 22:26:38,632 INFO root 🚀 启动 WealthLite 应用...
+2025-07-02 22:26:38,632 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-07-02 22:26:38,632 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-07-02 22:26:38,633 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-07-02 22:26:38,633 INFO root 
+💡 提示:
+2025-07-02 22:26:38,634 INFO root   - 应用将自动在浏览器中打开
+2025-07-02 22:26:38,634 INFO root   - 按 Ctrl+C 停止应用
+2025-07-02 22:26:38,634 INFO root   - 数据保存在 user_data/ 目录
+2025-07-02 22:26:38,635 INFO root 
+==================================================
+2025-07-02 22:26:38,640 DEBUG asyncio Using proactor: IocpProactor
+2025-07-02 22:26:38,702 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 22:26:38,703 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 22:26:38,704 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 22:26:38,705 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 22:26:38,706 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 22:26:38,707 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 22:26:38,707 INFO root ✅ 数据库服务初始化成功
+2025-07-02 22:34:51,305 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:35:01,931 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:35:12,824 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:38:54,085 ERROR asyncio Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "E:\Installed\anaconda3\envs\stock_analysis\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "E:\Installed\anaconda3\envs\stock_analysis\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+2025-07-02 22:39:39,805 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:51:05,566 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:51:24,202 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:51:32,455 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:56:56,199 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 22:57:18,130 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:07:16,031 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:13:01,601 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:13:11,435 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:13:29,618 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:13:58,535 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:14:34,842 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:14:47,075 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:14:56,085 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:25:28,241 ERROR root ❌ 创建交易失败: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+Traceback (most recent call last):
+  File "e:\Work\workspace\wealth_lite\main.py", line 377, in create_transaction
+    tx = self.wealth_service.create_cash_transaction(
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\Work\workspace\wealth_lite\src\wealth_lite\services\wealth_service.py", line 158, in create_cash_transaction
+    raise ValueError(f"资产类型不匹配，期望: {AssetType.CASH}, 实际: {asset.asset_type}")
+ValueError: 资产类型不匹配，期望: AssetType.CASH, 实际: AssetType.FIXED_INCOME
+2025-07-02 23:28:59,400 INFO root 🚀 启动 WealthLite 应用...
+2025-07-02 23:28:59,401 INFO root 📍 API服务器地址: http://127.0.0.1:8080
+2025-07-02 23:28:59,401 INFO root 📍 前端页面地址: http://127.0.0.1:8080/static/index.html
+2025-07-02 23:28:59,401 INFO root 📁 工作目录: E:\Work\workspace\wealth_lite
+2025-07-02 23:28:59,401 INFO root 
+💡 提示:
+2025-07-02 23:28:59,402 INFO root   - 应用将自动在浏览器中打开
+2025-07-02 23:28:59,402 INFO root   - 按 Ctrl+C 停止应用
+2025-07-02 23:28:59,402 INFO root   - 数据保存在 user_data/ 目录
+2025-07-02 23:28:59,402 INFO root 
+==================================================
+2025-07-02 23:28:59,406 DEBUG asyncio Using proactor: IocpProactor
+2025-07-02 23:28:59,476 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 23:28:59,477 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 23:28:59,477 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 23:28:59,479 INFO wealth_lite.data.database 数据表创建完成
+2025-07-02 23:28:59,480 INFO wealth_lite.data.database 索引创建完成
+2025-07-02 23:28:59,480 INFO wealth_lite.data.database 数据库初始化完成: user_data\wealth_lite.db
+2025-07-02 23:28:59,481 INFO root ✅ 数据库服务初始化成功

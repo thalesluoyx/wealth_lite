@@ -346,12 +346,14 @@ class WealthLiteApp:
 
         @app.post("/api/transactions")
         async def create_transaction(tx_data: dict):
-            """创建交易（仅支持现金类DEPOSIT/INTEREST）"""
+            """创建交易（支持现金类和固定收益类）"""
             try:
-                from wealth_lite.models.enums import TransactionType, Currency
+                from wealth_lite.models.enums import TransactionType, Currency, AssetType
                 from decimal import Decimal
                 import datetime
+                
                 asset_id = tx_data["asset_id"]
+                
                 # 兼容前端字段名
                 tx_type = tx_data.get("type") or tx_data.get("transaction_type")
                 if not tx_type:
@@ -360,30 +362,94 @@ class WealthLiteApp:
                     tx_type = TransactionType[tx_type]  # 用名字查找
                 except KeyError:
                     raise HTTPException(status_code=400, detail=f"无效的交易类型: {tx_type}")
+                
                 amount = Decimal(str(tx_data["amount"]))
+                
                 # 兼容字符串日期
                 tx_date = tx_data.get("date") or tx_data.get("transaction_date")
                 if not tx_date:
                     raise HTTPException(status_code=400, detail="缺少交易日期字段: date/transaction_date")
                 if isinstance(tx_date, str):
                     tx_date = datetime.date.fromisoformat(tx_date)
+                
                 currency_str = tx_data.get("currency", "CNY")
                 try:
                     currency = Currency[currency_str]  # 用名字查找
                 except KeyError:
                     raise HTTPException(status_code=400, detail=f"无效的货币类型: {currency_str}")
+                
                 exchange_rate = Decimal(str(tx_data.get("exchange_rate", 1.0)))
                 notes = tx_data.get("notes", "")
-                tx = self.wealth_service.create_cash_transaction(
-                    asset_id=asset_id,
-                    transaction_type=tx_type,
-                    amount=amount,
-                    transaction_date=tx_date,
-                    currency=currency,
-                    exchange_rate=exchange_rate,
-                    notes=notes
-                )
-                return {"id": tx.transaction_id, "asset_id": tx.asset_id, "type": tx.transaction_type.value, "amount": float(tx.amount), "date": str(tx.transaction_date), "currency": tx.currency.value, "notes": tx.notes}
+                
+                # 获取资产信息以确定资产类型
+                asset = self.wealth_service.get_asset(asset_id)
+                if not asset:
+                    raise HTTPException(status_code=400, detail=f"资产不存在: {asset_id}")
+                
+                # 根据资产类型创建不同的交易
+                if asset.asset_type == AssetType.CASH:
+                    tx = self.wealth_service.create_cash_transaction(
+                        asset_id=asset_id,
+                        transaction_type=tx_type,
+                        amount=amount,
+                        transaction_date=tx_date,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        notes=notes
+                    )
+                elif asset.asset_type == AssetType.FIXED_INCOME:
+                    # 解析固定收益特有字段
+                    annual_rate = tx_data.get("annual_rate")
+                    if annual_rate is not None:
+                        annual_rate = Decimal(str(annual_rate))
+                    
+                    start_date = tx_data.get("start_date")
+                    if start_date and isinstance(start_date, str):
+                        start_date = datetime.date.fromisoformat(start_date)
+                    
+                    maturity_date = tx_data.get("maturity_date")
+                    if maturity_date and isinstance(maturity_date, str):
+                        maturity_date = datetime.date.fromisoformat(maturity_date)
+                    
+                    interest_type = tx_data.get("interest_type")
+                    payment_frequency = tx_data.get("payment_frequency")
+                    
+                    face_value = tx_data.get("face_value")
+                    if face_value is not None:
+                        face_value = Decimal(str(face_value))
+                    
+                    coupon_rate = tx_data.get("coupon_rate")
+                    if coupon_rate is not None:
+                        coupon_rate = Decimal(str(coupon_rate))
+                    
+                    tx = self.wealth_service.create_fixed_income_transaction(
+                        asset_id=asset_id,
+                        transaction_type=tx_type,
+                        amount=amount,
+                        transaction_date=tx_date,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        annual_rate=annual_rate,
+                        start_date=start_date,
+                        maturity_date=maturity_date,
+                        interest_type=interest_type,
+                        payment_frequency=payment_frequency,
+                        face_value=face_value,
+                        coupon_rate=coupon_rate,
+                        notes=notes
+                    )
+                else:
+                    raise HTTPException(status_code=400, detail=f"暂不支持的资产类型: {asset.asset_type}")
+                
+                return {
+                    "id": tx.transaction_id, 
+                    "asset_id": tx.asset_id, 
+                    "type": tx.transaction_type.value, 
+                    "amount": float(tx.amount), 
+                    "date": str(tx.transaction_date), 
+                    "currency": tx.currency.value, 
+                    "notes": tx.notes
+                }
             except Exception as e:
                 logging.error(f"❌ 创建交易失败: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=f"创建交易失败: {str(e)}")

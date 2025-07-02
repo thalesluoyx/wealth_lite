@@ -169,6 +169,21 @@ class TransactionManager {
             }
         });
 
+        // 交易日期变化时通知固定收益管理器
+        document.getElementById('transactionDate')?.addEventListener('change', () => {
+            console.log('🎯 TransactionManager: transactionDate change 事件触发');
+            if (this.fixedIncomeManager) {
+                this.fixedIncomeManager.handleTransactionDateChange();
+            }
+        });
+
+        document.getElementById('transactionDate')?.addEventListener('input', () => {
+            console.log('🎯 TransactionManager: transactionDate input 事件触发');
+            if (this.fixedIncomeManager) {
+                this.fixedIncomeManager.handleTransactionDateChange();
+            }
+        });
+
         // 表格排序
         document.querySelectorAll('[data-sort]').forEach(th => {
             th.addEventListener('click', () => {
@@ -590,6 +605,11 @@ class TransactionManager {
     setDefaultTransactionDate() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('transactionDate').value = today;
+        
+        // 通知固定收益管理器交易日期变化
+        if (this.fixedIncomeManager) {
+            this.fixedIncomeManager.handleTransactionDateChange();
+        }
     }
 
     handleCurrencyChange(currency) {
@@ -1042,6 +1062,11 @@ class TransactionManager {
         document.getElementById('transactionAmount').value = transaction.amount;
         document.getElementById('transactionCurrency').value = transaction.currency;
         document.getElementById('transactionDate').value = transaction.date;
+        
+        // 通知固定收益管理器交易日期变化（编辑模式）
+        if (this.fixedIncomeManager) {
+            this.fixedIncomeManager.handleTransactionDateChange();
+        }
         document.getElementById('transactionNotes').value = transaction.description || transaction.notes || '';
         
         // 显示资产类型
