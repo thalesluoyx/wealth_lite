@@ -26,8 +26,9 @@ from fastapi.middleware.cors import CORSMiddleware
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from wealth_lite.services.wealth_service import WealthService
+from wealth_lite.services.enum_generator import EnumGeneratorService
 from wealth_lite.data.database import DatabaseManager
-from wealth_lite.models.enums import AssetType, Currency, TransactionType
+from wealth_lite.models.enums import AssetType, AssetSubType, Currency, TransactionType
 
 # 初始化日志
 setup_logging(LOG_LEVEL)
@@ -48,6 +49,13 @@ class WealthLiteApp:
             # 初始化数据库 - 根据环境变量自动选择数据库
             self.db_manager = DatabaseManager()
             self.wealth_service = WealthService()
+            
+            # 生成前端枚举文件
+            enum_generator = EnumGeneratorService()
+            if enum_generator.generate_enums_file():
+                logging.info("✅ 前端枚举文件生成成功")
+            else:
+                logging.warning("⚠️ 前端枚举文件生成失败，前端将使用备用数据")
             
             logging.info("✅ 数据库服务初始化成功")
             
@@ -127,7 +135,8 @@ class WealthLiteApp:
         async def health_check():
             """健康检查"""
             return {"status": "healthy", "service": "WealthLite"}
-        
+
+
         @app.get("/api/dashboard/summary")
         async def get_dashboard_summary():
             """获取仪表板总览数据"""
@@ -223,12 +232,11 @@ class WealthLiteApp:
                     {
                         "id": asset.asset_id,
                         "name": asset.asset_name,
-                        "type": asset.asset_type.name,
+                        "asset_type": asset.asset_type.name,
+                        "asset_subtype": asset.asset_subtype.name if asset.asset_subtype else None,
                         "currency": asset.currency.name,
                         "description": asset.description,
-                        "primary_category": asset.primary_category,
-                        "secondary_category": asset.secondary_category,
-                        "created_date": asset.created_date.isoformat()
+                        "created_at": asset.created_date.isoformat()
                     }
                     for asset in assets
                 ]
@@ -242,7 +250,7 @@ class WealthLiteApp:
             try:
                 
                 # 验证必填字段
-                required_fields = ['name', 'type', 'currency']
+                required_fields = ['name', 'asset_type', 'currency']
                 for field in required_fields:
                     if field not in asset_data or not asset_data[field]:
                         raise HTTPException(status_code=400, detail=f"缺少必填字段: {field}")
@@ -250,11 +258,11 @@ class WealthLiteApp:
                 # 转换枚举类型（支持名称和值）
                 try:
                     # 首先尝试按名称查找
-                    if hasattr(AssetType, asset_data['type']):
-                        asset_type = getattr(AssetType, asset_data['type'])
+                    if hasattr(AssetType, asset_data['asset_type']):
+                        asset_type = getattr(AssetType, asset_data['asset_type'])
                     else:
                         # 如果按名称找不到，尝试按值查找
-                        asset_type = AssetType(asset_data['type'])
+                        asset_type = AssetType(asset_data['asset_type'])
                     
                     if hasattr(Currency, asset_data['currency']):
                         currency = getattr(Currency, asset_data['currency'])
@@ -264,35 +272,44 @@ class WealthLiteApp:
                 except (ValueError, AttributeError) as e:
                     raise HTTPException(status_code=400, detail=f"无效的枚举值: {e}")
                 
-                # 设置默认分类
-                type_category_map = {
-                    AssetType.CASH: ("现金及等价物", "储蓄存款"),
-                    AssetType.FIXED_INCOME: ("固定收益类", "政府债券"),
-                    AssetType.EQUITY: ("权益类", "股票")
-                }
-                default_primary, default_secondary = type_category_map.get(asset_type, ("其他", "未分类"))
+                # 处理资产子类型
+                asset_subtype = None
+                if 'asset_subtype' in asset_data and asset_data['asset_subtype']:
+                    try:
+                        if hasattr(AssetSubType, asset_data['asset_subtype']):
+                            asset_subtype = getattr(AssetSubType, asset_data['asset_subtype'])
+                        else:
+                            asset_subtype = AssetSubType(asset_data['asset_subtype'])
+                    except (ValueError, AttributeError) as e:
+                        raise HTTPException(status_code=400, detail=f"无效的资产子类型: {asset_data['asset_subtype']}")
+                else:
+                    # 设置默认子类型
+                    type_subtype_map = {
+                        AssetType.CASH: AssetSubType.CHECKING_ACCOUNT,
+                        AssetType.FIXED_INCOME: AssetSubType.GOVERNMENT_BOND,
+                        AssetType.EQUITY: AssetSubType.DOMESTIC_STOCK
+                    }
+                    asset_subtype = type_subtype_map.get(asset_type, AssetSubType.CHECKING_ACCOUNT)
                 
                 # 创建资产
                 asset = self.wealth_service.create_asset(
                     asset_name=asset_data['name'],
                     asset_type=asset_type,
-                    primary_category=asset_data.get('primary_category', default_primary),
-                    secondary_category=asset_data.get('secondary_category', default_secondary),
+                    asset_subtype=asset_subtype,
                     currency=currency,
                     description=asset_data.get('description', ''),
-                    issuer=asset_data.get('issuer', ''),
-                    credit_rating=asset_data.get('credit_rating', '')
+                    issuer='',
+                    credit_rating=''
                 )
                 
                 return {
                     "id": asset.asset_id,
                     "name": asset.asset_name,
-                    "type": asset.asset_type.name,
+                    "asset_type": asset.asset_type.name,
+                    "asset_subtype": asset.asset_subtype.name if asset.asset_subtype else None,
                     "currency": asset.currency.name,
                     "description": asset.description,
-                    "primary_category": asset.primary_category,
-                    "secondary_category": asset.secondary_category,
-                    "created_date": asset.created_date.isoformat(),
+                    "created_at": asset.created_date.isoformat(),
                     "message": "资产创建成功"
                 }
                 
@@ -317,7 +334,8 @@ class WealthLiteApp:
                         "quantity": float(getattr(tx, "quantity", 0)) if getattr(tx, "quantity", None) is not None else None,
                         "date": tx.transaction_date.isoformat(),
                         "currency": tx.currency.name,
-                        "description": tx.notes
+                        "exchange_rate": float(tx.exchange_rate) if tx.exchange_rate else 1.0,
+                        "notes": tx.notes
                     }
                     for tx in transactions
                 ]
@@ -325,6 +343,118 @@ class WealthLiteApp:
                 logging.error(f"❌ 获取交易记录失败: {e}", exc_info=True)
                 return []
         
+        @app.get("/api/transactions/{tx_id}")
+        async def get_transaction_details(tx_id: str):
+            """获取单个交易的详细信息（包含固定收益详情）"""
+            try:
+                from wealth_lite.models.transaction import FixedIncomeTransaction
+                
+                tx = self.wealth_service.get_transaction(tx_id)
+                if not tx:
+                    raise HTTPException(status_code=404, detail="交易记录不存在")
+                
+                # 基础交易信息
+                result = {
+                    "id": tx.transaction_id,
+                    "asset_id": tx.asset_id,
+                    "type": tx.transaction_type.name,
+                    "amount": float(tx.amount),
+                    "date": tx.transaction_date.isoformat(),
+                    "currency": tx.currency.name,
+                    "exchange_rate": float(tx.exchange_rate) if tx.exchange_rate else 1.0,
+                    "notes": tx.notes
+                }
+                
+                # 如果是固定收益交易，添加详情字段
+                if isinstance(tx, FixedIncomeTransaction):
+                    result.update({
+                        "annual_rate": float(tx.annual_rate) if tx.annual_rate else None,
+                        "start_date": tx.start_date.isoformat() if tx.start_date else None,
+                        "maturity_date": tx.maturity_date.isoformat() if tx.maturity_date else None,
+                        "interest_type": tx.interest_type,
+                        "payment_frequency": tx.payment_frequency,
+                        "face_value": float(tx.face_value) if tx.face_value else None,
+                        "coupon_rate": float(tx.coupon_rate) if tx.coupon_rate else None
+                    })
+                
+                return result
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                logging.error(f"❌ 获取交易详情失败: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"获取交易详情失败: {str(e)}")
+        
+        @app.put("/api/assets/{asset_id}")
+        async def update_asset(asset_id: str, asset_data: dict):
+            """更新资产"""
+            try:
+                # 验证资产是否存在
+                existing_asset = self.wealth_service.get_asset(asset_id)
+                if not existing_asset:
+                    raise HTTPException(status_code=404, detail="资产不存在")
+                
+                # 转换枚举类型（支持名称和值）
+                asset_type = None
+                if 'asset_type' in asset_data:
+                    type_value = asset_data.get('asset_type')
+                    try:
+                        if hasattr(AssetType, type_value):
+                            asset_type = getattr(AssetType, type_value)
+                        else:
+                            asset_type = AssetType(type_value)
+                    except (ValueError, AttributeError) as e:
+                        raise HTTPException(status_code=400, detail=f"无效的资产类型: {type_value}")
+                
+                currency = None
+                if 'currency' in asset_data:
+                    try:
+                        if hasattr(Currency, asset_data['currency']):
+                            currency = getattr(Currency, asset_data['currency'])
+                        else:
+                            currency = Currency(asset_data['currency'])
+                    except (ValueError, AttributeError) as e:
+                        raise HTTPException(status_code=400, detail=f"无效的货币类型: {asset_data['currency']}")
+
+                # 处理资产子类型
+                asset_subtype = None
+                if 'asset_subtype' in asset_data:
+                    if asset_data['asset_subtype']:  # 非空字符串
+                        try:
+                            if hasattr(AssetSubType, asset_data['asset_subtype']):
+                                asset_subtype = getattr(AssetSubType, asset_data['asset_subtype'])
+                            else:
+                                asset_subtype = AssetSubType(asset_data['asset_subtype'])
+                        except (ValueError, AttributeError) as e:
+                            raise HTTPException(status_code=400, detail=f"无效的资产子类型: {asset_data['asset_subtype']}")
+                
+                # 更新资产
+                updated_asset = self.wealth_service.update_asset(
+                    asset_id=asset_id,
+                    asset_name=asset_data.get('name'),
+                    asset_type=asset_type,
+                    asset_subtype=asset_subtype,
+                    currency=currency,
+                    description=asset_data.get('description')
+                )
+                
+                return {
+                    "id": updated_asset.asset_id,
+                    "name": updated_asset.asset_name,
+                    "asset_type": updated_asset.asset_type.name,
+                    "asset_subtype": updated_asset.asset_subtype.name if updated_asset.asset_subtype else None,
+                    "currency": updated_asset.currency.name,
+                    "description": updated_asset.description,
+                    "created_at": updated_asset.created_date.isoformat(),
+                    "message": "资产更新成功"
+                }
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                logging.error(f"❌ 更新资产失败: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"更新资产失败: {str(e)}")
+
         @app.delete("/api/assets/{asset_id}")
         async def delete_asset(asset_id: str):
             """删除资产"""

@@ -12,7 +12,7 @@ from decimal import Decimal
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from wealth_lite.services.wealth_service import WealthService
-from wealth_lite.models.enums import AssetType, Currency
+from wealth_lite.models.enums import AssetType, AssetSubType, Currency
 
 
 class TestAssetNameValidation:
@@ -35,8 +35,7 @@ class TestAssetNameValidation:
         asset = wealth_service.create_asset(
             asset_name="测试资产",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY
         )
         
@@ -49,8 +48,7 @@ class TestAssetNameValidation:
             wealth_service.create_asset(
                 asset_name="",
                 asset_type=AssetType.CASH,
-                primary_category="现金及等价物",
-                secondary_category="储蓄存款",
+                asset_subtype=AssetSubType.CHECKING_ACCOUNT,
                 currency=Currency.CNY
             )
     
@@ -60,8 +58,7 @@ class TestAssetNameValidation:
             wealth_service.create_asset(
                 asset_name="   ",
                 asset_type=AssetType.CASH,
-                primary_category="现金及等价物",
-                secondary_category="储蓄存款",
+                asset_subtype=AssetSubType.CHECKING_ACCOUNT,
                 currency=Currency.CNY
             )
     
@@ -71,8 +68,7 @@ class TestAssetNameValidation:
         wealth_service.create_asset(
             asset_name="测试资产",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY
         )
         
@@ -81,8 +77,7 @@ class TestAssetNameValidation:
             wealth_service.create_asset(
                 asset_name="测试资产",
                 asset_type=AssetType.FIXED_INCOME,
-                primary_category="固定收益类",
-                secondary_category="政府债券",
+                asset_subtype=AssetSubType.GOVERNMENT_BOND,
                 currency=Currency.CNY
             )
     
@@ -92,8 +87,7 @@ class TestAssetNameValidation:
         wealth_service.create_asset(
             asset_name="测试资产",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY
         )
         
@@ -102,8 +96,7 @@ class TestAssetNameValidation:
             wealth_service.create_asset(
                 asset_name="  测试资产  ",
                 asset_type=AssetType.FIXED_INCOME,
-                primary_category="固定收益类",
-                secondary_category="政府债券",
+                asset_subtype=AssetSubType.GOVERNMENT_BOND,
                 currency=Currency.CNY
             )
     
@@ -112,8 +105,7 @@ class TestAssetNameValidation:
         asset = wealth_service.create_asset(
             asset_name="  测试资产  ",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY
         )
         
@@ -124,16 +116,14 @@ class TestAssetNameValidation:
         asset1 = wealth_service.create_asset(
             asset_name="测试资产1",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY
         )
         
         asset2 = wealth_service.create_asset(
             asset_name="测试资产2",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="政府债券",
+            asset_subtype=AssetSubType.GOVERNMENT_BOND,
             currency=Currency.CNY
         )
         

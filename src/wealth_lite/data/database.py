@@ -78,9 +78,8 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS assets (
                 asset_id TEXT PRIMARY KEY,              -- 资产唯一标识符（UUID格式）
                 asset_name TEXT NOT NULL,               -- 资产名称（如：招商银行储蓄、国债2024001）
-                asset_type TEXT NOT NULL,               -- 资产类型（CASH/FIXED_INCOME/EQUITY/REAL_ESTATE）
-                primary_category TEXT NOT NULL,         -- 一级分类（现金及等价物/固定收益类/权益类/不动产）
-                secondary_category TEXT NOT NULL,       -- 二级分类（储蓄存款/政府债券/A股股票/住宅等）
+                asset_type TEXT NOT NULL,               -- 资产类型（CASH/FIXED_INCOME/EQUITY）
+                asset_subtype TEXT,                     -- 资产子类型（新的两层分类结构）
                 currency TEXT NOT NULL DEFAULT 'CNY',  -- 资产计价币种（CNY/USD/EUR等）
                 description TEXT,                       -- 资产详细描述
                 issuer TEXT,                           -- 发行方或机构名称
@@ -179,7 +178,7 @@ class DatabaseManager:
         
         # 资产表索引
         conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_type ON assets(asset_type)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_category ON assets(primary_category, secondary_category)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_subtype ON assets(asset_subtype)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_assets_currency ON assets(currency)")
         
         # 交易表索引

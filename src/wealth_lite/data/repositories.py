@@ -19,7 +19,7 @@ from ..models.transaction import (
 )
 from ..models.position import Position
 from ..models.portfolio import Portfolio, PortfolioSnapshot
-from ..models.enums import AssetType, TransactionType, Currency
+from ..models.enums import AssetType, TransactionType, Currency, AssetSubType
 from .database import DatabaseManager
 
 
@@ -34,17 +34,16 @@ class AssetRepository:
         try:
             query = """
                 INSERT INTO assets (
-                    asset_id, asset_name, asset_type, primary_category, 
-                    secondary_category, currency, description, issuer, 
+                    asset_id, asset_name, asset_type, asset_subtype,
+                    currency, description, issuer, 
                     credit_rating, extended_attributes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             params = (
                 asset.asset_id,
                 asset.asset_name,
                 asset.asset_type.name,  # 使用英文名称而不是中文值
-                asset.primary_category,
-                asset.secondary_category,
+                asset.asset_subtype.name if asset.asset_subtype else None,
                 asset.currency.name,    # 使用英文名称而不是中文值
                 asset.description,
                 asset.issuer,
@@ -106,8 +105,8 @@ class AssetRepository:
         try:
             query = """
                 UPDATE assets SET 
-                    asset_name = ?, asset_type = ?, primary_category = ?,
-                    secondary_category = ?, currency = ?, description = ?,
+                    asset_name = ?, asset_type = ?, asset_subtype = ?,
+                    currency = ?, description = ?,
                     issuer = ?, credit_rating = ?, extended_attributes = ?,
                     updated_date = CURRENT_TIMESTAMP
                 WHERE asset_id = ?
@@ -115,8 +114,7 @@ class AssetRepository:
             params = (
                 asset.asset_name,
                 asset.asset_type.name,  # 使用英文名称而不是中文值
-                asset.primary_category,
-                asset.secondary_category,
+                asset.asset_subtype.name if asset.asset_subtype else None,
                 asset.currency.name,    # 使用英文名称而不是中文值
                 asset.description,
                 asset.issuer,
@@ -156,13 +154,24 @@ class AssetRepository:
         extended_attrs = None
         if row['extended_attributes']:
             extended_attrs = json.loads(row['extended_attributes'])
+        
+        # 处理资产子类型
+        asset_subtype = None
+        try:
+            if row['asset_subtype']:
+                try:
+                    asset_subtype = AssetSubType[row['asset_subtype']]
+                except KeyError:
+                    logging.warning(f"未知的资产子类型: {row['asset_subtype']}")
+        except (KeyError, IndexError):
+            # 如果字段不存在（旧数据），设为None
+            asset_subtype = None
             
         return Asset(
             asset_id=row['asset_id'],
             asset_name=row['asset_name'],
             asset_type=AssetType[row['asset_type']],  # 使用英文名称查找枚举
-            primary_category=row['primary_category'],
-            secondary_category=row['secondary_category'],
+            asset_subtype=asset_subtype,
             currency=Currency[row['currency']],      # 使用英文名称查找枚举
             description=row['description'],
             issuer=row['issuer'],
@@ -382,18 +391,22 @@ class TransactionRepository:
             'notes': row['notes']
         }
         
-        # 根据交易类型获取详情并创建具体对象
+        # 先检查是否有固定收益详情，如果有则创建FixedIncomeTransaction
+        fixed_income_details = self._get_fixed_income_details(row['transaction_id'])
+        if fixed_income_details:
+            return self._create_fixed_income_transaction(base_params, fixed_income_details)
+        
+        # 检查是否有现金交易详情，如果有则创建CashTransaction
+        cash_details = self._get_cash_details(row['transaction_id'])
+        if cash_details:
+            return self._create_cash_transaction(base_params)
+        
+        # 如果没有详情表记录，根据交易类型创建默认对象
         if transaction_type in [TransactionType.DEPOSIT, TransactionType.WITHDRAW, TransactionType.INTEREST]:
             return self._create_cash_transaction(base_params)
-        elif transaction_type in [TransactionType.BUY, TransactionType.SELL]:
-            # 需要进一步判断是固定收益还是权益类
-            # 先尝试固定收益
-            fixed_income_details = self._get_fixed_income_details(row['transaction_id'])
-            if fixed_income_details:
-                return self._create_fixed_income_transaction(base_params, fixed_income_details)
         
-        # 默认返回基础交易对象（这里需要根据实际需求调整）
-        return BaseTransaction(**base_params)
+        # 默认返回现金交易对象
+        return self._create_cash_transaction(base_params)
     
     def _create_cash_transaction(self, base_params: Dict) -> CashTransaction:
         """创建现金交易对象"""

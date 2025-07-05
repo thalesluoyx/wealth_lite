@@ -21,6 +21,7 @@ from wealth_lite.models import (
     Asset, AssetType, Currency, RiskLevel, LiquidityLevel,
     CashTransaction, TransactionType
 )
+from wealth_lite.models.enums import AssetSubType
 from wealth_lite.services.wealth_service import WealthService
 
 
@@ -72,9 +73,8 @@ def sample_asset() -> Asset:
     return Asset(
         asset_name="测试储蓄账户",
         asset_type=AssetType.CASH,
+        asset_subtype=AssetSubType.CHECKING_ACCOUNT,
         currency=Currency.CNY,
-        primary_category="现金及等价物",
-        secondary_category="储蓄存款",
         risk_level=RiskLevel.VERY_LOW,
         liquidity_level=LiquidityLevel.VERY_HIGH,
         description="用于测试的储蓄账户"
@@ -103,18 +103,21 @@ def sample_assets_list() -> list[Asset]:
         Asset(
             asset_name="招商银行储蓄",
             asset_type=AssetType.CASH,
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY,
             risk_level=RiskLevel.VERY_LOW
         ),
         Asset(
             asset_name="国债ETF",
             asset_type=AssetType.FIXED_INCOME,
+            asset_subtype=AssetSubType.GOVERNMENT_BOND,
             currency=Currency.CNY,
             risk_level=RiskLevel.LOW
         ),
         Asset(
             asset_name="沪深300ETF",
             asset_type=AssetType.EQUITY,
+            asset_subtype=AssetSubType.DOMESTIC_STOCK,
             currency=Currency.CNY,
             risk_level=RiskLevel.MEDIUM
         )

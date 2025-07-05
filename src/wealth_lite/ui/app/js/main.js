@@ -38,6 +38,13 @@ class WealthLiteApp {
             // 设置全局实例供模态窗口调用
             window.transactionManager = this.transactionManager;
         }
+        
+        // 初始化资产管理器
+        if (typeof AssetManager !== 'undefined') {
+            this.assetManager = new AssetManager(this);
+            // 设置全局实例供模态窗口调用
+            window.assetManager = this.assetManager;
+        }
     }
 
     initializeIcons() {
@@ -433,11 +440,14 @@ class WealthLiteApp {
     
     getAssetTypeText(type) {
         const typeMap = {
+            // 小写格式（仪表板API）
             'cash': '现金及等价物',
             'fixed_income': '固定收益',
             'equity': '权益类',
-            'alternative': '另类投资',
-            'real_estate': '不动产'
+            // 大写格式（资产API）
+            'CASH': '现金及等价物',
+            'FIXED_INCOME': '固定收益',
+            'EQUITY': '权益类'
         };
         return typeMap[type] || type;
     }
@@ -486,7 +496,12 @@ class WealthLiteApp {
 
     async loadAssetsData() {
         console.log('加载资产数据');
-        // TODO: 实现资产页面数据加载
+        
+        // 资产管理器已在应用启动时初始化
+        if (this.assetManager) {
+            // 刷新数据
+            this.assetManager.loadAssets();
+        }
     }
 
     async loadTransactionsData() {

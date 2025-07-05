@@ -11,7 +11,7 @@ import os
 from datetime import date, datetime
 from decimal import Decimal
 
-from src.wealth_lite.models.enums import AssetType, TransactionType, Currency
+from src.wealth_lite.models.enums import AssetType, AssetSubType, TransactionType, Currency
 from src.wealth_lite.services.wealth_service import WealthService
 
 
@@ -41,8 +41,7 @@ class TestDataPersistenceIntegration:
         cash_asset = wealth_service.create_asset(
             asset_name="招商银行储蓄账户",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY,
             description="招商银行储蓄账户",
             issuer="招商银行"
@@ -109,8 +108,7 @@ class TestDataPersistenceIntegration:
         bond_asset = wealth_service.create_asset(
             asset_name="国债2024001",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="政府债券",
+            asset_subtype=AssetSubType.GOVERNMENT_BOND,
             currency=Currency.CNY,
             description="5年期国债",
             issuer="中华人民共和国财政部",
@@ -170,8 +168,7 @@ class TestDataPersistenceIntegration:
         wealth_product_asset = wealth_service.create_asset(
             asset_name="招商银行朝朝盈理财产品",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="银行理财",
+            asset_subtype=AssetSubType.BANK_WEALTH_PRODUCT,
             currency=Currency.CNY,
             description="90天期银行理财产品，预期年化收益率3.8%",
             issuer="招商银行股份有限公司",
@@ -180,7 +177,7 @@ class TestDataPersistenceIntegration:
         
         assert wealth_product_asset is not None
         assert wealth_product_asset.asset_type == AssetType.FIXED_INCOME
-        assert wealth_product_asset.secondary_category == "银行理财"
+        assert wealth_product_asset.asset_subtype == AssetSubType.BANK_WEALTH_PRODUCT
         
         # 2. 创建购买交易
         purchase_transaction = wealth_service.create_fixed_income_transaction(
@@ -245,8 +242,7 @@ class TestDataPersistenceIntegration:
         floating_product = wealth_service.create_asset(
             asset_name="建设银行乾元理财产品",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="银行理财",
+            asset_subtype=AssetSubType.BANK_WEALTH_PRODUCT,
             currency=Currency.CNY,
             description="180天期浮动收益理财，业绩比较基准4.2%",
             issuer="中国建设银行",
@@ -314,8 +310,7 @@ class TestDataPersistenceIntegration:
         structured_product = wealth_service.create_asset(
             asset_name="工商银行挂钩黄金结构化产品",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="结构化理财",
+            asset_subtype=AssetSubType.BANK_WEALTH_PRODUCT,
             currency=Currency.CNY,
             description="365天期保本浮动收益，挂钩国际黄金价格",
             issuer="中国工商银行",
@@ -377,8 +372,7 @@ class TestDataPersistenceIntegration:
         cash_asset = wealth_service.create_asset(
             asset_name="现金账户",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="活期存款"
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT
         )
         
         wealth_service.create_cash_transaction(
@@ -392,8 +386,7 @@ class TestDataPersistenceIntegration:
         bond_asset = wealth_service.create_asset(
             asset_name="企业债券",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="企业债券"
+            asset_subtype=AssetSubType.CORPORATE_BOND
         )
         
         wealth_service.create_fixed_income_transaction(
@@ -435,8 +428,7 @@ class TestDataPersistenceIntegration:
             asset = service1.create_asset(
                 asset_name="测试资产",
                 asset_type=AssetType.CASH,
-                primary_category="现金及等价物",
-                secondary_category="测试账户"
+                asset_subtype=AssetSubType.CHECKING_ACCOUNT
             )
             
             transaction = service1.create_cash_transaction(
@@ -479,8 +471,7 @@ class TestDataPersistenceIntegration:
         asset = wealth_service.create_asset(
             asset_name="更新测试资产",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="测试账户"
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT
         )
         
         transaction = wealth_service.create_cash_transaction(
@@ -529,8 +520,7 @@ class TestDataPersistenceIntegration:
         asset = wealth_service.create_asset(
             asset_name="快照测试资产",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="测试账户"
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT
         )
         
         wealth_service.create_cash_transaction(
@@ -571,8 +561,7 @@ class TestDataPersistenceIntegration:
         asset1 = wealth_service.create_asset(
             asset_name="错误处理测试1",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="测试账户"
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT
         )
         
         # 尝试为不存在的资产创建交易
@@ -588,8 +577,7 @@ class TestDataPersistenceIntegration:
         fixed_income_asset = wealth_service.create_asset(
             asset_name="固定收益资产",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="政府债券"
+            asset_subtype=AssetSubType.GOVERNMENT_BOND
         )
         
         with pytest.raises(ValueError, match="资产类型不匹配"):
@@ -608,8 +596,7 @@ class TestDataPersistenceIntegration:
             asset = wealth_service.create_asset(
                 asset_name=f"性能测试资产{i+1}",
                 asset_type=AssetType.CASH if i % 2 == 0 else AssetType.FIXED_INCOME,
-                primary_category="现金及等价物" if i % 2 == 0 else "固定收益类",
-                secondary_category="测试账户" if i % 2 == 0 else "测试债券"
+                asset_subtype=AssetSubType.CHECKING_ACCOUNT if i % 2 == 0 else AssetSubType.CORPORATE_BOND
             )
             assets.append(asset)
         

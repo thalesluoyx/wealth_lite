@@ -88,7 +88,7 @@ class Asset:
     - asset_id: str
     - asset_name: str  
     - asset_type: AssetType
-    - category: Category
+    - asset_subtype: Optional[AssetSubType]
     - currency: Currency
     - 静态属性（发行方、评级等）
     # 职责：只管理资产的静态属性，不包含交易记录和计算逻辑
@@ -243,7 +243,7 @@ user_data/
 
 **核心表结构**：
 1. **ASSETS**：资产基础信息表（12个字段）
-   - asset_id, asset_name, asset_type, primary_category, secondary_category
+   - asset_id, asset_name, asset_type, asset_subtype
    - currency, description, issuer, credit_rating, extended_attributes
    - created_date, updated_date
 

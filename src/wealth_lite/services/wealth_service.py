@@ -15,7 +15,7 @@ from ..models.asset import Asset
 from ..models.transaction import BaseTransaction, CashTransaction, FixedIncomeTransaction
 from ..models.position import Position
 from ..models.portfolio import Portfolio, PortfolioSnapshot
-from ..models.enums import AssetType, TransactionType, Currency
+from ..models.enums import AssetType, TransactionType, Currency, AssetSubType
 from ..data.database import DatabaseManager
 from ..data.repositories import RepositoryManager
 
@@ -42,8 +42,7 @@ class WealthService:
         self,
         asset_name: str,
         asset_type: AssetType,
-        primary_category: str,
-        secondary_category: str,
+        asset_subtype: Optional[AssetSubType] = None,
         currency: Currency = Currency.CNY,
         description: Optional[str] = None,
         issuer: Optional[str] = None,
@@ -55,38 +54,42 @@ class WealthService:
         
         Args:
             asset_name: 资产名称
-            asset_type: 资产类型
-            primary_category: 一级分类
-            secondary_category: 二级分类
-            currency: 计价货币
-            description: 描述
+            asset_type: 资产类型（AssetType枚举）
+            asset_subtype: 资产子类型（AssetSubType枚举，可选）
+            currency: 货币类型，默认人民币
+            description: 资产描述
             issuer: 发行方
             credit_rating: 信用评级
             **extended_attributes: 扩展属性
             
         Returns:
-            创建的资产对象
+            创建的Asset对象
             
         Raises:
-            ValueError: 参数验证失败
-            RuntimeError: 数据库操作失败
+            ValueError: 输入参数无效
+            RuntimeError: 创建失败
         """
-        logging.debug(f"[create_asset] 参数: name={asset_name}, type={asset_type}, primary={primary_category}, secondary={secondary_category}, currency={currency}, desc={description}, issuer={issuer}, credit={credit_rating}, ext={extended_attributes}")
+        logging.debug(f"[create_asset] 参数: name={asset_name}, type={asset_type}, "
+                     f"subtype={asset_subtype}, currency={currency}, desc={description}, "
+                     f"issuer={issuer}, credit={credit_rating}, ext={extended_attributes}")
         
-        # 验证资产名称不能为空
+        # 输入验证
         if not asset_name or not asset_name.strip():
             raise ValueError("资产名称不能为空")
         
-        # 验证资产名称是否已存在
+        # 检查资产名称是否已存在
         if self.repositories.assets.exists_by_name(asset_name.strip()):
             raise ValueError(f"资产名称已存在: {asset_name}")
+        
+        # 验证资产子类型与资产类型的匹配
+        if asset_subtype and asset_subtype.get_asset_type() != asset_type:
+            raise ValueError(f"资产子类型 {asset_subtype.display_name} 与资产类型 {asset_type.display_name} 不匹配")
         
         # 创建资产对象
         asset = Asset(
             asset_name=asset_name.strip(),
             asset_type=asset_type,
-            primary_category=primary_category,
-            secondary_category=secondary_category,
+            asset_subtype=asset_subtype,
             currency=currency,
             description=description,
             issuer=issuer,
@@ -120,9 +123,74 @@ class WealthService:
         """获取所有资产"""
         return self.repositories.assets.get_all()
     
-    def update_asset(self, asset: Asset) -> bool:
-        """更新资产信息"""
-        return self.repositories.assets.update(asset)
+    def update_asset(
+        self,
+        asset_id: str,
+        asset_name: Optional[str] = None,
+        asset_type: Optional[AssetType] = None,
+        asset_subtype: Optional[AssetSubType] = None,
+        currency: Optional[Currency] = None,
+        description: Optional[str] = None,
+        issuer: Optional[str] = None,
+        credit_rating: Optional[str] = None,
+        **extended_attributes
+    ) -> Asset:
+        """
+        更新资产信息（支持部分更新）
+        
+        Args:
+            asset_id: 资产ID
+            asset_name: 资产名称
+            asset_type: 资产类型
+            asset_subtype: 资产子类型
+            currency: 货币类型
+            description: 描述
+            issuer: 发行方
+            credit_rating: 信用评级
+            **extended_attributes: 扩展属性
+            
+        Returns:
+            更新后的资产对象
+        """
+        # 获取现有资产
+        existing_asset = self.get_asset(asset_id)
+        if not existing_asset:
+            raise ValueError(f"资产不存在: {asset_id}")
+        
+        # 验证资产子类型与资产类型的匹配（如果两者都要更新）
+        final_asset_type = asset_type if asset_type is not None else existing_asset.asset_type
+        final_asset_subtype = asset_subtype if asset_subtype is not None else existing_asset.asset_subtype
+        
+        if final_asset_subtype and final_asset_subtype.get_asset_type() != final_asset_type:
+            raise ValueError(f"资产子类型 {final_asset_subtype.display_name} 与资产类型 {final_asset_type.display_name} 不匹配")
+        
+        # 更新字段（只更新非None的字段）
+        if asset_name is not None:
+            existing_asset.asset_name = asset_name
+        if asset_type is not None:
+            existing_asset.asset_type = asset_type
+        if asset_subtype is not None:
+            existing_asset.asset_subtype = asset_subtype
+        if currency is not None:
+            existing_asset.currency = currency
+        if description is not None:
+            existing_asset.description = description
+        if issuer is not None:
+            existing_asset.issuer = issuer
+        if credit_rating is not None:
+            existing_asset.credit_rating = credit_rating
+        if extended_attributes:
+            # 合并扩展属性
+            if existing_asset.extended_attributes:
+                existing_asset.extended_attributes.update(extended_attributes)
+            else:
+                existing_asset.extended_attributes = extended_attributes
+        
+        # 保存更新
+        if not self.repositories.assets.update(existing_asset):
+            raise RuntimeError(f"更新资产失败: {asset_id}")
+        
+        return existing_asset
     
     def delete_asset(self, asset_id: str) -> bool:
         """删除资产"""

@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import Optional, Dict, Any
 from dataclasses import dataclass, field
 
-from .enums import AssetType, Currency, RiskLevel, LiquidityLevel
+from .enums import AssetType, AssetSubType, Currency, RiskLevel, LiquidityLevel
 
 
 @dataclass
@@ -30,9 +30,8 @@ class Asset:
     asset_name: str = ""
     asset_type: AssetType = AssetType.CASH
     
-    # 分类信息
-    primary_category: str = ""
-    secondary_category: str = ""
+    # 分类信息（使用新的两层枚举结构）
+    asset_subtype: Optional[AssetSubType] = None
     
     # 货币和地区
     currency: Currency = Currency.CNY
@@ -62,9 +61,9 @@ class Asset:
         if not self.asset_name:
             raise ValueError("资产名称不能为空")
         
-        # 设置默认分类
-        if not self.primary_category:
-            self.primary_category = self.asset_type.display_name
+        # 如果没有指定子类型，但有asset_type，可以从子类型反推验证
+        if self.asset_subtype and self.asset_subtype.get_asset_type() != self.asset_type:
+            raise ValueError(f"资产子类型 {self.asset_subtype.display_name} 与资产类型 {self.asset_type.display_name} 不匹配")
             
         # 更新时间戳
         self.updated_date = datetime.now()
@@ -79,9 +78,9 @@ class Asset:
     @property
     def full_category(self) -> str:
         """返回完整分类路径"""
-        if self.secondary_category:
-            return f"{self.primary_category} > {self.secondary_category}"
-        return self.primary_category
+        if self.asset_subtype:
+            return f"{self.asset_type.display_name} > {self.asset_subtype.display_name}"
+        return self.asset_type.display_name
 
     @property
     def currency_symbol(self) -> str:
@@ -126,8 +125,7 @@ class Asset:
             'asset_id': self.asset_id,
             'asset_name': self.asset_name,
             'asset_type': self.asset_type.name,
-            'primary_category': self.primary_category,
-            'secondary_category': self.secondary_category,
+            'asset_subtype': self.asset_subtype.name if self.asset_subtype else None,
             'currency': self.currency.name,
             'country': self.country,
             'exchange': self.exchange,
@@ -152,6 +150,11 @@ class Asset:
         risk_level = RiskLevel[data.get('risk_level', 'MEDIUM')]
         liquidity_level = LiquidityLevel[data.get('liquidity_level', 'MEDIUM')]
         
+        # 处理资产子类型
+        asset_subtype = None
+        if data.get('asset_subtype'):
+            asset_subtype = AssetSubType[data['asset_subtype']]
+        
         # 处理时间戳
         created_date = datetime.fromisoformat(data.get('created_date', datetime.now().isoformat()))
         updated_date = datetime.fromisoformat(data.get('updated_date', datetime.now().isoformat()))
@@ -160,8 +163,7 @@ class Asset:
             asset_id=data.get('asset_id', str(uuid.uuid4())),
             asset_name=data.get('asset_name', ''),
             asset_type=asset_type,
-            primary_category=data.get('primary_category', ''),
-            secondary_category=data.get('secondary_category', ''),
+            asset_subtype=asset_subtype,
             currency=currency,
             country=data.get('country', '中国'),
             exchange=data.get('exchange', ''),

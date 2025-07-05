@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/transactions.css">
+    <link rel="stylesheet" href="styles/components/assets.css">
     <!-- Chart.js 轻量图表库 -->
     <script src="js/chart.umd.js"></script>
     <!-- Lucide Icons -->
@@ -197,9 +198,54 @@
             </div>
 
             <!-- 其他页面占位 -->
+            <!-- 资产管理页面 -->
             <div id="assets" class="page">
-                <h2>资产管理</h2>
-                <p>资产管理页面开发中...</p>
+                <div class="page-header">
+                    <h2>💰 资产管理</h2>
+                    <div class="page-actions">
+                        <button class="btn-primary" id="addAssetBtn">
+                            <i data-lucide="plus"></i>
+                            新增资产
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 资产列表 -->
+                <section class="assets-section">
+                    <div class="assets-card">
+                        <div class="card-header">
+                            <h3>资产列表</h3>
+                            <div class="card-stats">
+                                <span class="badge" id="assetCount">共 0 个资产</span>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="assets-table">
+                                <thead>
+                                    <tr>
+                                        <th>资产名称</th>
+                                        <th>资产类型</th>
+                                        <th>子类型</th>
+                                        <th>币种</th>
+                                        <th>创建时间</th>
+                                        <th>描述</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assetsTableBody">
+                                    <!-- 资产记录将通过JavaScript动态填充 -->
+                                </tbody>
+                            </table>
+                            <div class="table-empty" id="assetsEmpty" style="display: none;">
+                                <div class="empty-icon">
+                                    <i data-lucide="coins"></i>
+                                </div>
+                                <div class="empty-text">暂无资产</div>
+                                <div class="empty-subtext">点击"新增资产"按钮开始添加您的第一个资产</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
 
             <!-- 交易记录页面 -->
@@ -430,39 +476,46 @@
         </div>
     </div>
 
-    <!-- 新增资产模态窗口 -->
-    <div id="addAssetModal" class="modal">
+    <!-- 资产管理模态窗口 -->
+    <div id="assetManagementModal" class="modal">
         <div class="modal-content modal-small">
             <div class="modal-header">
-                <h3>创建新资产</h3>
-                <button class="modal-close" id="closeAssetModal">
+                <h3 id="assetModalTitle">新增资产</h3>
+                <button class="modal-close" id="closeAssetManagementModal">
                     <i data-lucide="x"></i>
                 </button>
             </div>
-            <form id="addAssetForm" class="modal-body">
+            <form id="assetManagementForm" class="modal-body">
                 <!-- 资产名称 -->
                 <div class="form-group">
-                    <label for="assetName" class="form-label">资产名称 *</label>
-                    <input type="text" id="assetName" class="form-input" 
+                    <label for="assetManagementName" class="form-label">资产名称 *</label>
+                    <input type="text" id="assetManagementName" class="form-input" 
                            placeholder="例如：招商银行储蓄账户" required>
                 </div>
 
                 <!-- 资产类型 -->
                 <div class="form-group">
-                    <label for="assetType" class="form-label">资产类型 *</label>
-                    <select id="assetType" class="form-select" required>
+                    <label for="assetManagementType" class="form-label">资产类型 *</label>
+                    <select id="assetManagementType" class="form-select" required>
                         <option value="">请选择资产类型...</option>
                         <option value="CASH">现金及等价物</option>
-                        <option value="FIXED_INCOME">固定收益</option>
+                        <option value="FIXED_INCOME">固定收益类</option>
                         <option value="EQUITY">权益类</option>
-                        <option value="ALTERNATIVE">另类投资</option>
+                    </select>
+                </div>
+
+                <!-- 资产子类型 -->
+                <div class="form-group" id="assetSubTypeGroup" style="display: none;">
+                    <label for="assetManagementSubType" class="form-label">资产子类型 *</label>
+                    <select id="assetManagementSubType" class="form-select">
+                        <option value="">请选择资产子类型...</option>
                     </select>
                 </div>
 
                 <!-- 币种 -->
                 <div class="form-group">
-                    <label for="assetCurrency" class="form-label">币种 *</label>
-                    <select id="assetCurrency" class="form-select" required>
+                    <label for="assetManagementCurrency" class="form-label">币种 *</label>
+                    <select id="assetManagementCurrency" class="form-select" required>
                         <option value="CNY">CNY - 人民币</option>
                         <option value="USD">USD - 美元</option>
                         <option value="HKD">HKD - 港币</option>
@@ -472,14 +525,14 @@
 
                 <!-- 描述 -->
                 <div class="form-group">
-                    <label for="assetDescription" class="form-label">描述</label>
-                    <textarea id="assetDescription" class="form-textarea" 
+                    <label for="assetManagementDescription" class="form-label">描述</label>
+                    <textarea id="assetManagementDescription" class="form-textarea" 
                               placeholder="资产描述信息..." rows="2"></textarea>
                 </div>
             </form>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelAssetBtn">取消</button>
-                <button type="submit" class="btn-primary" form="addAssetForm">创建资产</button>
+                <button type="button" class="btn-secondary" id="cancelAssetManagementBtn">取消</button>
+                <button type="submit" class="btn-primary" form="assetManagementForm" id="saveAssetBtn">保存资产</button>
             </div>
         </div>
     </div>
@@ -491,6 +544,7 @@
     <script src="js/components/fixed-income-manager.js"></script>
     
     <script src="js/transactions.js"></script>
+    <script src="js/assets.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/main.js"></script>
     

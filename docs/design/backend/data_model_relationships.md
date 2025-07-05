@@ -30,7 +30,7 @@ graph TB
     subgraph "资产定义层"
         D[Asset<br/>资产基础信息]
         E[AssetType<br/>资产类型枚举]
-        F[Category<br/>分类管理]
+        F[AssetSubType<br/>资产子类型]
     end
     
     subgraph "交易事件层"
@@ -38,7 +38,7 @@ graph TB
         H[CashTransaction<br/>现金类交易]
         I[FixedIncomeTransaction<br/>固定收益交易]
         J[EquityTransaction<br/>权益类交易]
-        K[RealEstateTransaction<br/>房产交易]
+
     end
     
     subgraph "持仓计算层"
@@ -51,7 +51,7 @@ graph TB
         O[CashCalculator<br/>现金类计算器]
         P[FixedIncomeCalculator<br/>固定收益计算器]
         Q[EquityCalculator<br/>权益类计算器]
-        R[RealEstateCalculator<br/>房产计算器]
+
     end
     
     A --> C
@@ -132,12 +132,12 @@ class Asset:
     - asset_id: str
     - asset_name: str
     - asset_type: AssetType
-    - primary_category: str
-    - secondary_category: str
+    - asset_subtype: Optional[AssetSubType]
     - currency: Currency
     - description: str
     - issuer: str
     - credit_rating: str
+    - extended_attributes: Dict[str, Any]
     - created_date: datetime
     - updated_date: datetime
 ```
@@ -153,7 +153,7 @@ class AssetType(Enum):
     CASH = "现金及等价物"
     FIXED_INCOME = "固定收益类"
     EQUITY = "权益类"
-    REAL_ESTATE = "不动产"
+
     COMMODITY = "大宗商品"
 ```
 
@@ -162,21 +162,35 @@ class AssetType(Enum):
 - 决定使用哪个专业计算器
 - 影响交易类型的选择
 
-#### Category（分类管理）
+#### AssetSubType（资产子类型）
 ```python
-class Category:
-    - primary_category: str
-    - secondary_category: str
-    - risk_level: RiskLevel
-    - return_level: ReturnLevel
-    - liquidity_level: LiquidityLevel
-    - use_case: str
+class AssetSubType(Enum):
+    # 现金及等价物
+    SAVINGS_DEPOSIT = "储蓄存款"
+    CHECKING_ACCOUNT = "活期存款"
+    TIME_DEPOSIT = "定期存款"
+    FOREIGN_CURRENCY_DEPOSIT = "外币存款"
+    MONEY_MARKET_FUND = "货币市场基金"
+    
+    # 固定收益类
+    GOVERNMENT_BOND = "政府债券"
+    CORPORATE_BOND = "企业债券"
+    BANK_WEALTH_PRODUCT = "银行理财"
+    STRUCTURED_PRODUCT = "结构化理财"
+    CERTIFICATE_DEPOSIT = "大额存单"
+    
+    # 权益类
+    DOMESTIC_STOCK = "A股股票"
+    FOREIGN_STOCK = "海外股票"
+    MUTUAL_FUND = "公募基金"
+    PRIVATE_FUND = "私募基金"
+    ETF = "交易所基金"
 ```
 
 **关系**：
-- 为Asset提供分类信息
-- 用于投资组合分析和风险评估
-- 支持自定义分类扩展
+- 被Asset引用，提供二级分类信息
+- 与AssetType形成两层分类架构
+- 支持类型匹配验证
 
 ### 3. 交易事件层
 

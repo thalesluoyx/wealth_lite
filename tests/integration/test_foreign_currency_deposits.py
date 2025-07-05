@@ -14,7 +14,7 @@ import os
 from datetime import date, datetime
 from decimal import Decimal
 
-from src.wealth_lite.models.enums import AssetType, TransactionType, Currency
+from src.wealth_lite.models.enums import AssetType, AssetSubType, TransactionType, Currency
 from src.wealth_lite.services.wealth_service import WealthService
 
 
@@ -52,8 +52,7 @@ class TestForeignCurrencyDeposits:
         hkd_deposit_asset = wealth_service.create_asset(
             asset_name="汇丰银行港元定期存款",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="外币定存",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.HKD,
             description="3个月港元定期存款，年利率3.5%",
             issuer="汇丰银行（香港）有限公司"
@@ -107,8 +106,7 @@ class TestForeignCurrencyDeposits:
         hkd_cash_asset = wealth_service.create_asset(
             asset_name="汇丰银行港元储蓄账户",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="外币储蓄",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.HKD,
             description="港元储蓄账户",
             issuer="汇丰银行（香港）有限公司"
@@ -185,8 +183,7 @@ class TestForeignCurrencyDeposits:
         hkd_deposit_asset = wealth_service.create_asset(
             asset_name="中银香港港元定期存款",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="外币定存",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.HKD,
             description="6个月港元定期存款，年利率3.8%",
             issuer="中国银行（香港）有限公司"
@@ -228,8 +225,7 @@ class TestForeignCurrencyDeposits:
         cny_cash_asset = wealth_service.create_asset(
             asset_name="招商银行人民币储蓄账户",
             asset_type=AssetType.CASH,
-            primary_category="现金及等价物",
-            secondary_category="储蓄存款",
+            asset_subtype=AssetSubType.CHECKING_ACCOUNT,
             currency=Currency.CNY,
             description="人民币储蓄账户",
             issuer="招商银行股份有限公司"
@@ -300,8 +296,7 @@ class TestForeignCurrencyDeposits:
         cny_deposit = wealth_service.create_asset(
             asset_name="工商银行人民币定存",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="定期存款",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.CNY,
             description="1年期人民币定存，年利率2.8%"
         )
@@ -320,8 +315,7 @@ class TestForeignCurrencyDeposits:
         hkd_deposit = wealth_service.create_asset(
             asset_name="汇丰银行港币定存",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="外币定存",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.HKD,
             description="1年期港币定存，年利率3.5%"
         )
@@ -340,8 +334,7 @@ class TestForeignCurrencyDeposits:
         usd_deposit = wealth_service.create_asset(
             asset_name="花旗银行美元定存",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="外币定存",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.USD,
             description="1年期美元定存，年利率4.2%"
         )
@@ -396,8 +389,7 @@ class TestForeignCurrencyDeposits:
         usd_deposit = wealth_service.create_asset(
             asset_name="美元定存汇率测试",
             asset_type=AssetType.FIXED_INCOME,
-            primary_category="固定收益类",
-            secondary_category="外币定存",
+            asset_subtype=AssetSubType.TIME_DEPOSIT,
             currency=Currency.USD,
             description="汇率波动测试用美元定存"
         )

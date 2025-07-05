@@ -572,6 +572,27 @@ class FixedIncomeManager {
         return Math.ceil(timeDiff / (1000 * 3600 * 24));
     }
 
+    /**
+     * 计算两个日期之间的月份差
+     * @param {Date} startDate - 开始日期
+     * @param {Date} endDate - 结束日期
+     * @returns {number} 月份差
+     */
+    calculateMonthsBetween(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        let months = (end.getFullYear() - start.getFullYear()) * 12;
+        months += end.getMonth() - start.getMonth();
+        
+        // 如果结束日期的日数小于开始日期的日数，说明不满一个月
+        if (end.getDate() < start.getDate()) {
+            months--;
+        }
+        
+        return months;
+    }
+
     calculateInterestPreview() {
         try {
             // 获取当前表单数据
@@ -840,6 +861,128 @@ class FixedIncomeManager {
         errorElement.className = 'field-error';
         errorElement.textContent = message;
         fieldGroup.appendChild(errorElement);
+    }
+
+    // ==================== 数据加载 ====================
+
+    /**
+     * 填充编辑模式下的固定收益字段数据
+     * @param {Object} transactionData - 包含固定收益详情的交易数据
+     */
+    async populateFixedIncomeFields(transactionData) {
+        console.log('🔄 开始填充固定收益字段数据:', transactionData);
+        
+        try {
+            // 获取完整的交易详情（包含固定收益字段）
+            let fullTransactionData = transactionData;
+            
+            // 如果传入的数据不包含固定收益字段，从API获取完整数据
+            if (!transactionData.annual_rate && !transactionData.start_date && !transactionData.maturity_date) {
+                console.log('📡 获取完整交易数据...');
+                const response = await fetch(`/api/transactions/${transactionData.id}`);
+                if (response.ok) {
+                    fullTransactionData = await response.json();
+                    console.log('✅ 获取到完整交易数据:', fullTransactionData);
+                } else {
+                    console.warn('⚠️ 无法获取完整交易数据，使用基础数据');
+                }
+            }
+            
+            // 填充固定收益字段
+            if (fullTransactionData.annual_rate !== undefined && fullTransactionData.annual_rate !== null) {
+                const annualRateField = document.getElementById('annualRate');
+                if (annualRateField) {
+                    annualRateField.value = fullTransactionData.annual_rate;
+                    console.log('📝 填充年利率:', fullTransactionData.annual_rate);
+                }
+            }
+            
+            if (fullTransactionData.start_date) {
+                const startDateField = document.getElementById('fiStartDate');
+                if (startDateField) {
+                    startDateField.value = fullTransactionData.start_date;
+                    console.log('📝 填充起息日期:', fullTransactionData.start_date);
+                }
+            }
+            
+            if (fullTransactionData.maturity_date) {
+                const maturityDateField = document.getElementById('maturityDate');
+                if (maturityDateField) {
+                    maturityDateField.value = fullTransactionData.maturity_date;
+                    console.log('📝 填充到期日期:', fullTransactionData.maturity_date);
+                }
+            }
+            
+            if (fullTransactionData.interest_type) {
+                const interestTypeField = document.getElementById('interestType');
+                if (interestTypeField) {
+                    interestTypeField.value = fullTransactionData.interest_type;
+                    console.log('📝 填充利息类型:', fullTransactionData.interest_type);
+                }
+            }
+            
+            if (fullTransactionData.payment_frequency) {
+                const paymentFrequencyField = document.getElementById('paymentFrequency');
+                if (paymentFrequencyField) {
+                    paymentFrequencyField.value = fullTransactionData.payment_frequency;
+                    console.log('📝 填充付息频率:', fullTransactionData.payment_frequency);
+                }
+            }
+            
+            if (fullTransactionData.face_value !== undefined && fullTransactionData.face_value !== null) {
+                const faceValueField = document.getElementById('faceValue');
+                if (faceValueField) {
+                    faceValueField.value = fullTransactionData.face_value;
+                    console.log('📝 填充面值:', fullTransactionData.face_value);
+                }
+            }
+            
+            if (fullTransactionData.coupon_rate !== undefined && fullTransactionData.coupon_rate !== null) {
+                const couponRateField = document.getElementById('couponRate');
+                if (couponRateField) {
+                    couponRateField.value = fullTransactionData.coupon_rate;
+                    console.log('📝 填充票面利率:', fullTransactionData.coupon_rate);
+                }
+            }
+            
+            // 计算并填充存款期限（根据起息日期和到期日期反推）
+            if (fullTransactionData.start_date && fullTransactionData.maturity_date) {
+                const startDate = new Date(fullTransactionData.start_date);
+                const maturityDate = new Date(fullTransactionData.maturity_date);
+                const monthsDiff = this.calculateMonthsBetween(startDate, maturityDate);
+                
+                const depositTermField = document.getElementById('depositTerm');
+                if (depositTermField) {
+                    // 匹配标准期限选项
+                    const standardTerms = {
+                        1: '1',
+                        3: '3',
+                        6: '6',
+                        12: '12',
+                        24: '24',
+                        36: '36',
+                        60: '60'
+                    };
+                    
+                    if (standardTerms[monthsDiff]) {
+                        depositTermField.value = standardTerms[monthsDiff];
+                        console.log('📝 填充存款期限:', monthsDiff + '个月');
+                    } else {
+                        console.log('⚠️ 非标准期限，无法自动填充:', monthsDiff + '个月');
+                    }
+                }
+            }
+            
+            // 根据交易类型显示相应的字段
+            if (fullTransactionData.type) {
+                this.adjustFieldsForTransactionType(fullTransactionData.type);
+            }
+            
+            console.log('✅ 固定收益字段数据填充完成');
+            
+        } catch (error) {
+            console.error('❌ 填充固定收益字段失败:', error);
+        }
     }
 
     // ==================== 工具方法 ====================

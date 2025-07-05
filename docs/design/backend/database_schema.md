@@ -30,32 +30,32 @@ CREATE TABLE assets (
     asset_id TEXT PRIMARY KEY,
     asset_name TEXT NOT NULL,
     asset_type TEXT NOT NULL,
-    primary_category TEXT NOT NULL,
-    secondary_category TEXT NOT NULL,
+    asset_subtype TEXT,
     currency TEXT NOT NULL DEFAULT 'CNY',
     description TEXT,
     issuer TEXT,
     credit_rating TEXT,
+    extended_attributes TEXT,
     created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 索引
 CREATE INDEX idx_assets_type ON assets(asset_type);
-CREATE INDEX idx_assets_category ON assets(primary_category, secondary_category);
+CREATE INDEX idx_assets_subtype ON assets(asset_subtype);
 CREATE INDEX idx_assets_currency ON assets(currency);
 ```
 
 **字段说明**：
 - `asset_id`: 资产唯一标识符（UUID）
 - `asset_name`: 资产名称
-- `asset_type`: 资产类型（CASH, FIXED_INCOME, EQUITY, REAL_ESTATE等）
-- `primary_category`: 一级分类
-- `secondary_category`: 二级分类
+- `asset_type`: 资产类型（第一层分类：CASH, FIXED_INCOME, EQUITY）
+- `asset_subtype`: 资产子类型（第二层分类：SAVINGS_DEPOSIT, GOVERNMENT_BOND, DOMESTIC_STOCK等）
 - `currency`: 资产币种
 - `description`: 资产描述
 - `issuer`: 发行方（可选）
 - `credit_rating`: 信用评级（可选）
+- `extended_attributes`: 扩展属性（JSON格式，可选）
 
 ### 2. TRANSACTIONS 表（交易记录）
 
@@ -287,13 +287,13 @@ erDiagram
     ASSETS {
         string asset_id PK "资产唯一标识符(UUID)"
         string asset_name "资产名称"
-        string asset_type "资产类型(CASH/FIXED_INCOME/EQUITY/REAL_ESTATE)"
-        string primary_category "一级分类"
-        string secondary_category "二级分类"
+        string asset_type "资产类型(CASH/FIXED_INCOME/EQUITY)"
+        string asset_subtype "资产子类型(SAVINGS_DEPOSIT/GOVERNMENT_BOND/DOMESTIC_STOCK等)"
         string currency "资产币种"
         string description "资产描述"
         string issuer "发行方"
         string credit_rating "信用评级"
+        string extended_attributes "扩展属性(JSON)"
         datetime created_date "创建时间"
         datetime updated_date "更新时间"
     }
@@ -337,13 +337,7 @@ erDiagram
         string compound_frequency "复利频率"
     }
 
-    REAL_ESTATE_TRANSACTIONS {
-        string transaction_id PK "交易ID(软外键)"
-        decimal property_area "物业面积"
-        decimal price_per_unit "单价"
-        decimal rental_income "租金收入"
-        string property_type "物业类型(RESIDENTIAL/COMMERCIAL/LAND)"
-    }
+
 
     PORTFOLIO_SNAPSHOTS {
         string snapshot_id PK "快照唯一标识符(UUID)"
@@ -382,7 +376,7 @@ erDiagram
     TRANSACTIONS ||--o| FIXED_INCOME_TRANSACTIONS : "软关联(transaction_id)"
     TRANSACTIONS ||--o| EQUITY_TRANSACTIONS : "软关联(transaction_id)"
     TRANSACTIONS ||--o| CASH_TRANSACTIONS : "软关联(transaction_id)"
-    TRANSACTIONS ||--o| REAL_ESTATE_TRANSACTIONS : "软关联(transaction_id)"
+
 ```
 
 ## 关系图说明（软外键关联）
@@ -416,8 +410,7 @@ SELECT
     a.asset_id,
     a.asset_name,
     a.asset_type,
-    a.primary_category,
-    a.secondary_category,
+    a.asset_subtype,
     a.currency,
     SUM(CASE WHEN t.transaction_type IN ('BUY', 'DEPOSIT') THEN t.amount ELSE 0 END) as total_invested,
     SUM(CASE WHEN t.transaction_type IN ('SELL', 'WITHDRAW') THEN t.amount ELSE 0 END) as total_withdrawn,

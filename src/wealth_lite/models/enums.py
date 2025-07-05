@@ -6,9 +6,14 @@ WealthLite 枚举类型定义
 
 枚举分组：
 1. 核心业务枚举 - 资产、交易、货币
-2. 金融产品枚举 - 利息、付息频率
-3. 状态评级枚举 - 持仓状态、风险等级、流动性等级
-4. 工具函数 - 枚举查找和转换
+2. 资产分类枚举 - 资产子类型
+3. 金融产品枚举 - 利息、付息频率
+4. 状态评级枚举 - 持仓状态、风险等级、流动性等级
+5. 工具函数 - 枚举查找和转换
+
+分类架构：
+- 第一层：AssetType（资产类型）- 现金及等价物、固定收益类、权益类
+- 第二层：AssetSubType（资产子类型）- 具体的资产细分类别
 """
 
 from enum import Enum
@@ -22,9 +27,10 @@ from typing import Dict, Any, List
 
 class AssetType(Enum):
     """
-    资产类型枚举
+    资产类型枚举（第一层分类）
     
-    定义系统支持的所有资产类型，用于资产分类和业务逻辑判断。
+    定义系统支持的三大资产类型，作为资产分类的顶层架构。
+    采用简化的三分法，便于管理和理解。
     """
     CASH = "现金及等价物"
     FIXED_INCOME = "固定收益类"
@@ -146,6 +152,82 @@ class Currency(Enum):
     def get_all_symbols(cls) -> Dict[str, str]:
         """获取所有货币符号字典 {name: symbol}"""
         return {item.name: item.symbol for item in cls}
+
+
+# ============================================================================
+# 资产分类枚举
+# ============================================================================
+
+class AssetSubType(Enum):
+    """
+    资产子类型枚举（第二层分类）
+    
+    定义资产的具体细分类别，与AssetType形成两层分类架构。
+    提供精确的资产分类管理，便于投资组合分析和风险控制。
+    """
+    # 现金及等价物
+    CHECKING_ACCOUNT = "活期存款"
+    MONEY_MARKET_FUND = "货币市场基金"
+    
+    # 固定收益类
+    TIME_DEPOSIT = "定期存款"
+    FOREIGN_CURRENCY_DEPOSIT = "外币定期存款"
+    BANK_WEALTH_PRODUCT = "银行理财"
+    GOVERNMENT_BOND = "政府债券"
+    CORPORATE_BOND = "企业债券"
+
+    # 权益类
+    DOMESTIC_STOCK = "A股股票"
+    FOREIGN_STOCK = "海外股票"
+    MUTUAL_FUND = "公募基金"
+    ETF = "交易所基金"
+
+    @property
+    def display_name(self) -> str:
+        """返回显示名称"""
+        return self.value
+
+    @classmethod
+    def get_all_subtypes(cls) -> Dict[str, str]:
+        """获取所有资产子类型的字典 {name: value}"""
+        return {item.name: item.value for item in cls}
+
+    @classmethod
+    def get_subtypes_by_asset_type(cls, asset_type: AssetType) -> List['AssetSubType']:
+        """根据资产类型获取对应的子类型"""
+        category_mapping = {
+            AssetType.CASH: [
+                cls.CHECKING_ACCOUNT, 
+                 cls.MONEY_MARKET_FUND
+            ],
+            AssetType.FIXED_INCOME: [
+                cls.TIME_DEPOSIT,cls.FOREIGN_CURRENCY_DEPOSIT, cls.BANK_WEALTH_PRODUCT,
+                cls.GOVERNMENT_BOND, cls.CORPORATE_BOND
+            ],
+            AssetType.EQUITY: [
+                cls.DOMESTIC_STOCK, cls.FOREIGN_STOCK, cls.MUTUAL_FUND, 
+                cls.ETF
+            ]
+        }
+        return category_mapping.get(asset_type, [])
+
+    def get_asset_type(self) -> AssetType:
+        """获取当前资产子类型对应的资产类型"""
+        # 现金及等价物
+        if self in [self.CHECKING_ACCOUNT, 
+                   self.MONEY_MARKET_FUND]:
+            return AssetType.CASH
+        # 固定收益类
+        elif self in [
+                      self.TIME_DEPOSIT,  self.FOREIGN_CURRENCY_DEPOSIT, self.BANK_WEALTH_PRODUCT,
+                      self.GOVERNMENT_BOND, self.CORPORATE_BOND]:
+            return AssetType.FIXED_INCOME
+        # 权益类
+        elif self in [self.DOMESTIC_STOCK, self.FOREIGN_STOCK, self.MUTUAL_FUND,
+                     self.ETF]:
+            return AssetType.EQUITY
+        else:
+            return AssetType.CASH  # 默认返回现金类
 
 
 # ============================================================================
@@ -366,6 +448,7 @@ def get_all_enum_classes() -> Dict[str, type]:
         'AssetType': AssetType,
         'TransactionType': TransactionType,
         'Currency': Currency,
+        'AssetSubType': AssetSubType,
         'InterestType': InterestType,
         'PaymentFrequency': PaymentFrequency,
         'PositionStatus': PositionStatus,
@@ -409,6 +492,9 @@ def validate_enum_name(enum_class: type, name: str) -> bool:
 # 所有核心枚举类的列表
 CORE_ENUMS = [AssetType, TransactionType, Currency]
 
+# 所有分类枚举类的列表（简化为只有资产子类型）
+CATEGORY_ENUMS = [AssetSubType]
+
 # 所有金融产品枚举类的列表
 FINANCIAL_ENUMS = [InterestType, PaymentFrequency]
 
@@ -416,4 +502,4 @@ FINANCIAL_ENUMS = [InterestType, PaymentFrequency]
 STATUS_ENUMS = [PositionStatus, RiskLevel, LiquidityLevel]
 
 # 所有枚举类的列表
-ALL_ENUMS = CORE_ENUMS + FINANCIAL_ENUMS + STATUS_ENUMS 
+ALL_ENUMS = CORE_ENUMS + CATEGORY_ENUMS + FINANCIAL_ENUMS + STATUS_ENUMS 

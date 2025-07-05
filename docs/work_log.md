@@ -584,3 +584,39 @@ Phase 1核心数据模型重构已完成，为后续开发奠定了坚实基础�
 2. **性能优化**：评估枚举处理性能，进一步优化数据库查询效率
 3. **用户界面**：完善前端枚举显示和交互逻辑
 
+---
+
+## 2025-07-05(续)
+### 工作时间
+- 总工作时长：约 6 小时
+
+### 完成工作
+1. **交易编辑功能修复**
+   - 发现并修复固定收益交易编辑时字段未正确加载的问题
+   - 添加了`GET /api/transactions/{tx_id}`API端点，返回完整的交易详情
+   - 在FixedIncomeManager中实现`populateFixedIncomeFields()`方法，支持编辑时自动填充字段
+
+2. **后端数据模型逻辑修复**
+   - 修复`TransactionRepository._row_to_transaction()`方法中的对象创建逻辑
+   - 改为优先检查固定收益详情，确保正确创建FixedIncomeTransaction对象
+   - 修复API导入路径错误：`from src.wealth_lite.models.transaction`改为`from wealth_lite.models.transaction`
+
+3. **数据库查询验证**
+   - 通过SQL查询验证数据库中固定收益交易详情正确存储
+   - 确认fixed_income_transactions表包含完整的年利率、起息日期、到期日期等字段
+   - 验证Repository层正确创建FixedIncomeTransaction对象
+
+4. **前端字段映射完善**
+   - 添加存款期限字段的反向计算逻辑（从起息日期和到期日期计算月数）
+   - 实现`calculateMonthsBetween()`辅助方法进行日期计算
+   - 完善字段映射，包括annual_rate、start_date、maturity_date、interest_type、payment_frequency等
+
+### Lessons Learned
+1. **API导入路径规范**：在FastAPI应用中导入模块时，需要使用正确的相对路径，避免`src.`前缀导致的导入错误
+2. **数据库对象创建优先级**：在Repository层创建Transaction对象时，应优先检查更具体的子类型（如FixedIncomeTransaction），再回退到通用类型
+3. **前后端数据一致性验证**：当前端无法获取预期数据时，需要从数据库存储、Repository对象创建、API返回等多个层面进行排查
+
+### 下一步计划
+1. **功能测试**：全面测试固定收益交易的创建、编辑、显示功能
+
+

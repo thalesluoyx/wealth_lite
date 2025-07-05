@@ -10,7 +10,7 @@ WealthLite 数据模型包
 """
 
 from .enums import (
-    AssetType, TransactionType, Currency, InterestType, PaymentFrequency,
+    AssetType, AssetSubType, TransactionType, Currency, InterestType, PaymentFrequency,
     PositionStatus, RiskLevel, LiquidityLevel
 )
 from .asset import Asset
@@ -27,6 +27,7 @@ from .portfolio import Portfolio, PortfolioSnapshot
 __all__ = [
     # 枚举类型
     "AssetType",
+    "AssetSubType",
     "TransactionType", 
     "Currency",
     "InterestType",

@@ -1,0 +1,303 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "generated_at": "2025-01-21T00:00:00Z",
+    "description": "WealthLite系统枚举定义，由后端自动生成"
+  },
+  "asset_types": {
+    "CASH": {
+      "display_name": "现金及等价物",
+      "value": "现金及等价物"
+    },
+    "FIXED_INCOME": {
+      "display_name": "固定收益类",
+      "value": "固定收益类"
+    },
+    "EQUITY": {
+      "display_name": "权益类",
+      "value": "权益类"
+    }
+  },
+  "asset_subtypes": {
+    "CHECKING_ACCOUNT": {
+      "display_name": "活期存款",
+      "value": "活期存款",
+      "parent_type": "CASH"
+    },
+    "MONEY_MARKET_FUND": {
+      "display_name": "货币市场基金",
+      "value": "货币市场基金",
+      "parent_type": "CASH"
+    },
+    "TIME_DEPOSIT": {
+      "display_name": "定期存款",
+      "value": "定期存款",
+      "parent_type": "FIXED_INCOME"
+    },
+    "FOREIGN_CURRENCY_DEPOSIT": {
+      "display_name": "外币定期存款",
+      "value": "外币定期存款",
+      "parent_type": "FIXED_INCOME"
+    },
+    "BANK_WEALTH_PRODUCT": {
+      "display_name": "银行理财",
+      "value": "银行理财",
+      "parent_type": "FIXED_INCOME"
+    },
+    "GOVERNMENT_BOND": {
+      "display_name": "政府债券",
+      "value": "政府债券",
+      "parent_type": "FIXED_INCOME"
+    },
+    "CORPORATE_BOND": {
+      "display_name": "企业债券",
+      "value": "企业债券",
+      "parent_type": "FIXED_INCOME"
+    },
+    "DOMESTIC_STOCK": {
+      "display_name": "A股股票",
+      "value": "A股股票",
+      "parent_type": "EQUITY"
+    },
+    "FOREIGN_STOCK": {
+      "display_name": "海外股票",
+      "value": "海外股票",
+      "parent_type": "EQUITY"
+    },
+    "MUTUAL_FUND": {
+      "display_name": "公募基金",
+      "value": "公募基金",
+      "parent_type": "EQUITY"
+    },
+    "ETF": {
+      "display_name": "交易所基金",
+      "value": "交易所基金",
+      "parent_type": "EQUITY"
+    }
+  },
+  "asset_subtype_mapping": {
+    "CASH": [
+      {
+        "value": "CHECKING_ACCOUNT",
+        "text": "活期存款",
+        "description": "活期存款"
+      },
+      {
+        "value": "MONEY_MARKET_FUND",
+        "text": "货币市场基金",
+        "description": "货币市场基金"
+      }
+    ],
+    "FIXED_INCOME": [
+      {
+        "value": "TIME_DEPOSIT",
+        "text": "定期存款",
+        "description": "定期存款"
+      },
+      {
+        "value": "FOREIGN_CURRENCY_DEPOSIT",
+        "text": "外币定期存款",
+        "description": "外币定期存款"
+      },
+      {
+        "value": "BANK_WEALTH_PRODUCT",
+        "text": "银行理财",
+        "description": "银行理财"
+      },
+      {
+        "value": "GOVERNMENT_BOND",
+        "text": "政府债券",
+        "description": "政府债券"
+      },
+      {
+        "value": "CORPORATE_BOND",
+        "text": "企业债券",
+        "description": "企业债券"
+      }
+    ],
+    "EQUITY": [
+      {
+        "value": "DOMESTIC_STOCK",
+        "text": "A股股票",
+        "description": "A股股票"
+      },
+      {
+        "value": "FOREIGN_STOCK",
+        "text": "海外股票",
+        "description": "海外股票"
+      },
+      {
+        "value": "MUTUAL_FUND",
+        "text": "公募基金",
+        "description": "公募基金"
+      },
+      {
+        "value": "ETF",
+        "text": "交易所基金",
+        "description": "交易所基金"
+      }
+    ]
+  },
+  "currencies": {
+    "CNY": {
+      "display_name": "人民币",
+      "symbol": "¥",
+      "value": "人民币"
+    },
+    "USD": {
+      "display_name": "美元",
+      "symbol": "$",
+      "value": "美元"
+    },
+    "EUR": {
+      "display_name": "欧元",
+      "symbol": "€",
+      "value": "欧元"
+    },
+    "GBP": {
+      "display_name": "英镑",
+      "symbol": "£",
+      "value": "英镑"
+    },
+    "JPY": {
+      "display_name": "日元",
+      "symbol": "¥",
+      "value": "日元"
+    },
+    "HKD": {
+      "display_name": "港币",
+      "symbol": "HK$",
+      "value": "港币"
+    },
+    "AUD": {
+      "display_name": "澳元",
+      "symbol": "A$",
+      "value": "澳元"
+    },
+    "CAD": {
+      "display_name": "加元",
+      "symbol": "C$",
+      "value": "加元"
+    },
+    "SGD": {
+      "display_name": "新加坡元",
+      "symbol": "S$",
+      "value": "新加坡元"
+    },
+    "KRW": {
+      "display_name": "韩元",
+      "symbol": "₩",
+      "value": "韩元"
+    }
+  },
+  "transaction_types": {
+    "BUY": {
+      "display_name": "买入",
+      "value": "买入",
+      "is_income": false,
+      "is_expense": false
+    },
+    "SELL": {
+      "display_name": "卖出",
+      "value": "卖出",
+      "is_income": false,
+      "is_expense": true
+    },
+    "DEPOSIT": {
+      "display_name": "存入",
+      "value": "存入",
+      "is_income": false,
+      "is_expense": false
+    },
+    "WITHDRAW": {
+      "display_name": "取出",
+      "value": "取出",
+      "is_income": false,
+      "is_expense": true
+    },
+    "INTEREST": {
+      "display_name": "利息收入",
+      "value": "利息收入",
+      "is_income": true,
+      "is_expense": false
+    },
+    "DIVIDEND": {
+      "display_name": "分红收入",
+      "value": "分红收入",
+      "is_income": true,
+      "is_expense": false
+    },
+    "FEE": {
+      "display_name": "手续费",
+      "value": "手续费",
+      "is_income": false,
+      "is_expense": true
+    },
+    "TRANSFER_IN": {
+      "display_name": "转入",
+      "value": "转入",
+      "is_income": false,
+      "is_expense": false
+    },
+    "TRANSFER_OUT": {
+      "display_name": "转出",
+      "value": "转出",
+      "is_income": false,
+      "is_expense": true
+    }
+  },
+  "risk_levels": {
+    "VERY_LOW": {
+      "display_name": "极低风险",
+      "value": "极低风险",
+      "risk_score": 1
+    },
+    "LOW": {
+      "display_name": "低风险",
+      "value": "低风险",
+      "risk_score": 2
+    },
+    "MEDIUM": {
+      "display_name": "中等风险",
+      "value": "中等风险",
+      "risk_score": 3
+    },
+    "HIGH": {
+      "display_name": "高风险",
+      "value": "高风险",
+      "risk_score": 4
+    },
+    "VERY_HIGH": {
+      "display_name": "极高风险",
+      "value": "极高风险",
+      "risk_score": 5
+    }
+  },
+  "liquidity_levels": {
+    "VERY_HIGH": {
+      "display_name": "极高流动性",
+      "value": "极高流动性",
+      "liquidity_score": 5
+    },
+    "HIGH": {
+      "display_name": "高流动性",
+      "value": "高流动性",
+      "liquidity_score": 4
+    },
+    "MEDIUM": {
+      "display_name": "中等流动性",
+      "value": "中等流动性",
+      "liquidity_score": 3
+    },
+    "LOW": {
+      "display_name": "低流动性",
+      "value": "低流动性",
+      "liquidity_score": 2
+    },
+    "VERY_LOW": {
+      "display_name": "极低流动性",
+      "value": "极低流动性",
+      "liquidity_score": 1
+    }
+  }
+}

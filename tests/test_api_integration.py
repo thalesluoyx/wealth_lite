@@ -45,7 +45,7 @@ def test_asset_crud_and_validation(client):
     # 1. 正常创建资产
     asset_data = {
         "name": "测试活期账户",
-        "type": AssetType.CASH.name,
+        "asset_type": AssetType.CASH.name,
         "currency": Currency.CNY.name,
         "description": "测试用活期账户"
     }
@@ -62,19 +62,19 @@ def test_asset_crud_and_validation(client):
     assert any(a["id"] == asset_id for a in assets)
 
     # 3. 缺少必填字段
-    resp = client.post("/api/assets", json={"type": AssetType.CASH.name, "currency": Currency.CNY.name})
+    resp = client.post("/api/assets", json={"asset_type": AssetType.CASH.name, "currency": Currency.CNY.name})
     assert resp.status_code == 400
     assert "缺少必填字段" in resp.json().get("detail", "")
 
     # 4. 非法类型
-    resp = client.post("/api/assets", json={"name": "非法资产", "type": "NOTYPE", "currency": Currency.CNY.name})
+    resp = client.post("/api/assets", json={"name": "非法资产", "asset_type": "NOTYPE", "currency": Currency.CNY.name})
     assert resp.status_code == 400
     assert "无效的枚举值" in resp.json().get("detail", "")
 
     # 5. 多资产创建
     asset2 = {
         "name": "测试定期存款",
-        "type": AssetType.FIXED_INCOME.name,
+        "asset_type": AssetType.FIXED_INCOME.name,
         "currency": Currency.CNY.name,
         "description": "测试用定期存款"
     }
@@ -88,7 +88,7 @@ def test_transactions_query(client):
     # 1. 资产先创建
     asset_data = {
         "name": "交易测试账户",
-        "type": AssetType.CASH.name,
+        "asset_type": AssetType.CASH.name,
         "currency": Currency.CNY.name,
         "description": "交易测试"
     }
@@ -134,7 +134,7 @@ def test_asset_delete(client):
     # 创建资产
     asset_data = {
         "name": "待删除资产",
-        "type": AssetType.CASH.name,
+        "asset_type": AssetType.CASH.name,
         "currency": Currency.CNY.name,
         "description": "删除测试"
     }
@@ -153,7 +153,7 @@ def test_transaction_culd(client):
     # 1. 创建资产
     asset_data = {
         "name": "交易CULD账户",
-        "type": AssetType.CASH.name,
+        "asset_type": AssetType.CASH.name,
         "currency": Currency.CNY.name,
         "description": "交易CULD测试"
     }

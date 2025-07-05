@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional, Dict, Any
 
 from src.wealth_lite.models import (
-    Asset, AssetType, Currency, RiskLevel, LiquidityLevel,
+    Asset, AssetType, AssetSubType, Currency, RiskLevel, LiquidityLevel,
     BaseTransaction, CashTransaction, FixedIncomeTransaction,
     TransactionType, InterestType, PaymentFrequency, Position, Portfolio
 )
@@ -28,9 +28,8 @@ class AssetFactory:
         defaults = {
             'asset_name': f"测试现金资产-{uuid.uuid4().hex[:8]}",
             'asset_type': AssetType.CASH,
+            'asset_subtype': AssetSubType.CHECKING_ACCOUNT,
             'currency': Currency.CNY,
-            'primary_category': "现金及等价物",
-            'secondary_category': "储蓄存款",
             'risk_level': RiskLevel.VERY_LOW,
             'liquidity_level': LiquidityLevel.VERY_HIGH,
             'description': "测试用现金资产"
@@ -44,9 +43,8 @@ class AssetFactory:
         defaults = {
             'asset_name': f"测试债券-{uuid.uuid4().hex[:8]}",
             'asset_type': AssetType.FIXED_INCOME,
+            'asset_subtype': AssetSubType.GOVERNMENT_BOND,
             'currency': Currency.CNY,
-            'primary_category': "固定收益类",
-            'secondary_category': "政府债券",
             'risk_level': RiskLevel.LOW,
             'liquidity_level': LiquidityLevel.MEDIUM,
             'description': "测试用固定收益资产"

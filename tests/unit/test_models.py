@@ -9,7 +9,7 @@ from decimal import Decimal
 from datetime import date, datetime, timedelta
 
 from src.wealth_lite.models import (
-    Asset, AssetType, Currency, RiskLevel, LiquidityLevel,
+    Asset, AssetType, AssetSubType, Currency, RiskLevel, LiquidityLevel,
     CashTransaction, FixedIncomeTransaction, TransactionType, 
     InterestType, PaymentFrequency, Position, Portfolio, PortfolioSnapshot
 )
@@ -25,8 +25,8 @@ class TestPhase1Assets:
         
         assert asset.asset_name == "测试储蓄账户"
         assert asset.asset_type == AssetType.CASH
+        assert asset.asset_subtype == AssetSubType.CHECKING_ACCOUNT
         assert asset.currency == Currency.CNY
-        assert asset.primary_category == "现金及等价物"
         assert asset.risk_level == RiskLevel.VERY_LOW
         assert asset.liquidity_level == LiquidityLevel.VERY_HIGH
         assert asset.asset_id is not None
@@ -38,8 +38,8 @@ class TestPhase1Assets:
         
         assert asset.asset_name == "测试国债"
         assert asset.asset_type == AssetType.FIXED_INCOME
+        assert asset.asset_subtype == AssetSubType.GOVERNMENT_BOND
         assert asset.currency == Currency.CNY
-        assert asset.primary_category == "固定收益类"
         assert asset.risk_level == RiskLevel.LOW
         assert asset.liquidity_level == LiquidityLevel.MEDIUM
     
