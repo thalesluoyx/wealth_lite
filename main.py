@@ -27,6 +27,7 @@ sys.path.append(str(Path(__file__).parent / "src"))
 
 from wealth_lite.services.wealth_service import WealthService
 from wealth_lite.data.database import DatabaseManager
+from wealth_lite.models.enums import AssetType, Currency, TransactionType
 
 # 初始化日志
 setup_logging(LOG_LEVEL)
@@ -44,12 +45,9 @@ class WealthLiteApp:
     def initialize_services(self):
         """初始化服务"""
         try:
-            # 初始化数据库
-            db_path = Path("user_data/wealth_lite.db")
-            db_path.parent.mkdir(exist_ok=True)
-            
-            self.db_manager = DatabaseManager(str(db_path))
-            self.wealth_service = WealthService(str(db_path))
+            # 初始化数据库 - 根据环境变量自动选择数据库
+            self.db_manager = DatabaseManager()
+            self.wealth_service = WealthService()
             
             logging.info("✅ 数据库服务初始化成功")
             
@@ -242,7 +240,6 @@ class WealthLiteApp:
         async def create_asset(asset_data: dict):
             """创建新资产"""
             try:
-                from wealth_lite.models.enums import AssetType, Currency
                 
                 # 验证必填字段
                 required_fields = ['name', 'type', 'currency']
@@ -271,8 +268,7 @@ class WealthLiteApp:
                 type_category_map = {
                     AssetType.CASH: ("现金及等价物", "储蓄存款"),
                     AssetType.FIXED_INCOME: ("固定收益类", "政府债券"),
-                    AssetType.EQUITY: ("权益类", "股票"),
-                    AssetType.REAL_ESTATE: ("不动产", "住宅")
+                    AssetType.EQUITY: ("权益类", "股票")
                 }
                 default_primary, default_secondary = type_category_map.get(asset_type, ("其他", "未分类"))
                 
@@ -348,7 +344,6 @@ class WealthLiteApp:
         async def create_transaction(tx_data: dict):
             """创建交易（支持现金类和固定收益类）"""
             try:
-                from wealth_lite.models.enums import TransactionType, Currency, AssetType
                 from decimal import Decimal
                 import datetime
                 
@@ -386,8 +381,9 @@ class WealthLiteApp:
                 if not asset:
                     raise HTTPException(status_code=400, detail=f"资产不存在: {asset_id}")
                 
+                
                 # 根据资产类型创建不同的交易
-                if asset.asset_type == AssetType.CASH:
+                if asset.asset_type.name == AssetType.CASH.name:
                     tx = self.wealth_service.create_cash_transaction(
                         asset_id=asset_id,
                         transaction_type=tx_type,
@@ -397,7 +393,7 @@ class WealthLiteApp:
                         exchange_rate=exchange_rate,
                         notes=notes
                     )
-                elif asset.asset_type == AssetType.FIXED_INCOME:
+                elif asset.asset_type.name == AssetType.FIXED_INCOME.name:
                     # 解析固定收益特有字段
                     annual_rate = tx_data.get("annual_rate")
                     if annual_rate is not None:
@@ -444,10 +440,10 @@ class WealthLiteApp:
                 return {
                     "id": tx.transaction_id, 
                     "asset_id": tx.asset_id, 
-                    "type": tx.transaction_type.value, 
+                    "type": tx.transaction_type.name,  # 使用英文名称保持一致
                     "amount": float(tx.amount), 
                     "date": str(tx.transaction_date), 
-                    "currency": tx.currency.value, 
+                    "currency": tx.currency.name,      # 使用英文名称保持一致
                     "notes": tx.notes
                 }
             except Exception as e:

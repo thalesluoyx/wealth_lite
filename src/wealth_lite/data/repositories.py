@@ -42,10 +42,10 @@ class AssetRepository:
             params = (
                 asset.asset_id,
                 asset.asset_name,
-                asset.asset_type.value,
+                asset.asset_type.name,  # 使用英文名称而不是中文值
                 asset.primary_category,
                 asset.secondary_category,
-                asset.currency.value,
+                asset.currency.name,    # 使用英文名称而不是中文值
                 asset.description,
                 asset.issuer,
                 asset.credit_rating,
@@ -73,9 +73,26 @@ class AssetRepository:
     def get_by_type(self, asset_type: AssetType) -> List[Asset]:
         """根据资产类型获取资产列表"""
         query = "SELECT * FROM assets WHERE asset_type = ? ORDER BY asset_name"
-        results = self.db.execute_query(query, (asset_type.value,))
+        results = self.db.execute_query(query, (asset_type.name,))  # 使用英文名称
         
         return [self._row_to_asset(row) for row in results]
+    
+    def get_by_name(self, asset_name: str) -> Optional[Asset]:
+        """根据资产名称获取资产"""
+        query = "SELECT * FROM assets WHERE asset_name = ?"
+        results = self.db.execute_query(query, (asset_name,))
+        
+        if not results:
+            return None
+            
+        row = results[0]
+        return self._row_to_asset(row)
+    
+    def exists_by_name(self, asset_name: str) -> bool:
+        """检查资产名称是否已存在"""
+        query = "SELECT COUNT(*) as count FROM assets WHERE asset_name = ?"
+        results = self.db.execute_query(query, (asset_name,))
+        return results[0]['count'] > 0
     
     def get_all(self) -> List[Asset]:
         """获取所有资产"""
@@ -97,10 +114,10 @@ class AssetRepository:
             """
             params = (
                 asset.asset_name,
-                asset.asset_type.value,
+                asset.asset_type.name,  # 使用英文名称而不是中文值
                 asset.primary_category,
                 asset.secondary_category,
-                asset.currency.value,
+                asset.currency.name,    # 使用英文名称而不是中文值
                 asset.description,
                 asset.issuer,
                 asset.credit_rating,
@@ -143,10 +160,10 @@ class AssetRepository:
         return Asset(
             asset_id=row['asset_id'],
             asset_name=row['asset_name'],
-            asset_type=AssetType(row['asset_type']),
+            asset_type=AssetType[row['asset_type']],  # 使用英文名称查找枚举
             primary_category=row['primary_category'],
             secondary_category=row['secondary_category'],
-            currency=Currency(row['currency']),
+            currency=Currency[row['currency']],      # 使用英文名称查找枚举
             description=row['description'],
             issuer=row['issuer'],
             credit_rating=row['credit_rating'],
@@ -175,9 +192,9 @@ class TransactionRepository:
                     transaction.transaction_id,
                     transaction.asset_id,
                     transaction.transaction_date.isoformat(),
-                    transaction.transaction_type.value,
+                    transaction.transaction_type.name,  # 使用英文名称
                     float(transaction.amount),
-                    transaction.currency.value,
+                    transaction.currency.name,          # 使用英文名称
                     float(transaction.exchange_rate),
                     float(transaction.amount_base_currency),
                     transaction.notes
@@ -255,9 +272,9 @@ class TransactionRepository:
                 main_params = (
                     transaction.asset_id,
                     transaction.transaction_date.isoformat(),
-                    transaction.transaction_type.value,
+                    transaction.transaction_type.name,  # 使用英文名称
                     float(transaction.amount),
-                    transaction.currency.value,
+                    transaction.currency.name,          # 使用英文名称
                     float(transaction.exchange_rate),
                     float(transaction.amount_base_currency),
                     transaction.notes,
@@ -351,7 +368,7 @@ class TransactionRepository:
     def _row_to_transaction(self, row: sqlite3.Row) -> BaseTransaction:
         """将数据库行转换为Transaction对象"""
         # 根据交易类型确定具体的Transaction子类
-        transaction_type = TransactionType(row['transaction_type'])
+        transaction_type = TransactionType[row['transaction_type']]  # 使用英文名称查找枚举
         
         # 基础参数
         base_params = {
@@ -360,7 +377,7 @@ class TransactionRepository:
             'transaction_date': datetime.fromisoformat(row['transaction_date']).date(),
             'transaction_type': transaction_type,
             'amount': Decimal(str(row['amount'])),
-            'currency': Currency(row['currency']),
+            'currency': Currency[row['currency']],  # 使用英文名称查找枚举
             'exchange_rate': Decimal(str(row['exchange_rate'])),
             'notes': row['notes']
         }
@@ -437,7 +454,7 @@ class PortfolioSnapshotRepository:
             params = (
                 snapshot.snapshot_id,
                 snapshot.snapshot_date.isoformat(),
-                snapshot.base_currency.value,
+                snapshot.base_currency.name,  # 使用英文名称
                 snapshot.description,
                 float(snapshot.total_value),
                 float(snapshot.total_cost),
@@ -517,7 +534,7 @@ class PortfolioSnapshotRepository:
         return PortfolioSnapshot(
             snapshot_id=row['snapshot_id'],
             snapshot_date=datetime.fromisoformat(row['snapshot_date']),
-            base_currency=Currency(row['base_currency']),
+            base_currency=Currency[row['base_currency']],  # 使用英文名称查找枚举
             description=row['description'],
             total_value=Decimal(str(row['total_value'])),
             total_cost=Decimal(str(row['total_cost'])),

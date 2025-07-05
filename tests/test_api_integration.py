@@ -45,8 +45,8 @@ def test_asset_crud_and_validation(client):
     # 1. 正常创建资产
     asset_data = {
         "name": "测试活期账户",
-        "type": AssetType.CASH.value,
-        "currency": Currency.CNY.value,
+        "type": AssetType.CASH.name,
+        "currency": Currency.CNY.name,
         "description": "测试用活期账户"
     }
     resp = client.post("/api/assets", json=asset_data)
@@ -62,20 +62,20 @@ def test_asset_crud_and_validation(client):
     assert any(a["id"] == asset_id for a in assets)
 
     # 3. 缺少必填字段
-    resp = client.post("/api/assets", json={"type": AssetType.CASH.value, "currency": Currency.CNY.value})
+    resp = client.post("/api/assets", json={"type": AssetType.CASH.name, "currency": Currency.CNY.name})
     assert resp.status_code == 400
     assert "缺少必填字段" in resp.json().get("detail", "")
 
     # 4. 非法类型
-    resp = client.post("/api/assets", json={"name": "非法资产", "type": "NOTYPE", "currency": Currency.CNY.value})
+    resp = client.post("/api/assets", json={"name": "非法资产", "type": "NOTYPE", "currency": Currency.CNY.name})
     assert resp.status_code == 400
     assert "无效的枚举值" in resp.json().get("detail", "")
 
     # 5. 多资产创建
     asset2 = {
         "name": "测试定期存款",
-        "type": AssetType.FIXED_INCOME.value,
-        "currency": Currency.CNY.value,
+        "type": AssetType.FIXED_INCOME.name,
+        "currency": Currency.CNY.name,
         "description": "测试用定期存款"
     }
     resp = client.post("/api/assets", json=asset2)
@@ -88,8 +88,8 @@ def test_transactions_query(client):
     # 1. 资产先创建
     asset_data = {
         "name": "交易测试账户",
-        "type": AssetType.CASH.value,
-        "currency": Currency.CNY.value,
+        "type": AssetType.CASH.name,
+        "currency": Currency.CNY.name,
         "description": "交易测试"
     }
     resp = client.post("/api/assets", json=asset_data)
@@ -106,9 +106,9 @@ def test_transactions_query(client):
     # 这里只做接口结构示例，具体参数需与后端实现一致
     transaction_data = {
         "asset_id": asset_id,
-        "type": TransactionType.DEPOSIT.value,
+        "type": TransactionType.DEPOSIT.name,
         "amount": 10000.0,
-        "currency": Currency.CNY.value,
+        "currency": Currency.CNY.name,
         "date": date.today().isoformat(),
         "exchange_rate": 1.0,
         "notes": "测试存入"
@@ -134,8 +134,8 @@ def test_asset_delete(client):
     # 创建资产
     asset_data = {
         "name": "待删除资产",
-        "type": AssetType.CASH.value,
-        "currency": Currency.CNY.value,
+        "type": AssetType.CASH.name,
+        "currency": Currency.CNY.name,
         "description": "删除测试"
     }
     resp = client.post("/api/assets", json=asset_data)
@@ -153,8 +153,8 @@ def test_transaction_culd(client):
     # 1. 创建资产
     asset_data = {
         "name": "交易CULD账户",
-        "type": AssetType.CASH.value,
-        "currency": Currency.CNY.value,
+        "type": AssetType.CASH.name,
+        "currency": Currency.CNY.name,
         "description": "交易CULD测试"
     }
     resp = client.post("/api/assets", json=asset_data)
@@ -163,9 +163,9 @@ def test_transaction_culd(client):
     # 2. 创建交易
     tx_data = {
         "asset_id": asset_id,
-        "type": TransactionType.DEPOSIT.value,
+        "type": TransactionType.DEPOSIT.name,
         "amount": 5000.0,
-        "currency": Currency.CNY.value,
+        "currency": Currency.CNY.name,
         "date": date.today().isoformat(),
         "exchange_rate": 1.0,
         "notes": "初始存入"

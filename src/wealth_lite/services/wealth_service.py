@@ -28,7 +28,10 @@ class WealthService:
         初始化财富管理服务
         
         Args:
-            db_path: 数据库文件路径，默认使用内存数据库
+            db_path: 数据库文件路径，如果不指定则根据环境变量自动选择
+                    - 测试环境：使用内存数据库
+                    - 开发环境：使用开发数据库
+                    - 生产环境：使用生产数据库
         """
         self.db_manager = DatabaseManager(db_path)
         self.repositories = RepositoryManager(self.db_manager)
@@ -69,9 +72,18 @@ class WealthService:
             RuntimeError: 数据库操作失败
         """
         logging.debug(f"[create_asset] 参数: name={asset_name}, type={asset_type}, primary={primary_category}, secondary={secondary_category}, currency={currency}, desc={description}, issuer={issuer}, credit={credit_rating}, ext={extended_attributes}")
+        
+        # 验证资产名称不能为空
+        if not asset_name or not asset_name.strip():
+            raise ValueError("资产名称不能为空")
+        
+        # 验证资产名称是否已存在
+        if self.repositories.assets.exists_by_name(asset_name.strip()):
+            raise ValueError(f"资产名称已存在: {asset_name}")
+        
         # 创建资产对象
         asset = Asset(
-            asset_name=asset_name,
+            asset_name=asset_name.strip(),
             asset_type=asset_type,
             primary_category=primary_category,
             secondary_category=secondary_category,

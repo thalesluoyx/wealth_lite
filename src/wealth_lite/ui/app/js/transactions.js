@@ -884,6 +884,16 @@ class TransactionManager {
             this.showValidationError('请输入资产名称');
             return false;
         }
+        
+        // 检查资产名称是否已存在
+        const existingAsset = this.assets.find(asset => 
+            asset.name.toLowerCase().trim() === data.name.toLowerCase().trim()
+        );
+        if (existingAsset) {
+            this.showValidationError(`资产名称已存在: ${data.name}`);
+            return false;
+        }
+        
         if (!data.type) {
             this.showValidationError('请选择资产类型');
             return false;

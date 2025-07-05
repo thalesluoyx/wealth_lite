@@ -7,35 +7,38 @@ WealthLite 测试配置
 import pytest
 import tempfile
 import os
+import sys
+from pathlib import Path
 from decimal import Decimal
 from datetime import date, datetime
 from typing import Generator
 
-# 当数据层开发完成后，取消这些导入的注释
-# from src.wealth_lite.data.database import DatabaseManager
-# from src.wealth_lite.data.repositories import AssetRepository, TransactionRepository
+# 添加src目录到Python路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root / "src"))
 
-from src.wealth_lite.models import (
+from wealth_lite.models import (
     Asset, AssetType, Currency, RiskLevel, LiquidityLevel,
     CashTransaction, TransactionType
 )
+from wealth_lite.services.wealth_service import WealthService
 
 
 @pytest.fixture(scope="function")
-def memory_db():
+def wealth_service():
     """
-    每个测试函数使用独立的内存数据库
+    每个测试函数使用独立的WealthService实例（内存数据库）
     
     适用于：单元测试，快速执行，自动清理
     """
-    # TODO: 当DatabaseManager实现后启用
-    # db_manager = DatabaseManager(":memory:")
-    # db_manager.initialize_schema()
-    # yield db_manager
-    # db_manager.close()
-    
-    # 临时返回None，后续替换
-    yield None
+    # 设置测试环境变量，确保使用内存数据库
+    os.environ['WEALTH_LITE_ENV'] = 'test'
+    service = WealthService()
+    yield service
+    service.close()
+    # 清理环境变量
+    if 'WEALTH_LITE_ENV' in os.environ:
+        del os.environ['WEALTH_LITE_ENV']
 
 
 @pytest.fixture(scope="session")
@@ -134,6 +137,9 @@ def clean_test_data():
 # pytest配置
 def pytest_configure(config):
     """pytest启动时的配置"""
+    # 设置测试环境变量
+    os.environ['WEALTH_LITE_ENV'] = 'test'
+    
     # 添加自定义标记
     config.addinivalue_line(
         "markers", "unit: 标记单元测试"

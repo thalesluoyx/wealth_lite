@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from datetime import datetime
 
 from ..models.enums import Currency
+from ..config.database_config import DatabaseConfig
 
 
 class DatabaseManager:
@@ -33,16 +34,21 @@ class DatabaseManager:
         初始化数据库管理器
         
         Args:
-            db_path: 数据库文件路径，默认为 user_data/wealth_lite.db
+            db_path: 数据库文件路径，如果不指定则根据环境变量自动选择
+                    - 测试环境：使用内存数据库 ":memory:"
+                    - 开发环境：使用 user_data/wealth_lite_dev.db
+                    - 生产环境：使用 user_data/wealth_lite.db
         """
         if db_path is None:
-            # 使用默认路径
-            user_data_dir = Path("user_data")
-            user_data_dir.mkdir(exist_ok=True)
-            self.db_path = user_data_dir / "wealth_lite.db"
+            # 使用配置类根据环境自动选择数据库路径
+            self.db_path = DatabaseConfig.get_db_path()
         else:
-            self.db_path = Path(db_path)
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            self.db_path = db_path
+        
+        # 只有非内存数据库才需要创建目录
+        if self.db_path != ":memory:":
+            db_path_obj = Path(self.db_path)
+            db_path_obj.parent.mkdir(parents=True, exist_ok=True)
         
         self.logger = logging.getLogger(__name__)
         self._connection: Optional[sqlite3.Connection] = None
@@ -198,12 +204,20 @@ class DatabaseManager:
     @contextmanager
     def get_connection(self):
         """获取数据库连接的上下文管理器"""
-        conn = sqlite3.connect(str(self.db_path))
-        conn.row_factory = sqlite3.Row  # 启用字典式访问
-        try:
-            yield conn
-        finally:
-            conn.close()
+        if self.db_path == ":memory:":
+            # 内存数据库需要保持持久连接
+            if self._connection is None:
+                self._connection = sqlite3.connect(self.db_path)
+                self._connection.row_factory = sqlite3.Row
+            yield self._connection
+        else:
+            # 文件数据库使用临时连接
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            try:
+                yield conn
+            finally:
+                conn.close()
     
     @contextmanager
     def transaction(self):
