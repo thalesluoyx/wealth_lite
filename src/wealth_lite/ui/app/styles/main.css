@@ -617,4 +617,319 @@ body {
   }
 }
 
+/* 持仓明细表格样式 */
+.positions-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.positions-list-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.positions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.positions-table th,
+.positions-table td {
+  padding: var(--spacing) var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.positions-table th {
+  background: var(--gray-50);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.positions-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.positions-table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.positions-table .asset-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.positions-table .asset-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+
+.positions-table .asset-icon.cash {
+  background: var(--success);
+}
+
+.positions-table .asset-icon.fixed_income {
+  background: var(--info);
+}
+
+.positions-table .asset-icon.equity {
+  background: var(--warning);
+}
+
+.positions-table .asset-icon i {
+  width: 16px;
+  height: 16px;
+}
+
+.positions-table .asset-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.positions-table .asset-type {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.positions-table .asset-type.cash {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.positions-table .asset-type.fixed_income {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.positions-table .asset-type.equity {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.positions-table .amount {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.positions-table .action-buttons {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.positions-table .btn-action {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.positions-table .btn-action:hover {
+  background: var(--gray-200);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.positions-table .btn-action.withdraw {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.positions-table .btn-action.withdraw:hover {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.positions-table .btn-action i {
+  width: 12px;
+  height: 12px;
+}
+
+/* 表格行内展开样式 */
+.positions-table .position-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.positions-table .position-row:hover {
+  background: var(--gray-50);
+}
+
+.positions-table .position-row.expanded {
+  background: var(--info-light);
+}
+
+.positions-table .expand-icon {
+  display: inline-block;
+  margin-right: var(--spacing-sm);
+  transition: transform 0.3s ease;
+  font-size: 1.1em;
+  color: var(--text-muted);
+}
+
+.positions-table .position-row.expanded .expand-icon {
+  transform: rotate(90deg);
+  color: var(--info);
+}
+
+.positions-table .details-row {
+  display: none;
+  background: var(--gray-50);
+}
+
+.positions-table .details-row.show {
+  display: table-row;
+}
+
+.positions-table .details-container {
+  padding: 0 !important;
+  border-bottom: none !important;
+}
+
+.positions-table .details-panel {
+  padding: var(--spacing-lg);
+  background: var(--white);
+  margin: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--info);
+  box-shadow: var(--shadow-sm);
+}
+
+.positions-table .details-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.positions-table .tab-button {
+  padding: var(--spacing-sm) var(--spacing);
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.positions-table .tab-button.active {
+  color: var(--info);
+  border-bottom-color: var(--info);
+}
+
+.positions-table .tab-button:hover {
+  color: var(--text-primary);
+}
+
+.positions-table .tab-content {
+  display: none;
+}
+
+.positions-table .tab-content.active {
+  display: block;
+}
+
+.positions-table .details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.positions-table .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.positions-table .detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.positions-table .detail-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.positions-table .status {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.positions-table .status.active {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.positions-table .status.closed {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.positions-table .status.matured {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+@media (max-width: 768px) {
+  .positions-table {
+    font-size: 0.875rem;
+  }
+  
+  .positions-table th,
+  .positions-table td {
+    padding: var(--spacing-sm);
+  }
+  
+  .positions-table .asset-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .positions-table .asset-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .positions-table .asset-icon i {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .positions-table .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
  

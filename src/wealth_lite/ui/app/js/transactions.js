@@ -463,7 +463,7 @@ class TransactionManager {
     }
 
     // 新增方法：从持仓明细触发的提取操作
-    openWithdrawTransactionModal(assetId) {
+    async openWithdrawTransactionModal(assetId, positionData = null) {
         // 设置提取模式
         this.editingTransactionId = null;
         this.isWithdrawMode = true;
@@ -472,7 +472,7 @@ class TransactionManager {
         // 设置模态窗口标题
         const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
         if (modalTitle) {
-            modalTitle.textContent = '提取资金';
+            modalTitle.textContent = '提取资产';
         }
         
         const submitBtn = document.querySelector('#addTransactionModal .modal-footer .btn-primary');
@@ -501,6 +501,66 @@ class TransactionManager {
             transactionTypeSelect.value = 'WITHDRAW';
             transactionTypeSelect.disabled = true;
             transactionTypeSelect.classList.add('field-locked');
+            
+            // 手动触发交易类型变化事件，确保固定收益字段正确隐藏
+            if (this.fixedIncomeManager) {
+                this.fixedIncomeManager.handleTransactionTypeChange('WITHDRAW');
+            }
+        }
+        
+        // 自动填写提取金额和币种
+        if (positionData) {
+            // 使用传入的持仓数据
+            console.log('📊 使用传入的持仓数据:', positionData);
+            
+            // 自动填写提取金额为当前持仓价值
+            const amountField = document.getElementById('transactionAmount');
+            const currentValue =positionData.amount;
+            if (amountField && currentValue) {
+                amountField.value = currentValue;
+                console.log('💰 自动填写提取金额:', currentValue);
+            }
+            
+            // 自动设置币种为持仓币种
+            const currencyField = document.getElementById('transactionCurrency');
+            if (currencyField && positionData.currency) {
+                currencyField.value = positionData.currency;
+                console.log('💱 自动设置币种:', positionData.currency);
+                
+                // 触发币种变化事件以处理汇率字段
+                this.handleCurrencyChange(positionData.currency);
+            }
+        } else {
+            // 获取持仓信息并自动填写提取金额（备用方案）
+            try {
+                console.log('🔍 获取持仓信息以自动填写提取金额...');
+                const response = await fetch(`/api/positions/${assetId}`);
+                if (response.ok) {
+                    const position = await response.json();
+                    console.log('📊 获取到持仓信息:', position);
+                    
+                    // 自动填写提取金额为当前持仓价值
+                    const amountField = document.getElementById('transactionAmount');
+                    if (amountField && position.current_value) {
+                        amountField.value = position.current_value;
+                        console.log('💰 自动填写提取金额:', position.current_value);
+                    }
+                    
+                    // 自动设置币种为持仓币种
+                    const currencyField = document.getElementById('transactionCurrency');
+                    if (currencyField && position.currency) {
+                        currencyField.value = position.currency;
+                        console.log('💱 自动设置币种:', position.currency);
+                        
+                        // 触发币种变化事件以处理汇率字段
+                        this.handleCurrencyChange(position.currency);
+                    }
+                } else {
+                    console.warn('⚠️ 获取持仓信息失败:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ 获取持仓信息时发生错误:', error);
+            }
         }
         
         document.getElementById('addTransactionModal').classList.add('show');
@@ -704,6 +764,12 @@ class TransactionManager {
             const formData = this.getTransactionFormData();
             console.log('📝 表单数据:', formData);
             
+            // 检查是否为提取模式
+            if (this.isWithdrawMode) {
+                console.log('💸 检测到提取模式');
+                return await this.handleWithdrawSubmit(formData);
+            }
+            
             // 检查是否为固定收益产品交易
             if (this.isFixedIncomeTransaction(formData)) {
                 console.log('🏦 检测到固定收益产品交易');
@@ -751,6 +817,89 @@ class TransactionManager {
             console.error('💥 交易提交处理失败:', error);
             this.showValidationError('处理失败: ' + error.message);
         }
+    }
+
+    /**
+     * 处理提取资产提交
+     */
+    async handleWithdrawSubmit(formData) {
+        try {
+            console.log('💸 开始处理提取资产...');
+            
+            // 验证提取表单
+            if (!this.validateWithdrawForm(formData)) {
+                return;
+            }
+
+            // 准备提取数据
+            const withdrawData = {
+                amount: formData.amount,
+                currency: formData.currency,
+                exchange_rate: formData.exchange_rate,
+                date: formData.transaction_date,
+                notes: formData.notes
+            };
+
+            console.log('📤 提取数据:', withdrawData);
+
+            // 调用提取资产API
+            const response = await fetch(`/api/positions/${this.lockedAssetId}/withdraw`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(withdrawData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ 提取成功:', result);
+
+            // 显示成功消息
+            this.showSuccessMessage(`资产提取成功！提取金额: ${result.withdraw_amount}，剩余价值: ${result.remaining_value}`);
+            
+            // 关闭模态窗口
+            this.closeAddTransactionModal();
+            
+            // 重新加载数据
+            await this.loadInitialData();
+            
+            // 通知主应用刷新仪表板数据
+            if (this.app && this.app.loadDashboardData) {
+                this.app.loadDashboardData();
+            }
+
+        } catch (error) {
+            console.error('❌ 提取资产失败:', error);
+            this.showValidationError('提取失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 验证提取表单
+     */
+    validateWithdrawForm(data) {
+        if (!data.asset_id) {
+            this.showValidationError('请选择资产');
+            return false;
+        }
+        if (!data.amount || data.amount <= 0) {
+            this.showValidationError('请输入有效的提取金额');
+            return false;
+        }
+        if (!data.currency) {
+            this.showValidationError('请选择币种');
+            return false;
+        }
+        if (!data.transaction_date) {
+            this.showValidationError('请选择提取日期');
+            return false;
+        }
+        return true;
     }
 
     /**

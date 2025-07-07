@@ -301,6 +301,8 @@ class PositionStatus(Enum):
     CLOSED = "已平仓"
     MATURED = "已到期"
     SUSPENDED = "暂停交易"
+    PARTIALLY_WITHDRAWN = "部分提取"
+    WITHDRAWN = "已提取"
 
     @property
     def display_name(self) -> str:
@@ -315,7 +317,7 @@ class PositionStatus(Enum):
     @classmethod
     def get_inactive_statuses(cls) -> List['PositionStatus']:
         """获取非活跃状态"""
-        return [cls.CLOSED, cls.MATURED, cls.SUSPENDED]
+        return [cls.CLOSED, cls.MATURED, cls.SUSPENDED, cls.WITHDRAWN]
 
 
 class RiskLevel(Enum):

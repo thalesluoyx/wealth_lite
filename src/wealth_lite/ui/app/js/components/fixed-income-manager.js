@@ -393,21 +393,25 @@ class FixedIncomeManager {
                 // 存入交易显示所有字段
                 console.log('📋 显示所有固定收益字段 (存入交易)');
                 this.showAllFixedIncomeFields();
+                this.showCurrencyAndExchangeRateFields();
                 break;
             case 'INTEREST':
-                // 利息交易只显示基本字段
-                console.log('📋 显示基本固定收益字段 (利息交易)');
-                this.showBasicFixedIncomeFields();
+                // 利息交易完全隐藏固定收益字段，实现极简化界面
+                console.log('📋 隐藏所有固定收益字段 (利息交易 - 极简模式)');
+                this.hideAllFixedIncomeFields();
+                this.hideCurrencyAndExchangeRateFields();
                 break;
             case 'WITHDRAW':
-                // 提取交易只显示基本字段
-                console.log('📋 显示基本固定收益字段 (提取交易)');
-                this.showBasicFixedIncomeFields();
+                // 提取交易隐藏所有固定收益字段，只保留基本交易字段
+                console.log('📋 隐藏所有固定收益字段 (提取交易 - 极简模式)');
+                this.hideAllFixedIncomeFields();
+                this.showCurrencyAndExchangeRateFields();
                 break;
             default:
                 // 默认情况（包括null或空值）显示所有字段
                 console.log('📋 显示所有固定收益字段 (默认)');
                 this.showAllFixedIncomeFields();
+                this.showCurrencyAndExchangeRateFields();
         }
     }
 
@@ -420,6 +424,16 @@ class FixedIncomeManager {
         if (container) {
             container.style.display = 'block';
             console.log('✅ 容器显示状态已设置为 block');
+            
+            // 获取当前交易类型
+            const transactionTypeSelect = document.getElementById('transactionType');
+            const currentTransactionType = transactionTypeSelect ? transactionTypeSelect.value : null;
+            console.log('🔍 当前交易类型:', currentTransactionType);
+            
+            // 更新状态并调整字段显示
+            if (currentTransactionType) {
+                this.uiState.currentTransactionType = currentTransactionType;
+            }
             this.adjustFieldsForTransactionType(this.uiState.currentTransactionType);
             
             // 设置必填字段的required属性
@@ -457,6 +471,16 @@ class FixedIncomeManager {
      * @param {boolean} isRequired - 是否设置为必填
      */
     setFixedIncomeFieldsRequired(isRequired) {
+        // 根据当前交易类型决定哪些字段需要设为必填
+        const currentTransactionType = this.uiState.currentTransactionType;
+        
+        if (currentTransactionType === 'INTEREST') {
+            // 利息交易不需要设置固定收益字段为必填
+            console.log('✅ 利息交易模式：跳过固定收益字段必填设置');
+            return;
+        }
+
+        // 非利息交易才设置固定收益字段为必填
         const requiredFields = ['annualRate', 'fiStartDate', 'maturityDate'];
         requiredFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
@@ -468,6 +492,8 @@ class FixedIncomeManager {
                 }
             }
         });
+        
+        console.log(`✅ 固定收益字段必填状态已设置为: ${isRequired}`);
     }
 
     showAllFixedIncomeFields() {
@@ -476,6 +502,16 @@ class FixedIncomeManager {
         fieldIds.forEach(id => {
             const field = document.getElementById(id);
             if (field) field.style.display = 'block';
+        });
+        
+        // 🔧 恢复必填字段的required属性
+        const requiredFieldIds = ['annualRate', 'fiStartDate', 'maturityDate'];
+        requiredFieldIds.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.setAttribute('required', '');
+                console.log(`✅ 恢复字段 ${fieldId} 的required属性`);
+            }
         });
     }
 
@@ -487,12 +523,88 @@ class FixedIncomeManager {
             if (field) field.style.display = 'block';
         });
         
-        // 然后隐藏复杂字段，只显示基本字段
+        // 然后隐藏复杂字段
         const hideFields = ['depositTermGroup', 'interestTypeGroup', 'paymentFrequencyGroup'];
         hideFields.forEach(id => {
             const field = document.getElementById(id);
             if (field) field.style.display = 'none';
         });
+        
+        // 🔧 恢复基本字段的required属性
+        const requiredFieldIds = ['annualRate', 'fiStartDate', 'maturityDate'];
+        requiredFieldIds.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.setAttribute('required', '');
+                console.log(`✅ 恢复基本字段 ${fieldId} 的required属性`);
+            }
+        });
+    }
+
+    /**
+     * 利息交易专用：隐藏所有固定收益字段，实现极简化界面
+     */
+    hideAllFixedIncomeFields() {
+        const fieldIds = ['annualRateGroup', 'startDateGroup', 'maturityDateGroup', 
+                         'depositTermGroup', 'interestTypeGroup', 'paymentFrequencyGroup'];
+        fieldIds.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) field.style.display = 'none';
+        });
+        
+        // 🔧 关键修复：移除隐藏字段的required属性，避免表单验证错误
+        const requiredFieldIds = ['annualRate', 'fiStartDate', 'maturityDate'];
+        requiredFieldIds.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.removeAttribute('required');
+                console.log(`✅ 移除字段 ${fieldId} 的required属性`);
+            }
+        });
+        
+        console.log('✅ 已隐藏所有固定收益字段 (利息交易极简模式)');
+    }
+
+    /**
+     * 隐藏币种和汇率字段（利息交易专用）
+     */
+    hideCurrencyAndExchangeRateFields() {
+        // 隐藏币种选择字段 - 使用更准确的选择器
+        const currencyField = document.getElementById('transactionCurrency');
+        const currencyGroup = currencyField?.closest('.form-group');
+        if (currencyGroup) {
+            currencyGroup.style.display = 'none';
+            console.log('✅ 已隐藏币种字段');
+        } else {
+            console.warn('⚠️ 未找到币种字段组');
+        }
+
+        // 隐藏汇率字段
+        const exchangeRateGroup = document.getElementById('exchangeRateGroup');
+        if (exchangeRateGroup) {
+            exchangeRateGroup.style.display = 'none';
+            console.log('✅ 已隐藏汇率字段');
+        } else {
+            console.warn('⚠️ 未找到汇率字段组');
+        }
+    }
+
+    /**
+     * 显示币种和汇率字段（非利息交易使用）
+     */
+    showCurrencyAndExchangeRateFields() {
+        // 显示币种选择字段
+        const currencyField = document.getElementById('transactionCurrency');
+        const currencyGroup = currencyField?.closest('.form-group');
+        if (currencyGroup) {
+            currencyGroup.style.display = 'block';
+            console.log('✅ 已显示币种字段');
+        } else {
+            console.warn('⚠️ 未找到币种字段组');
+        }
+
+        // 汇率字段的显示由币种变化事件控制，这里不强制显示
+        console.log('✅ 币种字段已恢复显示');
     }
 
     // ==================== 计算逻辑 ====================
@@ -725,12 +837,116 @@ class FixedIncomeManager {
     }
 
     async handleInterestTransaction(formData) {
-        const transactionData = {
-            ...formData,
-            transaction_type: 'INTEREST'
-        };
+        console.log('🏦 处理利息交易，开始自动获取资产信息...');
+        
+        try {
+            // 获取资产信息以自动填充币种和汇率
+            const assetInfo = await this.getAssetInfo(formData.asset_id);
+            if (!assetInfo) {
+                throw new Error('无法获取资产信息，请确认资产是否存在');
+            }
 
-        return await this.transactionManager.saveTransaction(transactionData);
+            console.log('📊 获取到资产信息:', assetInfo);
+
+            // 构建利息交易数据，自动使用资产的币种和汇率
+            const transactionData = {
+                asset_id: formData.asset_id,
+                transaction_type: 'INTEREST',
+                amount: parseFloat(formData.amount),
+                transaction_date: formData.transaction_date,
+                currency: assetInfo.currency,  // 自动使用资产币种
+                exchange_rate: await this.getExchangeRate(assetInfo.currency),  // 自动获取汇率
+                notes: formData.notes || ''
+            };
+
+            console.log('💰 构建的利息交易数据:', transactionData);
+
+            // 添加利息交易的备注信息
+            const originalNotes = transactionData.notes;
+            const interestNote = `利息收入 - 自动使用资产币种: ${assetInfo.currency}`;
+            transactionData.notes = originalNotes ? `${originalNotes}\n${interestNote}` : interestNote;
+
+            return await this.transactionManager.saveTransaction(transactionData);
+
+        } catch (error) {
+            console.error('❌ 利息交易处理失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 获取资产信息
+     * @param {string} assetId - 资产ID
+     * @returns {Object|null} 资产信息
+     */
+    async getAssetInfo(assetId) {
+        try {
+            // 从TransactionManager的资产列表中查找
+            const assets = this.transactionManager.assets || [];
+            const asset = assets.find(a => a.id === assetId);
+            
+            if (asset) {
+                console.log('✅ 从缓存中找到资产信息:', asset);
+                return {
+                    id: asset.id,
+                    name: asset.asset_name,
+                    currency: asset.currency || 'CNY',
+                    asset_type: asset.asset_type
+                };
+            }
+
+            // 如果缓存中没有，尝试从API获取
+            console.log('📡 从API获取资产信息...');
+            const response = await fetch(`/api/assets/${assetId}`);
+            if (response.ok) {
+                const assetData = await response.json();
+                console.log('✅ 从API获取到资产信息:', assetData);
+                return {
+                    id: assetData.id,
+                    name: assetData.asset_name,
+                    currency: assetData.currency || 'CNY',
+                    asset_type: assetData.asset_type
+                };
+            }
+
+            console.warn('⚠️ 无法从API获取资产信息');
+            return null;
+
+        } catch (error) {
+            console.error('❌ 获取资产信息失败:', error);
+            return null;
+        }
+    }
+
+    /**
+     * 获取汇率
+     * @param {string} currency - 币种
+     * @returns {number} 汇率
+     */
+    async getExchangeRate(currency) {
+        // 如果是基础货币（人民币），汇率为1
+        if (currency === 'CNY') {
+            return 1.0;
+        }
+
+        try {
+            // 尝试从系统配置或缓存中获取汇率
+            const defaultRates = {
+                'USD': 7.2,
+                'HKD': 0.9,
+                'EUR': 7.8,
+                'GBP': 9.1,
+                'JPY': 0.05
+            };
+
+            const rate = defaultRates[currency] || 1.0;
+            console.log(`💱 使用汇率: 1 ${currency} = ${rate} CNY`);
+            return rate;
+
+        } catch (error) {
+            console.error('❌ 获取汇率失败，使用默认汇率1.0:', error);
+            return 1.0;
+        }
     }
 
     async handleWithdrawalTransaction(formData) {
@@ -747,7 +963,11 @@ class FixedIncomeManager {
     validateFixedIncomeTransaction(formData) {
         const errors = [];
 
-        // 基础验证
+        // 基础验证（所有交易类型都需要）
+        if (!formData.asset_id) {
+            errors.push('请选择资产');
+        }
+
         if (!formData.amount || parseFloat(formData.amount) <= 0) {
             errors.push('交易金额必须大于0');
         }
@@ -756,37 +976,60 @@ class FixedIncomeManager {
             errors.push('交易日期不能为空');
         }
 
-        // 存入交易的特殊验证
-        if (formData.transaction_type === 'DEPOSIT') {
-            if (!formData.annual_rate || parseFloat(formData.annual_rate) <= 0) {
-                errors.push('年利率必须大于0');
-            }
-
-            if (formData.annual_rate && parseFloat(formData.annual_rate) > 50) {
-                errors.push('年利率不能超过50%');
-            }
-
-            if (!formData.start_date) {
-                errors.push('起息日期不能为空');
-            }
-
-            if (!formData.maturity_date) {
-                errors.push('到期日期不能为空');
-            }
-
-            if (formData.start_date && formData.maturity_date && 
-                new Date(formData.maturity_date) <= new Date(formData.start_date)) {
-                errors.push('到期日期必须晚于起息日期');
-            }
-
-            // 日期合理性验证
-            if (formData.start_date && new Date(formData.start_date) > new Date()) {
-                const today = new Date().toISOString().split('T')[0];
-                if (formData.start_date > today) {
-                    errors.push('起息日期不能晚于今天');
+        // 根据交易类型进行特殊验证
+        switch (formData.transaction_type) {
+            case 'DEPOSIT':
+                // 存入交易的完整验证
+                if (!formData.annual_rate || parseFloat(formData.annual_rate) <= 0) {
+                    errors.push('年利率必须大于0');
                 }
-            }
+
+                if (formData.annual_rate && parseFloat(formData.annual_rate) > 50) {
+                    errors.push('年利率不能超过50%');
+                }
+
+                if (!formData.start_date) {
+                    errors.push('起息日期不能为空');
+                }
+
+                if (!formData.maturity_date) {
+                    errors.push('到期日期不能为空');
+                }
+
+                if (formData.start_date && formData.maturity_date && 
+                    new Date(formData.maturity_date) <= new Date(formData.start_date)) {
+                    errors.push('到期日期必须晚于起息日期');
+                }
+
+                // 日期合理性验证
+                if (formData.start_date && new Date(formData.start_date) > new Date()) {
+                    const today = new Date().toISOString().split('T')[0];
+                    if (formData.start_date > today) {
+                        errors.push('起息日期不能晚于今天');
+                    }
+                }
+                break;
+
+            case 'INTEREST':
+                // 利息交易的简化验证 - 只验证基本字段
+                console.log('✅ 利息交易使用简化验证逻辑');
+                // 已经在上面进行了基础验证，利息交易不需要额外验证
+                break;
+
+            case 'WITHDRAW':
+                // 提取交易的验证
+                // 目前只需要基础验证
+                break;
+
+            default:
+                errors.push('不支持的交易类型');
         }
+
+        console.log('🔍 验证结果:', {
+            transactionType: formData.transaction_type,
+            isValid: errors.length === 0,
+            errors: errors
+        });
 
         return {
             isValid: errors.length === 0,
@@ -998,6 +1241,19 @@ class FixedIncomeManager {
     getFixedIncomeFormData() {
         if (!this.uiState.isFixedIncomeMode) return {};
 
+        const currentTransactionType = this.uiState.currentTransactionType;
+        
+        // 利息交易使用极简数据收集
+        if (currentTransactionType === 'INTEREST') {
+            console.log('📝 利息交易模式：收集简化数据');
+            return {
+                transaction_type: 'INTEREST'
+                // 币种和汇率将在handleInterestTransaction中自动获取
+                // 不收集固定收益相关字段
+            };
+        }
+
+        // 非利息交易收集完整数据
         const data = {
             annual_rate: document.getElementById('annualRate')?.value,
             start_date: document.getElementById('fiStartDate')?.value,
@@ -1008,6 +1264,7 @@ class FixedIncomeManager {
             transaction_type: document.getElementById('transactionType')?.value || ''
         };
 
+        console.log('📝 非利息交易模式：收集完整数据', data);
         return data;
     }
 

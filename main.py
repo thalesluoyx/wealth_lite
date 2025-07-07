@@ -141,10 +141,13 @@ class WealthLiteApp:
         async def get_dashboard_summary():
             """获取仪表板总览数据"""
             try:
+                logging.info("🔄 开始获取仪表板数据...")
                 portfolio = self.wealth_service.get_portfolio()
+                logging.info(f"✅ 获取到投资组合，包含 {len(portfolio.positions)} 个持仓")
                 
                 # 计算总资产
                 total_assets = sum(pos.current_book_value for pos in portfolio.positions)
+                logging.info(f"📊 总资产: {total_assets}")
                 
                 # 按资产类型分组
                 cash_assets = sum(
@@ -159,32 +162,88 @@ class WealthLiteApp:
                     if pos.asset.asset_type.name == "FIXED_INCOME"
                 )
                 
-                # 资产明细
+                logging.info(f"💰 现金资产: {cash_assets}, 固定收益: {fixed_income_assets}")
+                
+                # 获取完整的持仓数据
                 assets_list = []
-                for pos in portfolio.positions[:10]:  # 只返回前10个
-                    assets_list.append({
-                        "id": pos.asset.asset_id,
-                        "name": pos.asset.asset_name,
-                        "type": pos.asset.asset_type.name.lower(),
-                        "symbol": pos.asset.symbol or "",
-                        "amount": float(pos.current_book_value),
-                        "quantity": float(pos.current_book_value),  # 对于现金类资产，数量等于金额
-                        "currency": pos.asset.currency.name
-                    })
+                for pos in portfolio.positions:
+                    try:
+                        # 计算持有天数
+                        holding_days = 0
+                        if pos.first_transaction_date:
+                            holding_days = (datetime.now().date() - pos.first_transaction_date).days
+                        
+                        # 计算当前价值
+                        current_value = pos.calculate_current_value()
+                        total_return = pos.calculate_total_return(current_value)
+                        total_return_rate = pos.calculate_total_return_rate(current_value) / 100  # 转换为小数
+                        annualized_return = pos.calculate_annualized_return(current_value) / 100  # 转换为小数
+                        
+                        logging.info(f"📈 处理持仓: {pos.asset_name}, 状态: {pos.status}, 收益: {total_return}")
+                        
+                        assets_list.append({
+                            # 基本信息
+                            "id": pos.asset.asset_id,
+                            "name": pos.asset.asset_name,
+                            "type": pos.asset.asset_type.name.lower(),
+                            "asset_subtype": pos.asset.asset_subtype.value if pos.asset.asset_subtype else "未知",
+                            "currency": pos.asset.currency.name,
+                            
+                            # 持仓价值
+                            "amount": float(pos.current_book_value),
+                            "current_value": float(current_value),
+                            "current_book_value": float(pos.current_book_value),
+                            
+                            # 收益数据
+                            "total_return": float(total_return),
+                            "total_return_rate": float(total_return_rate),
+                            "annualized_return": float(annualized_return),
+                            "unrealized_pnl": float(pos.calculate_unrealized_pnl()),
+                            "realized_pnl": float(pos.calculate_realized_pnl()),
+                            
+                            # 交易统计
+                            "transaction_count": pos.transaction_count,
+                            "first_transaction_date": pos.first_transaction_date.isoformat() if pos.first_transaction_date else None,
+                            "last_transaction_date": pos.last_transaction_date.isoformat() if pos.last_transaction_date else None,
+                            "holding_days": holding_days,
+                            "firstTransactionDate": pos.first_transaction_date.isoformat() if pos.first_transaction_date else None,  # 兼容前端
+                            
+                            # 资金流水
+                            "total_invested": float(pos.total_invested),
+                            "total_withdrawn": float(pos.total_withdrawn),
+                            "total_income": float(pos.total_income),
+                            "total_fees": float(pos.total_fees),
+                            "net_invested": float(pos.net_invested),
+                            "principal_amount": float(pos.principal_amount),
+                            
+                            # 持仓状态
+                            "status": pos.status.name,
+                            
+                            # 兼容字段
+                            "symbol": pos.asset.symbol or "",
+                            "quantity": float(pos.current_book_value),
+                        })
+                        
+                    except Exception as pos_error:
+                        logging.error(f"❌ 处理持仓 {pos.asset_name} 时出错: {pos_error}", exc_info=True)
+                        continue
+                
+                logging.info(f"✅ 成功处理 {len(assets_list)} 个持仓")
                 
                 return {
                     "total_assets": float(total_assets),
-                    "total_change": 8750.0,  # TODO: 计算实际变化
-                    "total_change_percent": 5.85,  # TODO: 计算实际变化百分比
+                    "total_change": float(portfolio.calculate_total_return()),  # 使用正确的方法名
+                    "total_change_percent": float(portfolio.calculate_total_return_rate()),  # 已经是百分比
                     "cash_assets": float(cash_assets),
                     "fixed_income_assets": float(fixed_income_assets),
                     "assets": assets_list,
-                    "last_updated": datetime.now().isoformat()  # 使用当前时间
+                    "last_updated": datetime.now().isoformat()
                 }
                 
             except Exception as e:
                 logging.error(f"❌ 获取仪表板数据失败: {e}", exc_info=True)
-                # 返回模拟数据作为fallback
+                # 返回模拟数据作为fallback，包含完整字段
+                logging.warning("🔄 使用fallback模拟数据")
                 return {
                     "total_assets": 2341270.0,
                     "total_change": 8750.0,
@@ -194,35 +253,149 @@ class WealthLiteApp:
                     "assets": [
                         {
                             "id": "cash_001",
-                            "name": "现金",
+                            "name": "招商银行活期存款",
                             "type": "cash",
+                            "asset_subtype": "活期存款",
                             "symbol": "CNY",
                             "amount": 65000.0,
                             "quantity": 65000.0,
-                            "currency": "CNY"
+                            "currency": "CNY",
+                            "current_value": 65000.0,
+                            "current_book_value": 65000.0,
+                            "total_return": 320.0,
+                            "total_return_rate": 0.0049,
+                            "annualized_return": 0.018,
+                            "unrealized_pnl": 0.0,
+                            "realized_pnl": 320.0,
+                            "transaction_count": 5,
+                            "first_transaction_date": "2024-01-15",
+                            "last_transaction_date": "2024-06-20",
+                            "firstTransactionDate": "2024-01-15",
+                            "holding_days": 180,
+                            "total_invested": 65000.0,
+                            "total_withdrawn": 0.0,
+                            "total_income": 320.0,
+                            "total_fees": 0.0,
+                            "net_invested": 65000.0,
+                            "principal_amount": 65000.0,
+                            "status": "ACTIVE"
                         },
                         {
                             "id": "deposit_001", 
-                            "name": "定期存款",
-                            "type": "cash",
+                            "name": "工商银行定期存款",
+                            "type": "fixed_income",
+                            "asset_subtype": "定期存款",
                             "symbol": "CNY",
                             "amount": 84600.0,
                             "quantity": 84600.0,
-                            "currency": "CNY"
+                            "currency": "CNY",
+                            "current_value": 84600.0,
+                            "current_book_value": 84600.0,
+                            "total_return": 4600.0,
+                            "total_return_rate": 0.0575,
+                            "annualized_return": 0.0575,
+                            "unrealized_pnl": 0.0,
+                            "realized_pnl": 4600.0,
+                            "transaction_count": 2,
+                            "first_transaction_date": "2023-12-01",
+                            "last_transaction_date": "2024-06-01",
+                            "firstTransactionDate": "2023-12-01",
+                            "holding_days": 200,
+                            "total_invested": 80000.0,
+                            "total_withdrawn": 0.0,
+                            "total_income": 4600.0,
+                            "total_fees": 0.0,
+                            "net_invested": 80000.0,
+                            "principal_amount": 80000.0,
+                            "status": "ACTIVE"
                         },
                         {
                             "id": "bond_001",
-                            "name": "理财产品",
+                            "name": "建设银行理财产品",
                             "type": "fixed_income",
+                            "asset_subtype": "银行理财",
                             "symbol": "CNY",
                             "amount": 52500.0,
                             "quantity": 52500.0,
-                            "currency": "CNY"
+                            "currency": "CNY",
+                            "current_value": 0.0,
+                            "current_book_value": 0.0,
+                            "total_return": 2500.0,
+                            "total_return_rate": 0.05,
+                            "annualized_return": 0.20,
+                            "unrealized_pnl": 0.0,
+                            "realized_pnl": 2500.0,
+                            "transaction_count": 3,
+                            "first_transaction_date": "2024-01-01",
+                            "last_transaction_date": "2024-04-01",
+                            "firstTransactionDate": "2024-01-01",
+                            "holding_days": 90,
+                            "total_invested": 50000.0,
+                            "total_withdrawn": 52500.0,
+                            "total_income": 2500.0,
+                            "total_fees": 0.0,
+                            "net_invested": 0.0,
+                            "principal_amount": 0.0,
+                            "status": "MATURED"
                         }
                     ],
                     "last_updated": datetime.now().isoformat()
                 }
         
+        @app.get("/api/debug/data")
+        async def debug_data():
+            """调试：查看数据库中的数据"""
+            try:
+                # 获取所有资产
+                assets = self.wealth_service.get_all_assets()
+                assets_info = [
+                    {
+                        "id": asset.asset_id,
+                        "name": asset.asset_name,
+                        "type": asset.asset_type.name,
+                        "subtype": asset.asset_subtype.value if asset.asset_subtype else None
+                    }
+                    for asset in assets
+                ]
+                
+                # 获取所有交易
+                transactions = self.wealth_service.get_all_transactions()
+                transactions_info = [
+                    {
+                        "id": tx.transaction_id,
+                        "asset_id": tx.asset_id,
+                        "type": tx.transaction_type.name,
+                        "amount": float(tx.amount),
+                        "date": tx.transaction_date.isoformat()
+                    }
+                    for tx in transactions
+                ]
+                
+                # 获取所有持仓
+                positions = self.wealth_service.get_all_positions()
+                positions_info = [
+                    {
+                        "asset_name": pos.asset_name,
+                        "transaction_count": pos.transaction_count,
+                        "net_invested": float(pos.net_invested),
+                        "current_book_value": float(pos.current_book_value)
+                    }
+                    for pos in positions
+                ]
+                
+                return {
+                    "assets_count": len(assets),
+                    "transactions_count": len(transactions),
+                    "positions_count": len(positions),
+                    "assets": assets_info,
+                    "transactions": transactions_info[:10],  # 只显示前10个
+                    "positions": positions_info
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 调试数据获取失败: {e}", exc_info=True)
+                return {"error": str(e)}
+
         @app.get("/api/assets")
         async def get_assets():
             """获取资产列表"""
@@ -603,57 +776,105 @@ class WealthLiteApp:
                 logging.error(f"❌ 更新交易失败: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=f"更新交易失败: {str(e)}")
 
-        @app.post("/api/transactions/{tx_id}/withdraw")
-        async def withdraw_transaction(tx_id: str):
-            """取回交易（创建反向交易）"""
+        @app.post("/api/positions/{asset_id}/withdraw")
+        async def withdraw_from_position(asset_id: str, withdraw_data: dict):
+            """从持仓中提取资产"""
             try:
-                # 获取原交易
-                original_tx = self.wealth_service.get_transaction(tx_id)
-                if not original_tx:
-                    raise HTTPException(status_code=404, detail="交易不存在")
-                
-                # 创建反向交易
-                from wealth_lite.models.enums import TransactionType
                 from decimal import Decimal
                 import datetime
                 
-                # 确定反向交易类型
-                reverse_type_map = {
-                    TransactionType.DEPOSIT: TransactionType.WITHDRAW,
-                    TransactionType.INTEREST: TransactionType.WITHDRAW,
-                }
+                # 获取持仓信息
+                position = self.wealth_service.get_position(asset_id)
+                if not position:
+                    raise HTTPException(status_code=404, detail="持仓不存在")
                 
-                reverse_type = reverse_type_map.get(original_tx.transaction_type)
-                if not reverse_type:
-                    raise HTTPException(status_code=400, detail="该交易类型不支持取回操作")
+                # 获取提取金额
+                withdraw_amount = Decimal(str(withdraw_data["amount"]))
+                if withdraw_amount <= 0:
+                    raise HTTPException(status_code=400, detail="提取金额必须大于0")
                 
-                # 创建反向交易
-                reverse_tx = self.wealth_service.create_cash_transaction(
-                    asset_id=original_tx.asset_id,
-                    transaction_type=reverse_type,
-                    amount=original_tx.amount,
-                    transaction_date=datetime.date.today(),
-                    currency=original_tx.currency,
-                    exchange_rate=original_tx.exchange_rate,
-                    notes=f"取回交易: {original_tx.notes or ''}"
-                )
+                # 验证提取金额不能超过持仓价值
+                current_value = position.calculate_current_value()
+                if withdraw_amount > current_value:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"提取金额({withdraw_amount})不能超过持仓价值({current_value})"
+                    )
                 
-                # 更新原交易状态（如果有状态字段的话）
-                # 这里可以添加状态更新逻辑
+                # 获取其他参数
+                currency_str = withdraw_data.get("currency", "CNY")
+                try:
+                    currency = Currency[currency_str]
+                except KeyError:
+                    raise HTTPException(status_code=400, detail=f"无效的货币类型: {currency_str}")
+                
+                exchange_rate = Decimal(str(withdraw_data.get("exchange_rate", 1.0)))
+                notes = withdraw_data.get("notes", "")
+                
+                # 提取日期
+                withdraw_date = withdraw_data.get("date") or withdraw_data.get("transaction_date")
+                if not withdraw_date:
+                    withdraw_date = datetime.date.today()
+                elif isinstance(withdraw_date, str):
+                    withdraw_date = datetime.date.fromisoformat(withdraw_date)
+                
+                # 获取资产信息
+                asset = self.wealth_service.get_asset(asset_id)
+                if not asset:
+                    raise HTTPException(status_code=404, detail="资产不存在")
+                
+                # 创建提取交易
+                if asset.asset_type.name == AssetType.CASH.name:
+                    tx = self.wealth_service.create_cash_transaction(
+                        asset_id=asset_id,
+                        transaction_type=TransactionType.WITHDRAW,
+                        amount=withdraw_amount,
+                        transaction_date=withdraw_date,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        notes=notes
+                    )
+                elif asset.asset_type.name == AssetType.FIXED_INCOME.name:
+                    tx = self.wealth_service.create_fixed_income_transaction(
+                        asset_id=asset_id,
+                        transaction_type=TransactionType.WITHDRAW,
+                        amount=withdraw_amount,
+                        transaction_date=withdraw_date,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        notes=notes
+                    )
+                else:
+                    raise HTTPException(status_code=400, detail=f"暂不支持的资产类型: {asset.asset_type}")
+                
+                # 重新获取持仓信息以计算新的状态
+                updated_position = self.wealth_service.get_position(asset_id)
+                new_current_value = updated_position.calculate_current_value()
+                
+                # 确定新的持仓状态
+                from wealth_lite.models.enums import PositionStatus
+                new_status = PositionStatus.ACTIVE
+                
+                if new_current_value <= 0:
+                    new_status = PositionStatus.WITHDRAWN
+                elif new_current_value < current_value:
+                    new_status = PositionStatus.PARTIALLY_WITHDRAWN
                 
                 return {
                     "success": True,
-                    "message": "交易已成功取回",
-                    "original_transaction_id": tx_id,
-                    "reverse_transaction_id": reverse_tx.transaction_id,
-                    "reverse_amount": float(reverse_tx.amount)
+                    "message": "资产提取成功",
+                    "transaction_id": tx.transaction_id,
+                    "withdraw_amount": float(withdraw_amount),
+                    "remaining_value": float(new_current_value),
+                    "new_status": new_status.value,
+                    "status_code": new_status.name
                 }
                 
             except HTTPException:
                 raise
             except Exception as e:
-                logging.error(f"❌ 取回交易失败: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail=f"取回交易失败: {str(e)}")
+                logging.error(f"❌ 提取资产失败: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"提取资产失败: {str(e)}")
 
         @app.delete("/api/transactions/{tx_id}")
         async def delete_transaction(tx_id: str):

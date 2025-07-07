@@ -239,6 +239,13 @@ class WealthLiteApp {
         }).format(amount);
     }
 
+    formatPercentage(value) {
+        return new Intl.NumberFormat('zh-CN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value * 100) + '%';
+    }
+
     getCurrencySymbol(currency) {
         const symbols = {
             'CNY': '元',
@@ -347,6 +354,7 @@ class WealthLiteApp {
     }
 
     updateDashboardUI(data) {
+        this.dashboardData = data; // 存储仪表板数据
         // 更新总资产
         const totalAmountElement = document.getElementById('totalAmount');
         if (totalAmountElement) {
@@ -402,10 +410,26 @@ class WealthLiteApp {
         if (positionsEmpty) positionsEmpty.style.display = 'none';
         if (positionCount) positionCount.textContent = `共 ${positions.length} 笔持仓`;
         
-        positionsTableBody.innerHTML = positions.map(position => `
-            <tr data-position-id="${position.id}">
+        // 清空表格
+        positionsTableBody.innerHTML = '';
+        
+        positions.forEach(position => {
+            // 计算收益相关数据
+            const totalReturn = position.total_return || 0;
+            const totalReturnRate = position.total_return_rate || 0;
+            const returnClass = totalReturn >= 0 ? 'positive' : 'negative';
+            const status = position.status || 'ACTIVE';
+            const statusClass = status.toLowerCase();
+            
+            // 创建主行
+            const mainRow = document.createElement('tr');
+            mainRow.className = 'position-row';
+            mainRow.dataset.positionId = position.id;
+            
+            mainRow.innerHTML = `
                 <td>
                     <div class="asset-info">
+                        <span class="expand-icon">▶</span>
                         <div class="asset-icon ${position.type}">
                             <i data-lucide="${this.getAssetIcon(position.type)}"></i>
                         </div>
@@ -418,7 +442,15 @@ class WealthLiteApp {
                 <td>
                     <span class="amount" data-amount="${position.amount}">${this.formatAmount(position.amount)}</span>
                 </td>
-                <td>${position.currency}</td>
+                <td class="${returnClass}">
+                    ${this.formatAmount(totalReturn)}
+                </td>
+                <td class="${returnClass}">
+                    ${this.formatPercentage(totalReturnRate)}
+                </td>
+                <td>
+                    <span class="status ${statusClass}">${this.getStatusText(status)}</span>
+                </td>
                 <td>${this.calculateHoldingDays(position.firstTransactionDate)} 天</td>
                 <td>
                     <div class="action-buttons">
@@ -428,8 +460,165 @@ class WealthLiteApp {
                         </button>
                     </div>
                 </td>
-            </tr>
-        `).join('');
+            `;
+            
+            // 创建详细信息行
+            const detailsRow = document.createElement('tr');
+            detailsRow.className = 'details-row';
+            detailsRow.innerHTML = `
+                <td colspan="8" class="details-container">
+                    <div class="details-panel">
+                        <div class="details-tabs">
+                            <button class="tab-button active" data-tab="overview">概览</button>
+                            <button class="tab-button" data-tab="transactions">交易记录</button>
+                            <button class="tab-button" data-tab="performance">收益分析</button>
+                        </div>
+                        
+                        <div class="tab-content active" data-tab-content="overview">
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">资产子类型</span>
+                                    <span class="detail-value">${position.asset_subtype || '未知'}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">币种</span>
+                                    <span class="detail-value">${position.currency || 'CNY'}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">交易笔数</span>
+                                    <span class="detail-value">${position.transaction_count || 0} 笔</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">首次交易日期</span>
+                                    <span class="detail-value">${position.first_transaction_date || '未知'}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">最后交易日期</span>
+                                    <span class="detail-value">${position.last_transaction_date || '未知'}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">本金金额</span>
+                                    <span class="detail-value">${this.formatAmount(position.principal_amount || 0)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" data-tab-content="transactions">
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">总投入金额</span>
+                                    <span class="detail-value">${this.formatAmount(position.total_invested || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">总取出金额</span>
+                                    <span class="detail-value">${this.formatAmount(position.total_withdrawn || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">总收入金额</span>
+                                    <span class="detail-value">${this.formatAmount(position.total_income || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">总费用</span>
+                                    <span class="detail-value">${this.formatAmount(position.total_fees || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">净投入金额</span>
+                                    <span class="detail-value">${this.formatAmount(position.net_invested || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">账面价值</span>
+                                    <span class="detail-value">${this.formatAmount(position.current_book_value || 0)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" data-tab-content="performance">
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <span class="detail-label">总收益</span>
+                                    <span class="detail-value ${returnClass}">${this.formatAmount(totalReturn)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">总收益率</span>
+                                    <span class="detail-value ${returnClass}">${this.formatPercentage(totalReturnRate)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">未实现损益</span>
+                                    <span class="detail-value ${(position.unrealized_pnl || 0) >= 0 ? 'positive' : 'negative'}">${this.formatAmount(position.unrealized_pnl || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">已实现损益</span>
+                                    <span class="detail-value ${(position.realized_pnl || 0) >= 0 ? 'positive' : 'negative'}">${this.formatAmount(position.realized_pnl || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">年化收益率</span>
+                                    <span class="detail-value ${returnClass}">${this.formatPercentage(position.annualized_return || 0)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">持有天数</span>
+                                    <span class="detail-value">${this.calculateHoldingDays(position.firstTransactionDate)} 天</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">当前市值</span>
+                                    <span class="detail-value">${this.formatAmount(position.current_value || position.amount)}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">持仓状态</span>
+                                    <span class="detail-value">
+                                        <span class="status ${statusClass}">${this.getStatusText(status)}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+            
+            positionsTableBody.appendChild(mainRow);
+            positionsTableBody.appendChild(detailsRow);
+            
+            // 添加主行点击事件
+            mainRow.addEventListener('click', (e) => {
+                // 阻止按钮点击事件冒泡
+                if (e.target.closest('.btn-action')) return;
+                
+                const isExpanded = mainRow.classList.contains('expanded');
+                
+                // 收起所有其他行
+                document.querySelectorAll('.position-row').forEach(row => {
+                    row.classList.remove('expanded');
+                });
+                document.querySelectorAll('.details-row').forEach(row => {
+                    row.classList.remove('show');
+                });
+                
+                // 切换当前行
+                if (!isExpanded) {
+                    mainRow.classList.add('expanded');
+                    detailsRow.classList.add('show');
+                }
+            });
+            
+            // 添加标签切换事件
+            detailsRow.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const tabName = button.dataset.tab;
+                    
+                    // 切换标签按钮状态
+                    detailsRow.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    button.classList.add('active');
+                    
+                    // 切换标签内容
+                    detailsRow.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    detailsRow.querySelector(`[data-tab-content="${tabName}"]`).classList.add('active');
+                });
+            });
+        });
         
         // 绑定提取按钮事件
         this.bindPositionActions();
@@ -452,6 +641,19 @@ class WealthLiteApp {
         return typeMap[type] || type;
     }
     
+    getStatusText(status) {
+        const statusMap = {
+            'ACTIVE': '持有中',
+            'INACTIVE': '非活跃',
+            'CLOSED': '已平仓',
+            'MATURED': '已到期',
+            'SUSPENDED': '暂停',
+            'PARTIALLY_WITHDRAWN': '部分提取',
+            'WITHDRAWN': '已提取'
+        };
+        return statusMap[status] || status;
+    }
+    
     calculateHoldingDays(firstTransactionDate) {
         if (!firstTransactionDate) return 0;
         const firstDate = new Date(firstTransactionDate);
@@ -465,19 +667,28 @@ class WealthLiteApp {
         document.querySelectorAll('[data-action="withdraw"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const assetId = e.target.closest('[data-asset-id]').dataset.assetId;
-                this.handlePositionWithdraw(assetId);
+                
+                // 从仪表板数据中查找对应的持仓信息（修复：从assets而不是positions中查找）
+                const position = this.dashboardData?.assets?.find(p => p.id === assetId);
+                if (position) {
+                    console.log('✅ 找到持仓数据:', position);
+                    this.handlePositionWithdraw(assetId, position);
+                } else {
+                    console.warn('⚠️ 未找到持仓信息:', assetId);
+                    this.handlePositionWithdraw(assetId);
+                }
             });
         });
     }
     
-    handlePositionWithdraw(assetId) {
+    handlePositionWithdraw(assetId, positionData = null) {
         // 切换到交易记录页面
         this.navigateToPage('transactions');
         
         // 等待页面加载完成后打开提取交易模态窗口
-        setTimeout(() => {
+        setTimeout(async () => {
             if (this.transactionManager) {
-                this.transactionManager.openWithdrawTransactionModal(assetId);
+                await this.transactionManager.openWithdrawTransactionModal(assetId, positionData);
             }
         }, 300);
     }

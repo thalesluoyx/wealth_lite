@@ -8,3 +8,7 @@ drop table assets;
 
 
 select * from transactions
+
+
+select * from transactions join fixed_income_transactions 
+on transactions.transaction_id = fixed_income_transactions.transaction_id where transaction_id = 'b07a5e2b-bce4-4b95-92e9-65d7957fed6e';

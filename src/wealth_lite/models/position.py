@@ -243,8 +243,46 @@ class Position:
 
     def _calculate_fixed_income_value(self) -> Decimal:
         """计算固定收益产品的当前价值"""
-        # 简化实现：使用账面价值
-        # 实际实现中可以考虑利息计算、折现等
+        # 对于固定收益产品，需要考虑按时间比例的预期收益
+        
+        # 检查是否有固定收益交易记录
+        from .transaction import FixedIncomeTransaction
+        fixed_income_transactions = [
+            t for t in self.transactions 
+            if isinstance(t, FixedIncomeTransaction)
+        ]
+        
+        if not fixed_income_transactions:
+            # 没有固定收益交易，使用账面价值
+            return self.current_book_value
+        
+        # 使用最新的固定收益交易信息
+        latest_fi_transaction = fixed_income_transactions[-1]
+        
+        # 如果已到期，返回账面价值
+        if latest_fi_transaction.is_matured:
+            return self.current_book_value
+        
+        # 计算按时间比例的预期价值
+        if (latest_fi_transaction.annual_rate and 
+            latest_fi_transaction.maturity_date and 
+            latest_fi_transaction.start_date and
+            self.holding_days > 0):
+            
+            # 计算产品总期限（天）
+            term_days = (latest_fi_transaction.maturity_date - latest_fi_transaction.start_date).days
+            
+            # 计算预期收益：本金 × 年利率 × (持有天数 / 365)
+            annual_rate = float(latest_fi_transaction.annual_rate) / 100  # 转换为小数
+            time_ratio = min(self.holding_days / 365.0, 
+                           term_days / 365.0)  # 不超过产品期限
+            
+            expected_return = self.principal_amount * Decimal(str(annual_rate)) * Decimal(str(time_ratio))
+            
+            # 当前价值 = 本金 + 预期收益 + 已实现收益
+            return self.principal_amount + expected_return + self.total_income
+        
+        # 默认返回账面价值
         return self.current_book_value
 
     def calculate_total_return(self, current_value: Optional[Decimal] = None) -> Decimal:
@@ -308,6 +346,53 @@ class Position:
         
         return 0.0
 
+    def calculate_unrealized_pnl(self, market_value: Optional[Decimal] = None) -> Decimal:
+        """
+        计算未实现损益（方案三：分阶段确认）
+        
+        Args:
+            market_value: 当前市场价值（可选）
+        
+        Returns:
+            未实现损益（基础货币）
+        """
+        if market_value is None:
+            market_value = self.calculate_current_value()
+        
+        # 根据资产类型计算未实现损益
+        if self.asset.asset_type.name == 'CASH':
+            # 现金类资产：无市场价格波动，未实现损益为0
+            return Decimal('0')
+        elif self.asset.asset_type.name == 'FIXED_INCOME':
+            # 固定收益类资产（方案三：分阶段确认）：
+            # 持有期间：未实现损益 = 当前估值 - 成本基础
+            # 到期/赎回时：未实现损益转为已实现损益
+            if self.status.name == 'MATURED' or self.status.name == 'CLOSED':
+                # 已到期或已关闭：未实现损益为0（已全部转为已实现）
+                return Decimal('0')
+            else:
+                # 持有期间：当前估值 - 成本基础
+                cost_basis = self.principal_amount
+                return market_value - cost_basis
+        else:
+            # 其他类型资产（如股票、基金等）：
+            # 未实现损益 = 当前市值 - 成本基础 - 已实现收益
+            cost_basis = self.principal_amount
+            return market_value - cost_basis - self.total_income
+
+    def calculate_realized_pnl(self) -> Decimal:
+        """
+        计算已实现损益
+        
+        Returns:
+            已实现损益（基础货币）
+        """
+        # 已实现损益主要来自于：
+        # 1. 利息收入
+        # 2. 分红收入
+        # 3. 卖出交易的收益（如果有的话）
+        return self.total_income
+
     def get_transactions_by_type(self, transaction_type) -> List[BaseTransaction]:
         """获取指定类型的交易记录"""
         return [t for t in self.transactions if t.transaction_type == transaction_type]
@@ -357,7 +442,9 @@ class Position:
             'current_value': str(self.calculate_current_value()),
             'total_return': str(self.calculate_total_return()),
             'total_return_rate': self.calculate_total_return_rate(),
-            'annualized_return': self.calculate_annualized_return()
+            'annualized_return': self.calculate_annualized_return(),
+            'unrealized_pnl': str(self.calculate_unrealized_pnl()),
+            'realized_pnl': str(self.calculate_realized_pnl())
         }
         
         if include_transactions:

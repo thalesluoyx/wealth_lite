@@ -166,24 +166,20 @@ class AssetType(Enum):
 ```python
 class AssetSubType(Enum):
     # 现金及等价物
-    SAVINGS_DEPOSIT = "储蓄存款"
     CHECKING_ACCOUNT = "活期存款"
-    TIME_DEPOSIT = "定期存款"
-    FOREIGN_CURRENCY_DEPOSIT = "外币存款"
     MONEY_MARKET_FUND = "货币市场基金"
     
     # 固定收益类
+    TIME_DEPOSIT = "定期存款"
+    FOREIGN_CURRENCY_DEPOSIT = "外币定期存款"
+    BANK_WEALTH_PRODUCT = "银行理财"
     GOVERNMENT_BOND = "政府债券"
     CORPORATE_BOND = "企业债券"
-    BANK_WEALTH_PRODUCT = "银行理财"
-    STRUCTURED_PRODUCT = "结构化理财"
-    CERTIFICATE_DEPOSIT = "大额存单"
-    
+
     # 权益类
     DOMESTIC_STOCK = "A股股票"
     FOREIGN_STOCK = "海外股票"
     MUTUAL_FUND = "公募基金"
-    PRIVATE_FUND = "私募基金"
     ETF = "交易所基金"
 ```
 
