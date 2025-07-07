@@ -89,13 +89,14 @@ class FixedIncomeManager {
             container = this.createFieldsContainer();
         }
 
-        // 创建各个字段组
+        // 创建各个字段组（支持外汇定期存款）
         this.createAnnualRateField(container);
         this.createDateFields(container);
         this.createTermField(container);
         this.createInterestTypeField(container);
         this.createPaymentFrequencyField(container);
         this.createInterestCalculator(container);
+        this.createExchangeRatePreview();
         
         // 确保初始状态下字段是隐藏的且没有required属性
         this.hideFixedIncomeFields();
@@ -141,6 +142,43 @@ class FixedIncomeManager {
         }
 
         return container;
+    }
+
+    createExchangeRatePreviewContainer() {
+        console.log('🔧 开始创建汇率预览容器...');
+        
+        // 创建汇率预览容器
+        const exchangeContainer = document.createElement('div');
+        exchangeContainer.id = 'exchangeRatePreviewContainer';
+        exchangeContainer.style.display = 'none';
+
+        // 插入到汇率字段之后、交易日期之前
+        const transactionForm = document.getElementById('addTransactionForm');
+        const exchangeRateGroup = document.getElementById('exchangeRateGroup');
+        
+        // 查找交易日期字段组
+        let transactionDateGroup = null;
+        if (transactionForm) {
+            const formGroups = transactionForm.querySelectorAll('.form-group');
+            for (let group of formGroups) {
+                if (group.querySelector('#transactionDate')) {
+                    transactionDateGroup = group;
+                    break;
+                }
+            }
+        }
+        
+        console.log('📝 汇率字段组:', exchangeRateGroup);
+        console.log('📝 交易日期字段组:', transactionDateGroup);
+        
+        if (transactionForm && transactionDateGroup) {
+            transactionForm.insertBefore(exchangeContainer, transactionDateGroup);
+            console.log('✅ 汇率预览容器已插入到表单中（交易日期之前）');
+        } else {
+            console.warn('⚠️ 无法找到合适的位置插入汇率预览容器');
+        }
+
+        return exchangeContainer;
     }
 
     createAnnualRateField(container) {
@@ -261,6 +299,39 @@ class FixedIncomeManager {
         container.appendChild(calculatorGroup);
     }
 
+    createExchangeRatePreview() {
+        // 创建或获取汇率预览容器
+        let exchangeContainer = document.getElementById('exchangeRatePreviewContainer');
+        if (!exchangeContainer) {
+            exchangeContainer = this.createExchangeRatePreviewContainer();
+        }
+
+        const exchangeGroup = document.createElement('div');
+        exchangeGroup.className = 'form-group';
+        exchangeGroup.id = 'exchangeRatePreviewGroup';
+        exchangeGroup.style.display = 'none';
+        exchangeGroup.innerHTML = `
+            <div class="exchange-rate-preview">
+                <label class="form-label">汇率信息</label>
+                <div class="exchange-info">
+                    <div class="exchange-row">
+                        <span class="exchange-label">外币金额：</span>
+                        <span id="foreignCurrencyAmount" class="exchange-value">-</span>
+                    </div>
+                    <div class="exchange-row">
+                        <span class="exchange-label">当前汇率：</span>
+                        <span id="currentExchangeRate" class="exchange-value">-</span>
+                    </div>
+                    <div class="exchange-row highlight">
+                        <span class="exchange-label">人民币等值：</span>
+                        <span id="cnyEquivalent" class="exchange-value">¥0.00</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        exchangeContainer.appendChild(exchangeGroup);
+    }
+
     // ==================== 事件绑定 ====================
 
     bindEvents() {
@@ -293,6 +364,17 @@ class FixedIncomeManager {
                 document.getElementById(fieldId)?.addEventListener('change', () => {
                     this.calculateInterestPreview();
                 });
+            });
+
+            // 监听金额和汇率变化，实时更新人民币等值
+            document.getElementById('transactionAmount')?.addEventListener('input', () => {
+                this.updateExchangeRatePreview();
+            });
+            document.getElementById('exchangeRate')?.addEventListener('input', () => {
+                this.updateExchangeRatePreview();
+            });
+            document.getElementById('transactionCurrency')?.addEventListener('change', () => {
+                this.handleCurrencyChangeForFixedIncome();
             });
 
             // 实时验证
@@ -814,8 +896,9 @@ class FixedIncomeManager {
             coupon_rate: parseFloat(formData.annual_rate)
         };
 
-        // 计算预期收益并添加到备注
-        if (formData.annual_rate && formData.start_date && formData.maturity_date) {
+        // 只在新增交易时计算预期收益并添加到备注，编辑时不添加
+        if (!this.transactionManager.editingTransactionId && 
+            formData.annual_rate && formData.start_date && formData.maturity_date) {
             try {
                 const interestInfo = this.calculateInterest({
                     principal: parseFloat(formData.amount),
@@ -828,12 +911,20 @@ class FixedIncomeManager {
                 const originalNotes = formData.notes || '';
                 const interestNote = `预期收益: ¥${interestInfo.totalInterest.toFixed(2)}, 到期总额: ¥${interestInfo.totalAmount.toFixed(2)}`;
                 transactionData.notes = originalNotes ? `${originalNotes}\n${interestNote}` : interestNote;
+                console.log('💰 新增交易，自动添加预期收益信息到备注');
             } catch (error) {
                 console.warn('预期收益计算失败:', error);
             }
+        } else if (this.transactionManager.editingTransactionId) {
+            console.log('✏️ 编辑交易，保持原有备注不变');
         }
 
-        return await this.transactionManager.saveTransaction(transactionData);
+        // 检查是否为编辑模式
+        if (this.transactionManager.editingTransactionId) {
+            return await this.updateTransaction(this.transactionManager.editingTransactionId, transactionData);
+        } else {
+            return await this.transactionManager.saveTransaction(transactionData);
+        }
     }
 
     async handleInterestTransaction(formData) {
@@ -861,12 +952,22 @@ class FixedIncomeManager {
 
             console.log('💰 构建的利息交易数据:', transactionData);
 
-            // 添加利息交易的备注信息
-            const originalNotes = transactionData.notes;
-            const interestNote = `利息收入 - 自动使用资产币种: ${assetInfo.currency}`;
-            transactionData.notes = originalNotes ? `${originalNotes}\n${interestNote}` : interestNote;
+            // 只在新增交易时添加利息交易的备注信息，编辑时不添加
+            if (!this.transactionManager.editingTransactionId) {
+                const originalNotes = transactionData.notes;
+                const interestNote = `利息收入 - 自动使用资产币种: ${assetInfo.currency}`;
+                transactionData.notes = originalNotes ? `${originalNotes}\n${interestNote}` : interestNote;
+                console.log('💰 新增利息交易，自动添加币种信息到备注');
+            } else {
+                console.log('✏️ 编辑利息交易，保持原有备注不变');
+            }
 
-            return await this.transactionManager.saveTransaction(transactionData);
+            // 检查是否为编辑模式
+            if (this.transactionManager.editingTransactionId) {
+                return await this.updateTransaction(this.transactionManager.editingTransactionId, transactionData);
+            } else {
+                return await this.transactionManager.saveTransaction(transactionData);
+            }
 
         } catch (error) {
             console.error('❌ 利息交易处理失败:', error);
@@ -955,7 +1056,45 @@ class FixedIncomeManager {
             transaction_type: 'WITHDRAW'
         };
 
-        return await this.transactionManager.saveTransaction(transactionData);
+        // 检查是否为编辑模式
+        if (this.transactionManager.editingTransactionId) {
+            return await this.updateTransaction(this.transactionManager.editingTransactionId, transactionData);
+        } else {
+            return await this.transactionManager.saveTransaction(transactionData);
+        }
+    }
+
+    /**
+     * 更新现有交易记录
+     * @param {string} transactionId - 交易ID
+     * @param {Object} transactionData - 交易数据
+     * @returns {Promise} API响应
+     */
+    async updateTransaction(transactionId, transactionData) {
+        try {
+            console.log('✏️ 更新固定收益交易, ID:', transactionId, '数据:', transactionData);
+            
+            const response = await fetch(`/api/transactions/${transactionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transactionData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ 固定收益交易更新成功:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ 更新固定收益交易失败:', error);
+            throw error;
+        }
     }
 
     // ==================== 验证逻辑 ====================
@@ -1216,10 +1355,22 @@ class FixedIncomeManager {
                 }
             }
             
+            // 填充汇率字段（编辑模式下很重要）
+            if (fullTransactionData.exchange_rate !== undefined && fullTransactionData.exchange_rate !== null) {
+                const exchangeRateField = document.getElementById('exchangeRate');
+                if (exchangeRateField) {
+                    exchangeRateField.value = fullTransactionData.exchange_rate;
+                    console.log('💱 填充交易汇率:', fullTransactionData.exchange_rate);
+                }
+            }
+            
             // 根据交易类型显示相应的字段
             if (fullTransactionData.type) {
                 this.adjustFieldsForTransactionType(fullTransactionData.type);
             }
+            
+            // 更新汇率预览显示
+            this.updateExchangeRatePreview();
             
             console.log('✅ 固定收益字段数据填充完成');
             
@@ -1268,6 +1419,145 @@ class FixedIncomeManager {
         return data;
     }
 
+    // ==================== 外汇定期存款专用方法 ====================
+
+    /**
+     * 更新汇率预览信息
+     */
+    updateExchangeRatePreview() {
+        const amountField = document.getElementById('transactionAmount');
+        const currencyField = document.getElementById('transactionCurrency');
+        const exchangeRateField = document.getElementById('exchangeRate');
+        const previewGroup = document.getElementById('exchangeRatePreviewGroup');
+        const previewContainer = document.getElementById('exchangeRatePreviewContainer');
+
+        if (!amountField || !currencyField) return;
+
+        const amount = parseFloat(amountField.value) || 0;
+        // 获取实际的币种代码，而不是显示文本
+        const currencyCode = currencyField.getAttribute('data-currency-code') || 
+                           currencyField.value.split(' ')[0] || // 从"CNY - 人民币"中提取"CNY"
+                           currencyField.value;
+        const exchangeRate = parseFloat(exchangeRateField?.value) || 0;
+
+        console.log('💱 汇率预览更新:', {
+            amount,
+            currencyCode,
+            exchangeRate,
+            fieldValue: currencyField.value
+        });
+
+        // 如果是人民币，隐藏汇率预览
+        if (currencyCode === 'CNY') {
+            console.log('🇨🇳 检测到人民币，隐藏汇率预览');
+            if (previewGroup) previewGroup.style.display = 'none';
+            if (previewContainer) previewContainer.style.display = 'none';
+            return;
+        }
+
+        // 显示汇率预览容器和组
+        if (previewContainer) previewContainer.style.display = 'block';
+        if (previewGroup) previewGroup.style.display = 'block';
+
+        // 更新显示信息
+        const foreignAmountSpan = document.getElementById('foreignCurrencyAmount');
+        const exchangeRateSpan = document.getElementById('currentExchangeRate');
+        const cnyEquivalentSpan = document.getElementById('cnyEquivalent');
+
+        if (foreignAmountSpan) {
+            const currencySymbol = this.getCurrencySymbol(currencyCode);
+            foreignAmountSpan.textContent = `${currencySymbol}${amount.toFixed(2)}`;
+        }
+
+        if (exchangeRateSpan) {
+            exchangeRateSpan.textContent = exchangeRate > 0 ? `1 ${currencyCode} = ${exchangeRate} CNY` : '待输入';
+        }
+
+        if (cnyEquivalentSpan) {
+            const cnyEquivalent = amount * exchangeRate;
+            cnyEquivalentSpan.textContent = `¥${cnyEquivalent.toFixed(2)}`;
+        }
+    }
+
+    /**
+     * 处理币种变化（固定收益专用）
+     */
+    handleCurrencyChangeForFixedIncome() {
+        const currencyField = document.getElementById('transactionCurrency');
+        const exchangeRateGroup = document.getElementById('exchangeRateGroup');
+        const exchangeRateField = document.getElementById('exchangeRate');
+
+        if (!currencyField) return;
+
+        // 获取实际的币种代码，而不是显示文本
+        const currencyCode = currencyField.getAttribute('data-currency-code') || 
+                           currencyField.value.split(' ')[0] || // 从"CNY - 人民币"中提取"CNY"
+                           currencyField.value;
+
+        console.log('💱 币种变化处理（固定收益）:', {
+            currencyCode,
+            fieldValue: currencyField.value,
+            isFixedIncomeMode: this.uiState.isFixedIncomeMode
+        });
+
+        // 如果是人民币，隐藏汇率字段
+        if (currencyCode === 'CNY') {
+            console.log('🇨🇳 检测到人民币，隐藏汇率字段');
+            if (exchangeRateGroup) exchangeRateGroup.style.display = 'none';
+            if (exchangeRateField) exchangeRateField.value = '1.0';
+        } else {
+            // 外币显示汇率字段
+            console.log('🌍 检测到外币，显示汇率字段');
+            if (exchangeRateGroup) exchangeRateGroup.style.display = 'block';
+            // 自动获取汇率（如果有该功能）
+            this.autoFillExchangeRate(currencyCode);
+        }
+
+        // 更新汇率预览
+        this.updateExchangeRatePreview();
+    }
+
+    /**
+     * 自动填充汇率
+     */
+    async autoFillExchangeRate(currency) {
+        if (currency === 'CNY') return;
+
+        // 检查是否为编辑模式，编辑模式下不自动覆盖汇率
+        if (this.transactionManager && this.transactionManager.editingTransactionId) {
+            console.log('✏️ 编辑模式：不自动填充汇率，保持现有汇率');
+            return;
+        }
+
+        try {
+            const exchangeRate = await this.getExchangeRate(currency);
+            const exchangeRateField = document.getElementById('exchangeRate');
+            
+            if (exchangeRateField && exchangeRate > 0) {
+                exchangeRateField.value = exchangeRate.toFixed(4);
+                console.log(`🌍 自动填充汇率（新增模式）: 1 ${currency} = ${exchangeRate} CNY`);
+                
+                // 更新预览
+                this.updateExchangeRatePreview();
+            }
+        } catch (error) {
+            console.warn('⚠️ 自动获取汇率失败:', error);
+        }
+    }
+
+    /**
+     * 获取币种符号
+     */
+    getCurrencySymbol(currency) {
+        const symbols = {
+            'CNY': '¥',
+            'USD': '$',
+            'HKD': 'HK$',
+            'EUR': '€'
+        };
+        return symbols[currency] || currency;
+    }
+
     resetFixedIncomeFields() {
         console.log('🔄 开始重置固定收益字段');
         console.trace('resetFixedIncomeFields 调用堆栈');
@@ -1287,10 +1577,20 @@ class FixedIncomeManager {
             }
         });
 
-        // 隐藏利息预览
+        // 隐藏利息预览和汇率预览
         const previewSection = document.getElementById('interestPreview');
         if (previewSection) {
             previewSection.style.display = 'none';
+        }
+
+        const exchangePreviewGroup = document.getElementById('exchangeRatePreviewGroup');
+        if (exchangePreviewGroup) {
+            exchangePreviewGroup.style.display = 'none';
+        }
+
+        const exchangePreviewContainer = document.getElementById('exchangeRatePreviewContainer');
+        if (exchangePreviewContainer) {
+            exchangePreviewContainer.style.display = 'none';
         }
 
         // 重置UI状态

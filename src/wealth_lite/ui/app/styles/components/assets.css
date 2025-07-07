@@ -480,3 +480,102 @@
         width: calc(100% - 32px);
     }
 }
+
+/* 汇率预览组件样式 */
+.exchange-rate-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+}
+
+.exchange-rate-preview .form-label {
+    margin-bottom: 12px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.exchange-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exchange-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.exchange-row.highlight {
+    background: #f1f5f9;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+    border: 1px solid #cbd5e1;
+}
+
+.exchange-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.exchange-value {
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.exchange-row.highlight .exchange-value {
+    color: #0f766e;
+    font-size: 15px;
+}
+
+/* 利息预览样式优化 */
+.interest-preview {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.interest-preview .preview-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.interest-preview .preview-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #a16207;
+}
+
+.interest-preview .preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.interest-preview .preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.interest-preview .preview-label {
+    font-size: 13px;
+    color: #92400e;
+}
+
+.interest-preview .preview-value {
+    font-size: 14px;
+    color: #a16207;
+    font-weight: 500;
+}

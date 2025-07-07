@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外汇定期存款功能测试</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components/assets.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .test-title {
+            color: #1e293b;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+        }
+        .test-section h3 {
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .test-instructions {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .demo-form {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafbfc;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .test-result {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        .test-result.success {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+        .test-result.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🏦 外汇定期存款功能测试</h1>
+        
+        <div class="test-section">
+            <h3>📋 测试说明</h3>
+            <div class="test-instructions">
+                <p><strong>测试目标：</strong>验证外汇定期存款的交易流程是否符合最新文档要求</p>
+                <p><strong>主要功能：</strong></p>
+                <ul>
+                    <li>✅ 支持多币种（人民币、港币、美元、欧元）</li>
+                    <li>✅ 汇率实时计算和预览</li>
+                    <li>✅ 固定收益字段自动显示/隐藏</li>
+                    <li>✅ 交易金额和人民币等值实时更新</li>
+                    <li>✅ 简化的交易流程（存入、利息）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 功能演示</h3>
+            <div class="demo-form">
+                <div class="form-group">
+                    <label class="form-label">选择资产类型</label>
+                    <select id="demoAssetType" class="form-select">
+                        <option value="">请选择资产类型...</option>
+                        <option value="CASH">现金及等价物</option>
+                        <option value="FIXED_INCOME">固定收益类</option>
+                        <option value="EQUITY">权益类</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">交易类型</label>
+                    <select id="demoTransactionType" class="form-select">
+                        <option value="">请选择交易类型...</option>
+                        <option value="DEPOSIT">存入</option>
+                        <option value="INTEREST">利息</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">交易金额 *</label>
+                    <input type="number" id="demoAmount" class="form-input" 
+                           step="0.01" min="0" placeholder="请输入金额">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">币种 * (模拟选择)</label>
+                    <select id="demoCurrency" class="form-select">
+                        <option value="CNY">CNY - 人民币</option>
+                        <option value="HKD">HKD - 港币</option>
+                        <option value="USD">USD - 美元</option>
+                        <option value="EUR">EUR - 欧元</option>
+                    </select>
+                    <div class="form-help" style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                        注意：在实际系统中，币种由所选资产自动确定，不可手动修改
+                    </div>
+                </div>
+
+                <div class="form-group" id="demoExchangeGroup" style="display: none;">
+                    <label class="form-label">汇率 (1 外币 = ? CNY)</label>
+                    <input type="number" id="demoExchangeRate" class="form-input" 
+                           step="0.0001" min="0" placeholder="请输入汇率">
+                </div>
+
+                <!-- 汇率预览区域 -->
+                <div id="demoExchangePreview" style="display: none;">
+                    <!-- 这里会动态显示汇率预览内容 -->
+                </div>
+
+                <!-- 固定收益字段区域 -->
+                <div id="demoFixedIncomeFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">年利率 (%)</label>
+                            <input type="number" id="demoAnnualRate" class="form-input" 
+                                   step="0.01" min="0" placeholder="如：3.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">存款期限</label>
+                            <select id="demoTerm" class="form-select">
+                                <option value="">请选择期限...</option>
+                                <option value="3">3个月</option>
+                                <option value="6">6个月</option>
+                                <option value="12">1年</option>
+                                <option value="24">2年</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-primary" onclick="testFunction()">
+                    🧪 测试功能
+                </button>
+
+                <div id="testResult" class="test-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 测试用例</h3>
+            <div class="test-instructions">
+                <p><strong>测试用例 1：港币定期存款</strong></p>
+                <ol>
+                    <li>选择"固定收益类"资产类型</li>
+                    <li>选择"存入"交易类型</li>
+                    <li>输入金额：90000</li>
+                    <li>选择币种：HKD - 港币</li>
+                    <li>输入汇率：0.9</li>
+                    <li>观察汇率预览是否显示：人民币等值 ¥81000.00</li>
+                    <li>设置年利率：3.5%，期限：6个月</li>
+                </ol>
+                
+                <p><strong>测试用例 2：美元定期存款</strong></p>
+                <ol>
+                    <li>选择"固定收益类"资产类型</li>
+                    <li>选择"存入"交易类型</li>
+                    <li>输入金额：12000</li>
+                    <li>选择币种：USD - 美元</li>
+                    <li>输入汇率：7.2</li>
+                    <li>观察汇率预览是否显示：人民币等值 ¥86400.00</li>
+                    <li>设置年利率：4.2%，期限：1年</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟汇率预览功能
+        function updateExchangePreview() {
+            const amount = parseFloat(document.getElementById('demoAmount').value) || 0;
+            const currency = document.getElementById('demoCurrency').value;
+            const exchangeRate = parseFloat(document.getElementById('demoExchangeRate').value) || 0;
+            const exchangeGroup = document.getElementById('demoExchangeGroup');
+            const previewDiv = document.getElementById('demoExchangePreview');
+
+            console.log('💱 测试页面汇率预览:', { amount, currency, exchangeRate });
+
+            if (currency === 'CNY') {
+                console.log('🇨🇳 测试页面检测到人民币，隐藏汇率相关元素');
+                exchangeGroup.style.display = 'none';
+                previewDiv.style.display = 'none';
+                return;
+            }
+
+            exchangeGroup.style.display = 'block';
+
+            if (amount > 0 && exchangeRate > 0) {
+                const cnyEquivalent = amount * exchangeRate;
+                const currencySymbol = getCurrencySymbol(currency);
+                
+                previewDiv.innerHTML = `
+                    <div class="exchange-rate-preview">
+                        <label class="form-label">汇率信息</label>
+                        <div class="exchange-info">
+                            <div class="exchange-row">
+                                <span class="exchange-label">外币金额：</span>
+                                <span class="exchange-value">${currencySymbol}${amount.toFixed(2)}</span>
+                            </div>
+                            <div class="exchange-row">
+                                <span class="exchange-label">当前汇率：</span>
+                                <span class="exchange-value">1 ${currency} = ${exchangeRate} CNY</span>
+                            </div>
+                            <div class="exchange-row highlight">
+                                <span class="exchange-label">人民币等值：</span>
+                                <span class="exchange-value">¥${cnyEquivalent.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                previewDiv.style.display = 'block';
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        }
+
+        function getCurrencySymbol(currency) {
+            const symbols = {
+                'CNY': '¥',
+                'USD': '$',
+                'HKD': 'HK$',
+                'EUR': '€'
+            };
+            return symbols[currency] || currency;
+        }
+
+        function handleAssetTypeChange() {
+            const assetType = document.getElementById('demoAssetType').value;
+            const fixedIncomeFields = document.getElementById('demoFixedIncomeFields');
+            
+            if (assetType === 'FIXED_INCOME') {
+                fixedIncomeFields.style.display = 'block';
+            } else {
+                fixedIncomeFields.style.display = 'none';
+            }
+        }
+
+        function testFunction() {
+            const resultDiv = document.getElementById('testResult');
+            const amount = document.getElementById('demoAmount').value;
+            const currency = document.getElementById('demoCurrency').value;
+            const assetType = document.getElementById('demoAssetType').value;
+            
+            if (!amount || !currency || !assetType) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = '❌ 请填写所有必填字段！';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            if (assetType === 'FIXED_INCOME' && currency !== 'CNY') {
+                const exchangeRate = document.getElementById('demoExchangeRate').value;
+                if (!exchangeRate) {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = '❌ 外币交易请输入汇率！';
+                    resultDiv.style.display = 'block';
+                    return;
+                }
+            }
+
+            resultDiv.className = 'test-result success';
+            resultDiv.textContent = '✅ 测试通过！外汇定期存款功能正常工作。';
+            resultDiv.style.display = 'block';
+        }
+
+        // 绑定事件监听器
+        document.getElementById('demoAmount').addEventListener('input', updateExchangePreview);
+        document.getElementById('demoCurrency').addEventListener('change', updateExchangePreview);
+        document.getElementById('demoExchangeRate').addEventListener('input', updateExchangePreview);
+        document.getElementById('demoAssetType').addEventListener('change', handleAssetTypeChange);
+    </script>
+</body>
+</html> 

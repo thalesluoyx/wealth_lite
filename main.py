@@ -189,10 +189,15 @@ class WealthLiteApp:
                             "asset_subtype": pos.asset.asset_subtype.value if pos.asset.asset_subtype else "未知",
                             "currency": pos.asset.currency.name,
                             
-                            # 持仓价值
+                            # 持仓价值（基础货币 - 人民币）
                             "amount": float(pos.current_book_value),
                             "current_value": float(current_value),
                             "current_book_value": float(pos.current_book_value),
+                            
+                            # 持仓价值（原币种）
+                            "amount_original_currency": float(pos.current_book_value_original_currency),
+                            "current_value_original_currency": float(pos.current_book_value_original_currency),
+                            "current_book_value_original_currency": float(pos.current_book_value_original_currency),
                             
                             # 收益数据
                             "total_return": float(total_return),
@@ -794,11 +799,25 @@ class WealthLiteApp:
                     raise HTTPException(status_code=400, detail="提取金额必须大于0")
                 
                 # 验证提取金额不能超过持仓价值
-                current_value = position.calculate_current_value()
+                # 获取资产信息以确定币种
+                asset = self.wealth_service.get_asset(asset_id)
+                if not asset:
+                    raise HTTPException(status_code=404, detail="资产不存在")
+                
+                # 根据资产币种选择合适的持仓价值进行比较
+                if asset.currency.name == "CNY":
+                    # 人民币资产：使用人民币基础货币价值
+                    current_value = position.calculate_current_value()
+                    currency_name = "人民币"
+                else:
+                    # 外币资产：使用原币种价值
+                    current_value = position.current_book_value_original_currency
+                    currency_name = f"{asset.currency.name}"
+                
                 if withdraw_amount > current_value:
                     raise HTTPException(
                         status_code=400, 
-                        detail=f"提取金额({withdraw_amount})不能超过持仓价值({current_value})"
+                        detail=f"提取金额({withdraw_amount} {asset.currency.name})不能超过持仓价值({current_value} {asset.currency.name})"
                     )
                 
                 # 获取其他参数
@@ -817,11 +836,6 @@ class WealthLiteApp:
                     withdraw_date = datetime.date.today()
                 elif isinstance(withdraw_date, str):
                     withdraw_date = datetime.date.fromisoformat(withdraw_date)
-                
-                # 获取资产信息
-                asset = self.wealth_service.get_asset(asset_id)
-                if not asset:
-                    raise HTTPException(status_code=404, detail="资产不存在")
                 
                 # 创建提取交易
                 if asset.asset_type.name == AssetType.CASH.name:

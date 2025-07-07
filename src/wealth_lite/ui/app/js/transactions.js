@@ -136,6 +136,10 @@ class TransactionManager {
         // 汇率字段显示/隐藏
         document.getElementById('transactionCurrency')?.addEventListener('change', (e) => {
             this.handleCurrencyChange(e.target.value);
+            // 通知固定收益管理器处理币种变化
+            if (this.fixedIncomeManager) {
+                this.fixedIncomeManager.handleCurrencyChangeForFixedIncome();
+            }
         });
 
         // 资产选择变化时显示资产类型
@@ -372,7 +376,7 @@ class TransactionManager {
             }
 
             // 资产过滤
-            if (this.currentFilters.asset && transaction.assetId !== parseInt(this.currentFilters.asset)) {
+            if (this.currentFilters.asset && String(transaction.asset_id || transaction.assetId) !== String(this.currentFilters.asset)) {
                 return false;
             }
 
@@ -513,22 +517,39 @@ class TransactionManager {
             // 使用传入的持仓数据
             console.log('📊 使用传入的持仓数据:', positionData);
             
-            // 自动填写提取金额为当前持仓价值
+            // 自动填写提取金额：优先使用原币种金额，如果没有则使用人民币等值
             const amountField = document.getElementById('transactionAmount');
-            const currentValue =positionData.amount;
-            if (amountField && currentValue) {
-                amountField.value = currentValue;
-                console.log('💰 自动填写提取金额:', currentValue);
+            let withdrawAmount = positionData.amount; // 默认使用人民币等值
+            
+            // 如果是外币且有原币种金额，使用原币种金额
+            if (positionData.currency !== 'CNY' && positionData.amount_original_currency) {
+                withdrawAmount = positionData.amount_original_currency;
+                console.log('🌍 外币资产，使用原币种金额:', withdrawAmount, positionData.currency);
+            } else if (positionData.currency === 'CNY') {
+                withdrawAmount = positionData.amount;
+                console.log('🇨🇳 人民币资产，使用人民币金额:', withdrawAmount);
+            }
+            
+            if (amountField && withdrawAmount) {
+                amountField.value = withdrawAmount;
+                console.log('💰 自动填写提取金额:', withdrawAmount, '币种:', positionData.currency);
             }
             
             // 自动设置币种为持仓币种
             const currencyField = document.getElementById('transactionCurrency');
             if (currencyField && positionData.currency) {
-                currencyField.value = positionData.currency;
-                console.log('💱 自动设置币种:', positionData.currency);
+                const currencyDisplay = this.getCurrencyDisplayName(positionData.currency);
+                currencyField.value = currencyDisplay;
+                currencyField.setAttribute('data-currency-code', positionData.currency);
+                console.log('💱 自动设置币种:', positionData.currency, '显示:', currencyDisplay);
                 
                 // 触发币种变化事件以处理汇率字段
                 this.handleCurrencyChange(positionData.currency);
+                
+                // 通知固定收益管理器处理币种变化
+                if (this.fixedIncomeManager) {
+                    this.fixedIncomeManager.handleCurrencyChangeForFixedIncome();
+                }
             }
         } else {
             // 获取持仓信息并自动填写提取金额（备用方案）
@@ -539,21 +560,39 @@ class TransactionManager {
                     const position = await response.json();
                     console.log('📊 获取到持仓信息:', position);
                     
-                    // 自动填写提取金额为当前持仓价值
+                    // 自动填写提取金额：优先使用原币种金额
                     const amountField = document.getElementById('transactionAmount');
-                    if (amountField && position.current_value) {
-                        amountField.value = position.current_value;
-                        console.log('💰 自动填写提取金额:', position.current_value);
+                    let withdrawAmount = position.current_value; // 默认使用人民币等值
+                    
+                    // 如果是外币且有原币种金额，使用原币种金额
+                    if (position.currency !== 'CNY' && position.current_value_original_currency) {
+                        withdrawAmount = position.current_value_original_currency;
+                        console.log('🌍 外币资产（API），使用原币种金额:', withdrawAmount, position.currency);
+                    } else if (position.currency === 'CNY') {
+                        withdrawAmount = position.current_value;
+                        console.log('🇨🇳 人民币资产（API），使用人民币金额:', withdrawAmount);
+                    }
+                    
+                    if (amountField && withdrawAmount) {
+                        amountField.value = withdrawAmount;
+                        console.log('💰 自动填写提取金额（API）:', withdrawAmount, '币种:', position.currency);
                     }
                     
                     // 自动设置币种为持仓币种
                     const currencyField = document.getElementById('transactionCurrency');
                     if (currencyField && position.currency) {
-                        currencyField.value = position.currency;
-                        console.log('💱 自动设置币种:', position.currency);
+                        const currencyDisplay = this.getCurrencyDisplayName(position.currency);
+                        currencyField.value = currencyDisplay;
+                        currencyField.setAttribute('data-currency-code', position.currency);
+                        console.log('💱 自动设置币种（API）:', position.currency, '显示:', currencyDisplay);
                         
                         // 触发币种变化事件以处理汇率字段
                         this.handleCurrencyChange(position.currency);
+                        
+                        // 通知固定收益管理器处理币种变化
+                        if (this.fixedIncomeManager) {
+                            this.fixedIncomeManager.handleCurrencyChangeForFixedIncome();
+                        }
                     }
                 } else {
                     console.warn('⚠️ 获取持仓信息失败:', response.status);
@@ -681,17 +720,25 @@ class TransactionManager {
 
     handleCurrencyChange(currency) {
         const exchangeRateGroup = document.getElementById('exchangeRateGroup');
+        const exchangeRateField = document.getElementById('exchangeRate');
+        
         if (currency === 'CNY') {
             exchangeRateGroup.style.display = 'none';
         } else {
             exchangeRateGroup.style.display = 'block';
-            // 设置默认汇率
-            const defaultRates = {
-                'USD': 7.2,
-                'HKD': 0.9,
-                'EUR': 7.8
-            };
-            document.getElementById('exchangeRate').value = defaultRates[currency] || '';
+            
+            // 只在非编辑模式下设置默认汇率
+            if (!this.editingTransactionId) {
+                const defaultRates = {
+                    'USD': 7.2,
+                    'HKD': 0.9,
+                    'EUR': 7.8
+                };
+                exchangeRateField.value = defaultRates[currency] || '';
+                console.log('💱 设置默认汇率（新增模式）:', defaultRates[currency]);
+            } else {
+                console.log('✏️ 编辑模式：保持现有汇率 -', exchangeRateField.value);
+            }
         }
     }
 
@@ -704,6 +751,13 @@ class TransactionManager {
         if (!assetId) {
             // 没有选择资产时隐藏资产类型显示
             assetTypeDisplay.style.display = 'none';
+            
+            // 清空币种字段
+            const currencyField = document.getElementById('transactionCurrency');
+            if (currencyField) {
+                currencyField.value = '请先选择资产...';
+                currencyField.removeAttribute('data-currency-code');
+            }
             
             // 通知固定收益管理器
             if (this.fixedIncomeManager) {
@@ -726,6 +780,23 @@ class TransactionManager {
             assetTypeDisplay.style.display = 'block';
             
             console.log('📊 资产类型:', selectedAsset.asset_type, '显示名称:', assetTypeDisplayName);
+            
+            // 自动设置交易币种为资产币种
+            const currencyField = document.getElementById('transactionCurrency');
+            if (currencyField && selectedAsset.currency) {
+                const currencyDisplay = this.getCurrencyDisplayName(selectedAsset.currency);
+                currencyField.value = currencyDisplay;
+                currencyField.setAttribute('data-currency-code', selectedAsset.currency);
+                console.log('💱 自动设置币种:', selectedAsset.currency, '显示:', currencyDisplay);
+                
+                // 触发币种变化处理
+                this.handleCurrencyChange(selectedAsset.currency);
+                
+                // 通知固定收益管理器处理币种变化
+                if (this.fixedIncomeManager) {
+                    this.fixedIncomeManager.handleCurrencyChangeForFixedIncome();
+                }
+            }
             
             // 通知固定收益管理器资产类型变化
             if (this.fixedIncomeManager) {
@@ -755,6 +826,17 @@ class TransactionManager {
             'EQUITY': '权益类'
         };
         return typeMap[assetType] || assetType;
+    }
+
+    getCurrencyDisplayName(currencyCode) {
+        const currencyMap = {
+            'CNY': 'CNY - 人民币',
+            'USD': 'USD - 美元',
+            'HKD': 'HKD - 港币',
+            'EUR': 'EUR - 欧元',
+            'JPY': 'JPY - 日元'
+        };
+        return currencyMap[currencyCode] || `${currencyCode} - 未知币种`;
     }
 
     async handleTransactionSubmit() {
@@ -948,19 +1030,28 @@ class TransactionManager {
 
     getTransactionFormData() {
         try {
+            // 获取币种字段
+            const currencyField = document.getElementById('transactionCurrency');
+            const currencyCode = currencyField?.getAttribute('data-currency-code') || currencyField?.value || '';
+            
             // 组装表单数据，字段名与后端保持一致
             // 交易类型直接取下拉框的value（如DEPOSIT、PURCHASE等枚举名）
             const data = {
                 asset_id: document.getElementById('assetSelect')?.value || '',
                 transaction_type: document.getElementById('transactionType')?.value || '',
                 amount: parseFloat(document.getElementById('transactionAmount')?.value || '0'),
-                currency: document.getElementById('transactionCurrency')?.value || '',
+                currency: currencyCode,
                 transaction_date: document.getElementById('transactionDate')?.value || '',
                 exchange_rate: parseFloat(document.getElementById('exchangeRate')?.value || '1.0'),
                 notes: document.getElementById('transactionNotes')?.value?.trim() || ''
             };
             
             console.log('📊 获取的表单数据:', data);
+            console.log('💱 币种处理:', {
+                fieldValue: currencyField?.value,
+                currencyCode: currencyCode,
+                dataAttribute: currencyField?.getAttribute('data-currency-code')
+            });
             return data;
         } catch (error) {
             console.error('❌ 获取表单数据失败:', error);
@@ -1023,6 +1114,13 @@ class TransactionManager {
         document.getElementById('exchangeRateGroup').style.display = 'none';
         // 隐藏资产类型显示
         document.getElementById('assetTypeDisplay').style.display = 'none';
+        
+        // 重置币种字段
+        const currencyField = document.getElementById('transactionCurrency');
+        if (currencyField) {
+            currencyField.value = '请先选择资产...';
+            currencyField.removeAttribute('data-currency-code');
+        }
         
         // 重置固定收益字段
         if (this.fixedIncomeManager) {
@@ -1119,7 +1217,15 @@ class TransactionManager {
         document.getElementById('assetSelect').value = transaction.asset_id;
         document.getElementById('transactionType').value = transaction.type;
         document.getElementById('transactionAmount').value = transaction.amount;
-        document.getElementById('transactionCurrency').value = transaction.currency;
+        
+        // 设置币种字段（新的方式）
+        const currencyField = document.getElementById('transactionCurrency');
+        if (currencyField && transaction.currency) {
+            const currencyDisplay = this.getCurrencyDisplayName(transaction.currency);
+            currencyField.value = currencyDisplay;
+            currencyField.setAttribute('data-currency-code', transaction.currency);
+        }
+        
         document.getElementById('transactionDate').value = transaction.date;
         
         // 通知固定收益管理器交易日期变化（编辑模式）
@@ -1147,11 +1253,14 @@ class TransactionManager {
         document.getElementById('transactionType').classList.add('field-locked');
         document.getElementById('transactionCurrency').classList.add('field-locked');
         
-        // 处理汇率显示
-        this.handleCurrencyChange(transaction.currency);
+        // 先设置汇率值，再处理币种变化
         if (transaction.currency !== 'CNY') {
             document.getElementById('exchangeRate').value = transaction.exchange_rate || 1.0;
+            console.log('💱 设置编辑交易汇率:', transaction.exchange_rate);
         }
+        
+        // 处理汇率显示（编辑模式下不会覆盖已设置的汇率）
+        this.handleCurrencyChange(transaction.currency);
         
         // 更改模态窗口标题和按钮文本 - 添加安全检查
         const modalTitle = document.querySelector('#addTransactionModal .modal-header h3');
@@ -1199,6 +1308,7 @@ class TransactionManager {
     formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('zh-CN', {
+            year: 'numeric',
             month: 'numeric',
             day: 'numeric'
         });

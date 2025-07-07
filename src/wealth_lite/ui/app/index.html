@@ -301,15 +301,14 @@
                     <div class="toolbar-card">
                         <div class="toolbar-left">
                             <div class="search-box">
-                                <i data-lucide="search"></i>
+                                
                                 <input type="text" placeholder="搜索交易记录..." id="transactionSearch">
                             </div>
                             <div class="filter-group">
                                 <select id="transactionTypeFilter" class="filter-select">
                                     <option value="">所有类型</option>
                                     <option value="DEPOSIT">存入</option>
-                                    <option value="PURCHASE">购买</option>
-                                    <option value="REDEMPTION">赎回</option>
+                                    <option value="WITHDRAW">提取</option>
                                     <option value="INTEREST">利息</option>
                                 </select>
                                 <select id="assetFilter" class="filter-select">
@@ -430,28 +429,22 @@
                     </select>
                 </div>
 
-                <!-- 交易金额和币种 -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="transactionAmount" class="form-label">交易金额 *</label>
-                        <input type="number" id="transactionAmount" class="form-input" 
-                               step="0.01" min="0" placeholder="0.00" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="transactionCurrency" class="form-label">币种 *</label>
-                        <select id="transactionCurrency" class="form-select" required>
-                            <option value="CNY">CNY - 人民币</option>
-                            <option value="USD">USD - 美元</option>
-                            <option value="HKD">HKD - 港币</option>
-                            <option value="EUR">EUR - 欧元</option>
-                        </select>
-                    </div>
+                <!-- 交易金额 -->
+                <div class="form-group">
+                    <label for="transactionAmount" class="form-label">交易金额 *</label>
+                    <input type="number" id="transactionAmount" class="form-input" 
+                           step="0.01" min="0" placeholder="0.00" required>
                 </div>
 
-                <!-- 交易日期 -->
+                <!-- 币种 (由资产决定，不可修改) -->
                 <div class="form-group">
-                    <label for="transactionDate" class="form-label">交易日期 *</label>
-                    <input type="date" id="transactionDate" name="transaction_date" class="form-input" required>
+                    <label for="transactionCurrency" class="form-label">币种 *</label>
+                    <input type="text" id="transactionCurrency" class="form-input" 
+                           placeholder="请先选择资产..." readonly disabled 
+                           style="background: #f8fafc; color: #64748b;">
+                    <div class="form-help">
+                        币种由所选资产的计价币种自动确定，不可修改
+                    </div>
                 </div>
 
                 <!-- 汇率 (非基础货币时显示) -->
@@ -462,6 +455,14 @@
                     <div class="form-help">
                         请输入交易时的实际汇率，如不填写将使用系统默认汇率
                     </div>
+                </div>
+
+                <!-- 汇率信息预览区域会通过JavaScript动态插入到这里 -->
+
+                <!-- 交易日期 -->
+                <div class="form-group">
+                    <label for="transactionDate" class="form-label">交易日期 *</label>
+                    <input type="date" id="transactionDate" name="transaction_date" class="form-input" required>
                 </div>
 
                 <!-- 备注 -->
