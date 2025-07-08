@@ -155,43 +155,37 @@
 
                 <!-- 统计卡片区域 -->
                 <section class="stats-section">
-                    <!-- 总资产卡片 -->
-                    <div class="total-assets-card">
-                        <div class="card-header">
-                            <span class="label">总资产价值</span>
-                            <span class="period">今日</span>
-                        </div>
-                        <div class="total-amount" id="totalAmount">
-                            2,341,270<span class="currency">元</span>
-                        </div>
-                        <div class="change-info">
-                            <span class="change positive" id="totalChange">+8,750</span>
-                            <span class="change-percent positive" id="totalChangePercent">+5.85%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress" style="width: 68%"></div>
-                        </div>
-                    </div>
-
-                    <!-- 圆环图卡片 -->
+                    <!-- 资产类型圆环图卡片 -->
                     <div class="chart-card">
-                        <h3>现金类资产</h3>
+                        <h3>资产类型分布</h3>
                         <div class="donut-chart-container">
-                            <canvas id="cashChart"></canvas>
+                            <canvas id="assetTypeChart"></canvas>
                             <div class="chart-center">
-                                <div class="center-amount" id="cashAmount">3,234,000</div>
+                                <div class="center-amount" id="assetTypeAmount">0</div>
                                 <div class="center-label">元</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 饼图卡片 -->
+                    <!-- 现金及等价物饼图卡片 -->
+                    <div class="chart-card">
+                        <h3>现金类资产</h3>
+                        <div class="pie-chart-container">
+                            <canvas id="cashChart"></canvas>
+                            <div class="chart-center">
+                                <div class="center-amount" id="cashAmount">0</div>
+                                <div class="center-label">元</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 固定收益饼图卡片 -->
                     <div class="chart-card">
                         <h3>固定收益</h3>
                         <div class="pie-chart-container">
                             <canvas id="fixedIncomeChart"></canvas>
                             <div class="chart-center">
-                                <div class="center-amount" id="fixedAmount">2,436,000</div>
+                                <div class="center-amount" id="fixedAmount">0</div>
                                 <div class="center-label">元</div>
                             </div>
                         </div>
@@ -343,7 +337,7 @@
                             <table class="transactions-table">
                                 <thead>
                                     <tr>
-                                        <th data-sort="date">日期 <i data-lucide="chevron-up-down"></i></th>
+                                        <th data-sort="date">日期 <i data-lucide="chevron-down"></i></th>
                                         <th data-sort="asset">资产</th>
                                         <th data-sort="type">交易类型</th>
                                         <th data-sort="amount">金额</th>
@@ -565,6 +559,9 @@
                 script.src = 'dev-tools/stagewise-toolbar.js';
                 script.onload = () => {
                     console.log('🎯 Stagewise 开发工具已加载');
+                };
+                script.onerror = () => {
+                    console.log('⚠️ Stagewise 开发工具未找到，跳过加载');
                 };
                 document.head.appendChild(script);
             }

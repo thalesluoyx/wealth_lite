@@ -35,15 +35,18 @@ class ChartManager {
         // 等待DOM加载完成后初始化图表
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
+                this.destroyExistingCharts();
                 this.initializeCharts();
             });
         } else {
+            this.destroyExistingCharts();
             this.initializeCharts();
         }
     }
 
     initializeCharts() {
         this.createMainChart();
+        this.createAssetTypeChart();
         this.createCashChart();
         this.createFixedIncomeChart();
         this.setupChartTooltip();
@@ -52,6 +55,11 @@ class ChartManager {
     createMainChart() {
         const canvas = document.getElementById('mainChart');
         if (!canvas) return;
+        
+        // 销毁现有图表（如果存在）
+        if (this.charts.main) {
+            this.charts.main.destroy();
+        }
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -199,16 +207,126 @@ class ChartManager {
         });
     }
 
+    createAssetTypeChart() {
+        const ctx = document.getElementById('assetTypeChart');
+        if (!ctx) return;
+        
+        // 销毁现有图表（如果存在）
+        if (this.charts.assetType) {
+            this.charts.assetType.destroy();
+        }
+
+        this.charts.assetType = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['现金及等价物', '固定收益', '权益类'],
+                datasets: [{
+                    data: [0, 0, 0], // 初始化为0，后续通过updateAssetTypeChart更新
+                    backgroundColor: [
+                        this.chartColors.success,
+                        this.chartColors.primary,
+                        this.chartColors.warning
+                    ],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                return `${context.label}: ${value.toLocaleString()}元 (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createCashChart() {
+        const ctx = document.getElementById('cashChart');
+        if (!ctx) return;
+
+        // 销毁现有图表（如果存在）
+        if (this.charts.cash) {
+            this.charts.cash.destroy();
+        }
+
+        this.charts.cash = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        this.chartColors.success,
+                        this.chartColors.accent,
+                        this.chartColors.info
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                return `${context.label}: ${value.toLocaleString()}元 (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     createFixedIncomeChart() {
         const ctx = document.getElementById('fixedIncomeChart');
         if (!ctx) return;
 
+        // 销毁现有图表（如果存在）
+        if (this.charts.fixedIncome) {
+            this.charts.fixedIncome.destroy();
+        }
+
         this.charts.fixedIncome = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['国债', '银行理财', '定期存款'],
+                labels: [],
                 datasets: [{
-                    data: [800000, 900000, 736000],
+                    data: [],
                     backgroundColor: [
                         this.chartColors.primary,
                         this.chartColors.purple,
@@ -236,7 +354,7 @@ class ChartManager {
                             label: function(context) {
                                 const value = context.parsed;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                                 return `${context.label}: ${value.toLocaleString()}元 (${percentage}%)`;
                             }
                         }
@@ -397,10 +515,27 @@ class ChartManager {
     // 销毁所有图表
     destroy() {
         Object.values(this.charts).forEach(chart => {
-            if (chart) {
+            if (chart && typeof chart.destroy === 'function') {
                 chart.destroy();
             }
         });
+        this.charts = {};
+    }
+
+    destroyExistingCharts() {
+        // 销毁所有现有的Chart.js实例
+        if (typeof Chart !== 'undefined') {
+            // Chart.js 3.x+ 方式：通过 Chart.registry 获取所有实例
+            const canvases = document.querySelectorAll('canvas');
+            canvases.forEach(canvas => {
+                const chart = Chart.getChart(canvas);
+                if (chart) {
+                    chart.destroy();
+                }
+            });
+        }
+        
+        // 清空我们自己的图表记录
         this.charts = {};
     }
 
@@ -411,12 +546,12 @@ class ChartManager {
 
     // 更新图表主题
     updateTheme(isDark = false) {
-        const textColor = isDark ? '#ffffff' : '#94a3b8';
-        const gridColor = isDark ? '#374151' : '#f1f5f9';
-        
+        // 更新图表主题
         Object.values(this.charts).forEach(chart => {
-            if (chart && chart.options.scales) {
-                // 更新坐标轴颜色
+            if (chart.options && chart.options.scales) {
+                const textColor = isDark ? '#ffffff' : '#94a3b8';
+                const gridColor = isDark ? '#374151' : '#f1f5f9';
+                
                 if (chart.options.scales.x) {
                     chart.options.scales.x.ticks.color = textColor;
                     chart.options.scales.x.grid.color = gridColor;
@@ -425,9 +560,130 @@ class ChartManager {
                     chart.options.scales.y.ticks.color = textColor;
                     chart.options.scales.y.grid.color = gridColor;
                 }
+                
                 chart.update();
             }
         });
+    }
+
+    updateAssetTypeChart(positions) {
+        if (!this.charts.assetType || !positions) return;
+
+        // 按资产类型分组统计
+        const assetTypeData = {};
+        positions.forEach(position => {
+            const type = position.type || 'UNKNOWN';
+            const typeText = this.getAssetTypeText(type);
+            const amount = position.amount || 0;
+            
+            if (!assetTypeData[typeText]) {
+                assetTypeData[typeText] = 0;
+            }
+            assetTypeData[typeText] += amount;
+        });
+
+        const labels = Object.keys(assetTypeData);
+        const data = Object.values(assetTypeData);
+        const total = data.reduce((sum, value) => sum + value, 0);
+
+        // 更新图表数据
+        this.charts.assetType.data.labels = labels;
+        this.charts.assetType.data.datasets[0].data = data;
+        this.charts.assetType.update();
+
+        // 更新中心显示的总金额
+        const centerAmount = document.getElementById('assetTypeAmount');
+        if (centerAmount) {
+            centerAmount.textContent = total.toLocaleString();
+        }
+    }
+
+    updateCashChart(positions) {
+        if (!this.charts.cash || !positions) return;
+
+        // 过滤出现金及等价物类型的资产
+        const cashPositions = positions.filter(position => {
+            const type = position.type || '';
+            return type.toLowerCase() === 'cash' || type === 'CASH';
+        });
+
+        // 按资产子类型分组统计
+        const cashData = {};
+        cashPositions.forEach(position => {
+            const subType = position.asset_subtype || position.name || '未分类';
+            const amount = position.amount || 0;
+            
+            if (!cashData[subType]) {
+                cashData[subType] = 0;
+            }
+            cashData[subType] += amount;
+        });
+
+        const labels = Object.keys(cashData);
+        const data = Object.values(cashData);
+        const total = data.reduce((sum, value) => sum + value, 0);
+
+        // 更新图表数据
+        this.charts.cash.data.labels = labels;
+        this.charts.cash.data.datasets[0].data = data;
+        this.charts.cash.update();
+
+        // 更新中心显示的总金额
+        const centerAmount = document.getElementById('cashAmount');
+        if (centerAmount) {
+            centerAmount.textContent = total.toLocaleString();
+        }
+    }
+
+    updateFixedIncomeChart(positions) {
+        if (!this.charts.fixedIncome || !positions) return;
+
+        // 过滤出固定收益类型的资产
+        const fixedIncomePositions = positions.filter(position => {
+            const type = position.type || '';
+            return type.toLowerCase() === 'fixed_income' || type === 'FIXED_INCOME';
+        });
+
+        // 按资产子类型分组统计
+        const fixedIncomeData = {};
+        fixedIncomePositions.forEach(position => {
+            const subType = position.asset_subtype || position.name || '未分类';
+            const amount = position.amount || 0;
+            
+            if (!fixedIncomeData[subType]) {
+                fixedIncomeData[subType] = 0;
+            }
+            fixedIncomeData[subType] += amount;
+        });
+
+        const labels = Object.keys(fixedIncomeData);
+        const data = Object.values(fixedIncomeData);
+        const total = data.reduce((sum, value) => sum + value, 0);
+
+        // 更新图表数据
+        this.charts.fixedIncome.data.labels = labels;
+        this.charts.fixedIncome.data.datasets[0].data = data;
+        this.charts.fixedIncome.update();
+
+        // 更新中心显示的总金额
+        const centerAmount = document.getElementById('fixedAmount');
+        if (centerAmount) {
+            centerAmount.textContent = total.toLocaleString();
+        }
+    }
+
+    getAssetTypeText(type) {
+        const typeMap = {
+            // 小写格式（仪表板API）
+            'cash': '现金及等价物',
+            'fixed_income': '固定收益',
+            'equity': '权益类',
+            // 大写格式（资产API）
+            'CASH': '现金及等价物',
+            'FIXED_INCOME': '固定收益',
+            'EQUITY': '权益类'
+        };
+        return typeMap[type] || '其他';
     }
 }
 

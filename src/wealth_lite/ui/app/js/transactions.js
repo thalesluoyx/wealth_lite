@@ -395,19 +395,31 @@ class TransactionManager {
 
     getSortedTransactions(transactions) {
         return [...transactions].sort((a, b) => {
-            let aValue = a[this.currentSort.field];
-            let bValue = b[this.currentSort.field];
+            let aValue, bValue;
 
             // 特殊处理不同类型的排序
-            if (this.currentSort.field === 'date') {
-                aValue = new Date(aValue);
-                bValue = new Date(bValue);
+            if (this.currentSort.field === 'asset') {
+                // 资产列需要通过asset_id查找资产名称
+                const assetA = this.assets.find(asset => asset.id === a.asset_id);
+                const assetB = this.assets.find(asset => asset.id === b.asset_id);
+                aValue = assetA ? assetA.name.toLowerCase() : '';
+                bValue = assetB ? assetB.name.toLowerCase() : '';
+            } else if (this.currentSort.field === 'date') {
+                aValue = new Date(a[this.currentSort.field]);
+                bValue = new Date(b[this.currentSort.field]);
             } else if (this.currentSort.field === 'amount') {
-                aValue = parseFloat(aValue);
-                bValue = parseFloat(bValue);
-            } else if (typeof aValue === 'string') {
-                aValue = aValue.toLowerCase();
-                bValue = bValue.toLowerCase();
+                aValue = parseFloat(a[this.currentSort.field]);
+                bValue = parseFloat(b[this.currentSort.field]);
+            } else {
+                aValue = a[this.currentSort.field];
+                bValue = b[this.currentSort.field];
+                
+                if (typeof aValue === 'string') {
+                    aValue = aValue.toLowerCase();
+                }
+                if (typeof bValue === 'string') {
+                    bValue = bValue.toLowerCase();
+                }
             }
 
             if (aValue < bValue) {

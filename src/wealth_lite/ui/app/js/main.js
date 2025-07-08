@@ -32,6 +32,11 @@ class WealthLiteApp {
     }
 
     initializePageManagers() {
+        // 初始化图表管理器（避免重复创建）
+        if (typeof ChartManager !== 'undefined' && !this.chartManager) {
+            this.chartManager = new ChartManager();
+        }
+        
         // 初始化交易管理器
         if (typeof TransactionManager !== 'undefined') {
             this.transactionManager = new TransactionManager(this);
@@ -391,6 +396,9 @@ class WealthLiteApp {
         
         // 更新持仓列表
         this.updatePositionsList(data.assets);
+        
+        // 更新图表
+        this.updateCharts(data.assets);
     }
 
     updatePositionsList(positions) {
@@ -415,7 +423,7 @@ class WealthLiteApp {
         
         positions.forEach(position => {
             // 计算收益相关数据
-            const totalReturn = position.total_return || 0;
+            const totalReturn = (Math.round(position.total_return)) || 0;
             const totalReturnRate = position.total_return_rate || 0;
             const returnClass = totalReturn >= 0 ? 'positive' : 'negative';
             const status = position.status || 'ACTIVE';
@@ -620,6 +628,19 @@ class WealthLiteApp {
             });
         });
         
+        // 汇总行
+        const totalAmount = positions.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const totalReturn = positions.reduce((sum, p) => sum + (p.total_return || 0), 0);
+        const summaryRow = document.createElement('tr');
+        summaryRow.className = 'summary-row';
+        summaryRow.innerHTML = `
+            <td colspan="2" style="font-weight:bold;">汇总</td>
+            <td style="font-weight:bold; text-align:right;">${this.formatAmount(totalAmount)}</td>
+            <td style="font-weight:bold; text-align:right;">${this.formatAmount(Math.round(totalReturn))}</td>
+            <td colspan="4"></td>
+        `;
+        positionsTableBody.appendChild(summaryRow);
+        
         // 绑定提取按钮事件
         this.bindPositionActions();
         
@@ -777,11 +798,27 @@ class WealthLiteApp {
     getCurrentPage() {
         return this.currentPage;
     }
+
+    updateCharts(positions) {
+        // 确保图表管理器已初始化
+        if (!this.chartManager) return;
+        
+        // 更新资产类型图表
+        this.chartManager.updateAssetTypeChart(positions);
+        
+        // 更新现金及等价物图表
+        this.chartManager.updateCashChart(positions);
+        
+        // 更新固定收益图表
+        this.chartManager.updateFixedIncomeChart(positions);
+    }
 }
 
-// 当DOM加载完成后初始化应用
+// 当DOM加载完成后初始化应用（避免重复初始化）
 document.addEventListener('DOMContentLoaded', () => {
-    window.wealthLiteApp = new WealthLiteApp();
+    if (!window.wealthLiteApp) {
+        window.wealthLiteApp = new WealthLiteApp();
+    }
 });
 
 // 导出类以供其他模块使用

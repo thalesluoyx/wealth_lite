@@ -928,8 +928,33 @@ body {
   }
   
   .positions-table .details-grid {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: 1fr;
+}
+
+
 }
 
  
+/* 持仓明细表格数字右对齐 */
+.positions-table td:nth-child(3),
+.positions-table td:nth-child(4),
+.positions-table td:nth-child(5),
+.positions-table td:nth-child(7) {
+  text-align: right !important;
+  padding-right: 16px !important;
+}
+
+/* 汇总行样式 */
+.positions-table .summary-row {
+  border-top: 2px solid var(--gray-300);
+  background-color: var(--gray-50);
+}
+
+.positions-table .summary-row td {
+  padding: 12px 16px;
+}
+.positions-table .summary-row td:nth-child(3),
+.positions-table .summary-row td:nth-child(4) {
+  text-align: right !important;
+  padding-right: 16px !important;
+}

@@ -592,7 +592,7 @@ class FixedIncomeManager {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.setAttribute('required', '');
-                console.log(`✅ 恢复字段 ${fieldId} 的required属性`);
+                //console.log(`✅ 恢复字段 ${fieldId} 的required属性`);
             }
         });
     }
@@ -618,7 +618,7 @@ class FixedIncomeManager {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.setAttribute('required', '');
-                console.log(`✅ 恢复基本字段 ${fieldId} 的required属性`);
+                //console.log(`✅ 恢复基本字段 ${fieldId} 的required属性`);
             }
         });
     }
@@ -640,11 +640,11 @@ class FixedIncomeManager {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.removeAttribute('required');
-                console.log(`✅ 移除字段 ${fieldId} 的required属性`);
+                //console.log(`✅ 移除字段 ${fieldId} 的required属性`);
             }
         });
         
-        console.log('✅ 已隐藏所有固定收益字段 (利息交易极简模式)');
+        //console.log('✅ 已隐藏所有固定收益字段 (利息交易极简模式)');
     }
 
     /**
@@ -1372,7 +1372,7 @@ class FixedIncomeManager {
             // 更新汇率预览显示
             this.updateExchangeRatePreview();
             
-            console.log('✅ 固定收益字段数据填充完成');
+            //console.log('✅ 固定收益字段数据填充完成');
             
         } catch (error) {
             console.error('❌ 填充固定收益字段失败:', error);
@@ -1560,7 +1560,7 @@ class FixedIncomeManager {
 
     resetFixedIncomeFields() {
         console.log('🔄 开始重置固定收益字段');
-        console.trace('resetFixedIncomeFields 调用堆栈');
+        //console.trace('resetFixedIncomeFields 调用堆栈');
         
         const fixedIncomeFields = [
             'annualRate', 'fiStartDate', 'maturityDate', 
@@ -1570,7 +1570,7 @@ class FixedIncomeManager {
         fixedIncomeFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
-                console.log(`🗑️ 重置字段 ${fieldId}: ${field.value} → ''`);
+                //console.log(`🗑️ 重置字段 ${fieldId}: ${field.value} → ''`);
                 field.value = '';
                 field.removeAttribute('data-user-set'); // 清除用户设置标记
                 this.clearFieldError(field);
