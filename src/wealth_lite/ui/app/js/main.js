@@ -456,13 +456,13 @@ class WealthLiteApp {
             const assetTxns = assetTransactions[assetId];
             const position = this.calculateAssetPosition(asset, assetTxns);
             
-            console.log(`📊 资产 ${asset.name} 持仓计算结果:`, {
-                amount: position.amount,
-                totalReturn: position.total_return,
-                totalInvested: position.total_invested,
-                totalWithdrawn: position.total_withdrawn,
-                totalIncome: position.total_income
-            });
+            // console.log(`📊 资产 ${asset.name} 持仓计算结果:`, {
+            //     amount: position.amount,
+            //     totalReturn: position.total_return,
+            //     totalInvested: position.total_invested,
+            //     totalWithdrawn: position.total_withdrawn,
+            //     totalIncome: position.total_income
+            // });
             
             if (position.amount > 0) { // 只显示有持仓的资产
                 positions.push(position);
@@ -725,7 +725,7 @@ class WealthLiteApp {
                             <div class="details-grid">
                                 <div class="detail-item">
                                     <span class="detail-label">资产子类型</span>
-                                    <span class="detail-value">${position.asset_subtype || '未知'}</span>
+                                    <span class="detail-value">${window.assetManager && typeof window.assetManager.getAssetSubTypeText === 'function' ? window.assetManager.getAssetSubTypeText(position.asset_subtype) : (position.asset_subtype || '未知')}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">币种</span>

@@ -432,19 +432,19 @@ class Position:
             'first_transaction_date': self.first_transaction_date.isoformat() if self.first_transaction_date else None,
             'last_transaction_date': self.last_transaction_date.isoformat() if self.last_transaction_date else None,
             'holding_days': self.holding_days,
-            'total_invested': str(self.total_invested),
-            'total_withdrawn': str(self.total_withdrawn),
-            'total_income': str(self.total_income),
-            'total_fees': str(self.total_fees),
-            'net_invested': str(self.net_invested),
-            'principal_amount': str(self.principal_amount),
-            'current_book_value': str(self.current_book_value),
-            'current_value': str(self.calculate_current_value()),
-            'total_return': str(self.calculate_total_return()),
-            'total_return_rate': self.calculate_total_return_rate(),
-            'annualized_return': self.calculate_annualized_return(),
-            'unrealized_pnl': str(self.calculate_unrealized_pnl()),
-            'realized_pnl': str(self.calculate_realized_pnl())
+            'total_invested': round(float(self.total_invested), 2),
+            'total_withdrawn': round(float(self.total_withdrawn), 2),
+            'total_income': round(float(self.total_income), 2),
+            'total_fees': round(float(self.total_fees), 2),
+            'net_invested': round(float(self.net_invested), 2),
+            'principal_amount': round(float(self.principal_amount), 2),
+            'current_book_value': round(float(self.current_book_value), 2),
+            'current_value': round(float(self.calculate_current_value()), 2),
+            'total_return': round(float(self.calculate_total_return()), 4),
+            'total_return_rate': round(self.calculate_total_return_rate(), 4),
+            'annualized_return': round(self.calculate_annualized_return(), 4),
+            'unrealized_pnl': round(float(self.calculate_unrealized_pnl()), 4),
+            'realized_pnl': round(float(self.calculate_realized_pnl()), 4)
         }
         
         if include_transactions:

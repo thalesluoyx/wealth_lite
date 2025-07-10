@@ -255,22 +255,20 @@ class Portfolio:
             'calculation_date': self.calculation_date.isoformat(),
             'position_count': self.position_count,
             'active_position_count': self.active_position_count,
-            'total_value': str(self.total_value),
-            'total_cost': str(self.total_cost),
-            'total_invested': str(self.total_invested),
-            'total_withdrawn': str(self.total_withdrawn),
-            'total_income': str(self.total_income),
-            'total_fees': str(self.total_fees),
-            'net_invested': str(self.net_invested),
-            'total_return': str(self.calculate_total_return()),
-            'total_return_rate': self.calculate_total_return_rate(),
+            'total_value': round(float(self.total_value), 2),
+            'total_cost': round(float(self.total_cost), 2),
+            'total_invested': round(float(self.total_invested), 2),
+            'total_withdrawn': round(float(self.total_withdrawn), 2),
+            'total_income': round(float(self.total_income), 2),
+            'total_fees': round(float(self.total_fees), 2),
+            'net_invested': round(float(self.net_invested), 2),
+            'total_return': round(float(self.calculate_total_return()), 4),
+            'total_return_rate': round(self.calculate_total_return_rate(), 4),
             'asset_allocation': self.calculate_asset_allocation(),
             'performance_metrics': self.calculate_performance_metrics()
         }
-        
         if include_positions:
             result['positions'] = [p.to_dict(include_transactions=False) for p in self.positions]
-        
         return result
 
     def __str__(self) -> str:
@@ -317,7 +315,7 @@ class PortfolioSnapshot:
 
     @classmethod
     def from_portfolio(cls, portfolio: Portfolio, description: str = "") -> 'PortfolioSnapshot':
-        """从Portfolio创建快照"""
+        """从Portfolio创建快照;"""
         return cls(
             snapshot_date=datetime.now(),
             base_currency=portfolio.base_currency,
@@ -378,10 +376,10 @@ class PortfolioSnapshot:
             'snapshot_date': self.snapshot_date.isoformat(),
             'base_currency': self.base_currency.name,
             'description': self.description,
-            'total_value': str(self.total_value),
-            'total_cost': str(self.total_cost),
-            'total_return': str(self.total_return),
-            'return_rate': self.return_rate,
+            'total_value': round(float(self.total_value), 2),
+            'total_cost': round(float(self.total_cost), 2),
+            'total_return': round(float(self.total_return), 4),
+            'return_rate': round(self.return_rate, 4),
             'asset_allocation': self.asset_allocation,
             'performance_metrics': self.performance_metrics,
             'position_snapshots': self.position_snapshots,

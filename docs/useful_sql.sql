@@ -8,6 +8,8 @@ drop table assets;
 
 
 select * from transactions
+select * from fixed_income_transactions
+select * from cash_transactions
 
 
 select * from transactions join fixed_income_transactions 
@@ -16,6 +18,7 @@ on transactions.transaction_id = fixed_income_transactions.transaction_id where 
 SELECT name FROM sqlite_master WHERE type='table'
 
 select * from portfolio_snapshots;
+
 
 transactions
 cash_transactions
