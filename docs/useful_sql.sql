@@ -12,3 +12,17 @@ select * from transactions
 
 select * from transactions join fixed_income_transactions 
 on transactions.transaction_id = fixed_income_transactions.transaction_id where transaction_id = 'b07a5e2b-bce4-4b95-92e9-65d7957fed6e';
+
+SELECT name FROM sqlite_master WHERE type='table'
+
+select * from portfolio_snapshots;
+
+transactions
+cash_transactions
+fixed_income_transactions
+equity_transactions
+real_estate_transactions
+assets
+ai_analysis_configs
+ai_analysis_results
+portfolio_snapshots

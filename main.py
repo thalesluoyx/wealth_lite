@@ -25,13 +25,20 @@ from fastapi.middleware.cors import CORSMiddleware
 # 添加src目录到Python路径
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from wealth_lite.services.wealth_service import WealthService
-from wealth_lite.services.enum_generator import EnumGeneratorService
-from wealth_lite.data.database import DatabaseManager
-from wealth_lite.models.enums import AssetType, AssetSubType, Currency, TransactionType
+from src.wealth_lite.data.database import DatabaseManager
+from src.wealth_lite.services.wealth_service import WealthService
+from src.wealth_lite.services.enum_generator import EnumGeneratorService
+from src.wealth_lite.services.snapshot_service import SnapshotService, AIConfigService, AIAnalysisService
+from src.wealth_lite.models.enums import AssetType, AssetSubType, Currency, TransactionType
 
 # 初始化日志
 setup_logging(LOG_LEVEL)
+
+db_manager = DatabaseManager()
+wealth_service = WealthService(db_manager)
+config_service = AIConfigService(db_manager)
+analysis_service = AIAnalysisService(db_manager)
+snapshot_service = SnapshotService(db_manager, wealth_service)
 
 class WealthLiteApp:
     """WealthLite 应用主类"""
@@ -47,8 +54,9 @@ class WealthLiteApp:
         """初始化服务"""
         try:
             # 初始化数据库 - 根据环境变量自动选择数据库
+            
             self.db_manager = DatabaseManager()
-            self.wealth_service = WealthService()
+            self.wealth_service = WealthService(self.db_manager)
             
             # 生成前端枚举文件
             enum_generator = EnumGeneratorService()
@@ -57,7 +65,21 @@ class WealthLiteApp:
             else:
                 logging.warning("⚠️ 前端枚举文件生成失败，前端将使用备用数据")
             
+            # 创建启动时的自动快照
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                snapshot_service = SnapshotService(self.db_manager, self.wealth_service)
+                snapshot = snapshot_service.create_startup_snapshot()
+                if snapshot:
+                    logging.info(f"✅ 自动快照创建成功: {snapshot.snapshot_id}")
+                else:
+                    logging.info("ℹ️ 今日自动快照已存在，跳过创建")
+            except Exception as e:
+                logging.warning(f"⚠️ 自动快照创建失败: {e}")
+                # 不阻断应用启动
+            
             logging.info("✅ 数据库服务初始化成功")
+            logging.info(f"wealth_service 初始化完成，依赖 db_manager 状态: {self.db_manager.is_connected()}")
             
         except Exception as e:
             logging.error(f"❌ 服务初始化失败: {e}", exc_info=True)
@@ -135,6 +157,370 @@ class WealthLiteApp:
         async def health_check():
             """健康检查"""
             return {"status": "healthy", "service": "WealthLite"}
+
+        # ==================== 快照管理 API ====================
+        
+        @app.get("/api/portfolio/current")
+        async def get_current_portfolio():
+            """获取当前投资组合状态"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                
+                # 使用SnapshotService获取当前投资组合状态
+                portfolio = self.wealth_service.get_portfolio()
+                
+                if not portfolio:
+                    return {
+                        "success": True,
+                        "data": {
+                            "total_value": 0,
+                            "total_cost": 0,
+                            "total_return": 0,
+                            "total_return_rate": 0
+                        }
+                    }
+                
+                # 计算当前投资组合状态
+                total_value = sum(pos.current_book_value for pos in portfolio.positions)
+                total_cost = sum(pos.net_invested for pos in portfolio.positions)
+                total_return = total_value - total_cost
+                total_return_rate = (total_return / total_cost * 100) if total_cost > 0 else 0
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "total_value": float(total_value),
+                        "total_cost": float(total_cost),
+                        "total_return": float(total_return),
+                        "total_return_rate": float(total_return_rate)
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取当前投资组合失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.get("/api/snapshots")
+        async def get_snapshots(type: str = "auto", limit: int = 50, offset: int = 0):
+            """获取快照列表"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                from wealth_lite.models.enums import SnapshotType
+                
+                # 转换快照类型
+                snapshot_type = SnapshotType.AUTO if type.lower() == 'auto' else SnapshotType.MANUAL
+                
+                # 获取快照列表
+                snapshots = snapshot_service.get_snapshots_by_type(snapshot_type, limit, offset)
+                
+                # 转换为前端格式
+                snapshots_data = []
+                for snapshot in snapshots:
+                    snapshots_data.append({
+                        "snapshot_id": snapshot.snapshot_id,
+                        "snapshot_date": snapshot.snapshot_date.isoformat(),
+                        "snapshot_type": snapshot.snapshot_type.value,
+                        "total_value": float(snapshot.total_value),
+                        "total_return": float(snapshot.total_return),
+                        "total_return_rate": float(snapshot.total_return_rate),
+                        "notes": snapshot.notes,
+                        "is_today": snapshot.is_today
+                    })
+                
+                # 统计信息
+                stats = {
+                    "total_count": len(snapshots),
+                    "type": type
+                }
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "snapshots": snapshots_data,
+                        "stats": stats
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取快照列表失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.post("/api/snapshots")
+        async def create_snapshot(snapshot_data: dict):
+            """创建手动快照"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                
+                notes = snapshot_data.get("notes", "")
+                
+                # 创建手动快照
+                snapshot = snapshot_service.create_manual_snapshot(notes)
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "snapshot_id": snapshot.snapshot_id,
+                        "snapshot_date": snapshot.snapshot_date.isoformat(),
+                        "snapshot_type": snapshot.snapshot_type.value,
+                        "total_value": float(snapshot.total_value),
+                        "notes": snapshot.notes
+                    },
+                    "message": "快照创建成功"
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 创建快照失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.get("/api/snapshots/{snapshot_id}")
+        async def get_snapshot_detail(snapshot_id: str):
+            """获取快照详情"""
+            try:
+                # 不要在这里 import 或 new SnapshotService
+                snapshot = snapshot_service.get_snapshot_by_id(snapshot_id)
+                if not snapshot:
+                    return {
+                        "success": False,
+                        "message": "快照不存在"
+                    }
+                return {
+                    "success": True,
+                    "data": {
+                        "snapshot": snapshot.to_dict()
+                    }
+                }
+            except Exception as e:
+                logging.error(f"❌ 获取快照详情失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.delete("/api/snapshots/{snapshot_id}")
+        async def delete_snapshot(snapshot_id: str):
+            """删除快照"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                
+                result = snapshot_service.delete_snapshot(snapshot_id)
+                
+                if result:
+                    return {
+                        "success": True,
+                        "message": "快照删除成功"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "无法删除快照"
+                    }
+                
+            except Exception as e:
+                logging.error(f"❌ 删除快照失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.get("/api/snapshots/today/manual")
+        async def check_today_manual_snapshot():
+            """检查今日是否已有手动快照"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                from wealth_lite.models.enums import SnapshotType
+                from datetime import date
+                
+                snapshot = snapshot_service.get_snapshot_by_date_and_type(date.today(), SnapshotType.MANUAL)
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "snapshot": {
+                            "snapshot_id": snapshot.snapshot_id,
+                            "snapshot_date": snapshot.snapshot_date.isoformat(),
+                            "total_value": float(snapshot.total_value)
+                        } if snapshot else None
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 检查今日快照失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.post("/api/snapshots/compare")
+        async def compare_snapshots(comparison_data: dict):
+            """对比两个快照"""
+            try:
+                from wealth_lite.services.snapshot_service import SnapshotService
+                
+                snapshot1_id = comparison_data.get("snapshot1_id")
+                snapshot2_id = comparison_data.get("snapshot2_id")
+                
+                if not snapshot1_id or not snapshot2_id:
+                    return {
+                        "success": False,
+                        "message": "需要提供两个快照ID"
+                    }
+                
+                # 进行快照对比
+                comparison = snapshot_service.compare_snapshots(snapshot1_id, snapshot2_id)
+                
+                return {
+                    "success": True,
+                    "data": comparison
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 快照对比失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        # ==================== AI分析 API ====================
+        
+        @app.get("/api/ai/configs")
+        async def get_ai_configs():
+            """获取AI配置列表"""
+            try:
+                configs = config_service.get_all_configs()
+                default_config = config_service.get_default_config()
+                
+                configs_data = []
+                for config in configs:
+                    configs_data.append({
+                        "config_id": config.config_id,
+                        "config_name": config.config_name,
+                        "ai_type": config.ai_type.value,
+                        "is_default": config.is_default,
+                        "display_name": f"{config.config_name} ({config.ai_type.value})"
+                    })
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "configs": configs_data,
+                        "default_config": {
+                            "config_id": default_config.config_id,
+                            "ai_type": default_config.ai_type.value
+                        } if default_config else None
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取AI配置失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.post("/api/ai/configs/switch")
+        async def switch_ai_config(config_data: dict):
+            """切换AI配置"""
+            try:
+                from src.wealth_lite.models.enums import AIType
+                ai_type_str = config_data.get("ai_type")
+                if not ai_type_str:
+                    return {
+                        "success": False,
+                        "message": "需要提供AI类型"
+                    }
+                ai_type = AIType.LOCAL if ai_type_str == "LOCAL" else AIType.CLOUD
+                config = config_service.switch_ai_type(ai_type)
+                return {
+                    "success": True,
+                    "data": {
+                        "config_id": config.config_id,
+                        "ai_type": config.ai_type.value
+                    },
+                    "message": "AI配置已更新"
+                }
+            except Exception as e:
+                logging.error(f"❌ 切换AI配置失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.post("/api/ai/analysis/snapshots")
+        async def analyze_snapshots_with_ai(analysis_data: dict):
+            """使用AI分析快照对比"""
+            try:
+                snapshot1_id = analysis_data.get("snapshot1_id")
+                snapshot2_id = analysis_data.get("snapshot2_id")
+                config_id = analysis_data.get("config_id")
+                if not snapshot1_id or not snapshot2_id:
+                    return {
+                        "success": False,
+                        "message": "需要提供两个快照ID"
+                    }
+                result = analysis_service.analyze_snapshots(snapshot1_id, snapshot2_id, config_id)
+                return {
+                    "success": True,
+                    "data": {
+                        "analysis_id": result.analysis_id,
+                        "analysis_status": result.analysis_status,
+                        "analysis_summary": result.analysis_summary,
+                        "investment_advice": result.investment_advice,
+                        "risk_assessment": result.risk_assessment,
+                        "processing_time_ms": result.processing_time_ms
+                    }
+                }
+            except Exception as e:
+                logging.error(f"❌ AI分析失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.get("/api/ai/analysis/{analysis_id}")
+        async def get_ai_analysis_result(analysis_id: str):
+            """获取AI分析结果"""
+            try:
+                from wealth_lite.services.snapshot_service import AIAnalysisService
+                
+                analysis_service = AIAnalysisService()
+                result = analysis_service.get_analysis_result(analysis_id)
+                
+                if not result:
+                    return {
+                        "success": False,
+                        "message": "分析结果不存在"
+                    }
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "analysis_id": result.analysis_id,
+                        "analysis_status": result.analysis_status,
+                        "analysis_summary": result.analysis_summary,
+                        "investment_advice": result.investment_advice,
+                        "risk_assessment": result.risk_assessment,
+                        "processing_time_ms": result.processing_time_ms,
+                        "created_date": result.created_date.isoformat()
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取AI分析结果失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        # ==================== 原有的API路由 ====================
 
 
         @app.get("/api/dashboard/summary")
@@ -502,21 +888,74 @@ class WealthLiteApp:
             """获取交易记录"""
             try:
                 transactions = self.wealth_service.get_recent_transactions(limit)
-                return [
-                    {
+                result = []
+                
+                for tx in transactions:
+                    # 基础交易信息
+                    tx_data = {
                         "id": tx.transaction_id,
                         "asset_id": tx.asset_id,
                         "type": tx.transaction_type.name,
                         "amount": float(tx.amount),
-                        "price": float(getattr(tx, "price", 0)) if getattr(tx, "price", None) is not None else None,
-                        "quantity": float(getattr(tx, "quantity", 0)) if getattr(tx, "quantity", None) is not None else None,
                         "date": tx.transaction_date.isoformat(),
                         "currency": tx.currency.name,
                         "exchange_rate": float(tx.exchange_rate) if tx.exchange_rate else 1.0,
-                        "notes": tx.notes
+                        "amount_base_currency": float(tx.amount_base_currency) if tx.amount_base_currency else float(tx.amount),
+                        "notes": tx.notes,
+                        "reference_number": tx.reference_number,
+                        "created_date": tx.created_date.isoformat() if tx.created_date else None,
+                        "transaction_class": tx.__class__.__name__  # 交易类型类名
                     }
-                    for tx in transactions
-                ]
+                    
+                    # 添加特定类型的详细信息
+                    if hasattr(tx, 'quantity') and tx.quantity:
+                        tx_data["quantity"] = float(tx.quantity)
+                    if hasattr(tx, 'price_per_share') and tx.price_per_share:
+                        tx_data["price_per_share"] = float(tx.price_per_share)
+                    if hasattr(tx, 'commission') and tx.commission:
+                        tx_data["commission"] = float(tx.commission)
+                    
+                    # 固定收益特有字段
+                    if hasattr(tx, 'annual_rate') and tx.annual_rate:
+                        tx_data["annual_rate"] = float(tx.annual_rate)
+                    if hasattr(tx, 'start_date') and tx.start_date:
+                        tx_data["start_date"] = tx.start_date.isoformat()
+                    if hasattr(tx, 'maturity_date') and tx.maturity_date:
+                        tx_data["maturity_date"] = tx.maturity_date.isoformat()
+                    if hasattr(tx, 'interest_type'):
+                        tx_data["interest_type"] = tx.interest_type.name if hasattr(tx.interest_type, 'name') else str(tx.interest_type)
+                    if hasattr(tx, 'payment_frequency'):
+                        tx_data["payment_frequency"] = tx.payment_frequency.name if hasattr(tx.payment_frequency, 'name') else str(tx.payment_frequency)
+                    if hasattr(tx, 'face_value') and tx.face_value:
+                        tx_data["face_value"] = float(tx.face_value)
+                    if hasattr(tx, 'coupon_rate') and tx.coupon_rate:
+                        tx_data["coupon_rate"] = float(tx.coupon_rate)
+                    
+                    # 现金类特有字段
+                    if hasattr(tx, 'account_type'):
+                        tx_data["account_type"] = tx.account_type
+                    if hasattr(tx, 'interest_rate') and tx.interest_rate:
+                        tx_data["interest_rate"] = float(tx.interest_rate)
+                    if hasattr(tx, 'compound_frequency'):
+                        tx_data["compound_frequency"] = tx.compound_frequency
+                    
+                    # 房产特有字段
+                    if hasattr(tx, 'property_area') and tx.property_area:
+                        tx_data["property_area"] = float(tx.property_area)
+                    if hasattr(tx, 'price_per_unit') and tx.price_per_unit:
+                        tx_data["price_per_unit"] = float(tx.price_per_unit)
+                    if hasattr(tx, 'rental_income') and tx.rental_income:
+                        tx_data["rental_income"] = float(tx.rental_income)
+                    if hasattr(tx, 'property_type'):
+                        tx_data["property_type"] = tx.property_type
+                    if hasattr(tx, 'location'):
+                        tx_data["location"] = tx.location
+                    if hasattr(tx, 'tax_amount') and tx.tax_amount:
+                        tx_data["tax_amount"] = float(tx.tax_amount)
+                    
+                    result.append(tx_data)
+                
+                return result
             except Exception as e:
                 logging.error(f"❌ 获取交易记录失败: {e}", exc_info=True)
                 return []

@@ -23,7 +23,7 @@ from ..data.repositories import RepositoryManager
 class WealthService:
     """财富管理核心服务"""
     
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_manager):
         """
         初始化财富管理服务
         
@@ -33,7 +33,7 @@ class WealthService:
                     - 开发环境：使用开发数据库
                     - 生产环境：使用生产数据库
         """
-        self.db_manager = DatabaseManager(db_path)
+        self.db_manager = db_manager
         self.repositories = RepositoryManager(self.db_manager)
     
     # ==================== 资产管理 ====================

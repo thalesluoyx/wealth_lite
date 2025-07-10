@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/transactions.css">
     <link rel="stylesheet" href="styles/components/assets.css">
+    <link rel="stylesheet" href="styles/portfolio.css">
     <!-- Chart.js 轻量图表库 -->
     <script src="js/chart.umd.js"></script>
     <!-- Lucide Icons -->
@@ -100,15 +101,15 @@
                         <canvas id="mainChart"></canvas>
                         <!-- 数据悬浮卡片 -->
                         <div class="chart-tooltip" id="chartTooltip">
-                            <div class="tooltip-date">4개월</div>
+                            <div class="tooltip-date">4月</div>
                             <div class="tooltip-values">
                                 <div class="tooltip-item">
-                                    <span class="label">현금</span>
-                                    <span class="value">8,435,530원</span>
+                                    <span class="label">现金</span>
+                                    <span class="value">8,435,530元</span>
                                 </div>
                                 <div class="tooltip-item">
-                                    <span class="label">예금</span>
-                                    <span class="value">6,234,560원</span>
+                                    <span class="label">存款</span>
+                                    <span class="value">6,234,560元</span>
                                 </div>
                             </div>
                         </div>
@@ -377,8 +378,195 @@
             </div>
 
             <div id="portfolio" class="page">
-                <h2>投资组合</h2>
-                <p>投资组合页面开发中...</p>
+                <div class="page-header">
+                    <h2>📊 投资组合</h2>
+                    <div class="page-actions">
+                        <button class="btn-primary" id="createSnapshotBtn">
+                            <i data-lucide="camera"></i>
+                            创建快照
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 当前组合概览 -->
+                <section class="portfolio-overview">
+                    <div class="overview-card">
+                        <h3>🔄 当前组合概览</h3>
+                        <div class="overview-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">总价值</div>
+                                <div class="stat-value" id="portfolioTotalValue">¥0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">总收益</div>
+                                <div class="stat-value" id="portfolioTotalReturn">¥0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">收益率</div>
+                                <div class="stat-value" id="portfolioReturnRate">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 快照浏览 -->
+                <section class="snapshots-section">
+                    <div class="snapshots-card">
+                        <div class="card-header">
+                            <h3>📈 快照浏览</h3>
+                            <div class="snapshot-tabs">
+                                <button class="tab-btn active" id="autoSnapshotsTab" data-type="auto">
+                                    <i data-lucide="zap"></i>
+                                    自动快照
+                                </button>
+                                <button class="tab-btn" id="manualSnapshotsTab" data-type="manual">
+                                    <i data-lucide="user"></i>
+                                    手动快照
+                                </button>
+                            </div>
+                        </div>
+                        <div id="snapshotStats" class="snapshot-stats" style="margin: 8px 0 0 0;"></div>
+                        <div class="snapshots-content">
+                            <!-- 快照列表 -->
+                            <div class="snapshots-list" id="snapshotsList">
+                                <div class="table-container">
+                                    <table class="snapshots-table">
+                                        <thead>
+                                            <tr>
+                                                <th>日期</th>
+                                                <th>类型</th>
+                                                <th>总价值</th>
+                                                <th>收益率</th>
+                                                <th>备注</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="snapshotsTableBody">
+                                            <!-- 快照记录将通过JavaScript动态填充 -->
+                                        </tbody>
+                                    </table>
+                                    <div class="table-empty" id="snapshotsEmpty" style="display: none;">
+                                        <div class="empty-icon">
+                                            <i data-lucide="camera-off"></i>
+                                        </div>
+                                        <div class="empty-text">暂无快照</div>
+                                        <div class="empty-subtext">点击"创建快照"按钮保存当前投资组合状态</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 快照对比分析 -->
+                <section class="comparison-section">
+                    <div class="comparison-card">
+                        <div class="card-header">
+                            <h3>🔍 快照对比分析</h3>
+                            <div class="comparison-controls">
+                                <button class="btn-secondary" id="clearComparisonBtn" style="display: none;">
+                                    <i data-lucide="x"></i>
+                                    清除选择
+                                </button>
+                            </div>
+                        </div>
+                        <div class="comparison-content">
+                            <!-- 快照选择区域 -->
+                            <div class="snapshot-selection">
+                                <div class="selection-item">
+                                    <label>快照1：</label>
+                                    <div class="selected-snapshot" id="selectedSnapshot1">
+                                        <div class="placeholder">点击快照列表中的快照进行选择</div>
+                                    </div>
+                                </div>
+                                <div class="selection-item">
+                                    <label>快照2：</label>
+                                    <div class="selected-snapshot" id="selectedSnapshot2">
+                                        <div class="placeholder">选择第二个快照进行对比</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 对比操作按钮 -->
+                            <div class="comparison-actions">
+                                <button class="btn-primary" id="compareSnapshotsBtn" disabled>
+                                    <i data-lucide="git-compare"></i>
+                                    对比分析
+                                </button>
+                            </div>
+
+                            <!-- 对比结果显示区域 -->
+                            <div class="comparison-results" id="comparisonResults" style="display: none;">
+                                <!-- 基础对比数据 -->
+                                <div class="comparison-overview">
+                                    <div class="comparison-stat">
+                                        <div class="stat-label">价值变化</div>
+                                        <div class="stat-value" id="valueChange">--</div>
+                                    </div>
+                                    <div class="comparison-stat">
+                                        <div class="stat-label">变化幅度</div>
+                                        <div class="stat-value" id="changeRate">--</div>
+                                    </div>
+                                    <div class="comparison-stat">
+                                        <div class="stat-label">时间间隔</div>
+                                        <div class="stat-value" id="timePeriod">--</div>
+                                    </div>
+                                </div>
+
+                                <!-- 详细对比数据 -->
+                                <div class="comparison-details" id="comparisonDetails">
+                                    <!-- 对比数据将通过JavaScript动态填充 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI分析对比 -->
+                <section class="ai-analysis-section">
+                    <div class="ai-analysis-card">
+                        <div class="card-header">
+                            <h3>🤖 AI分析对比</h3>
+                            <div class="ai-config-display">
+                                <span class="ai-type-label">当前AI：</span>
+                                <span class="ai-type-value" id="currentAiType">本地AI</span>
+                                <button class="btn-link" id="changeAiTypeBtn">
+                                    <i data-lucide="settings"></i>
+                                    切换
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ai-analysis-content">
+                            <!-- AI分析操作 -->
+                            <div class="ai-analysis-actions">
+                                <button class="btn-primary" id="aiAnalyzeBtn" disabled>
+                                    <i data-lucide="brain"></i>
+                                    AI分析
+                                </button>
+                                <div class="ai-status" id="aiStatus" style="display: none;">
+                                    <div class="loading-spinner"></div>
+                                    <span>AI分析中...</span>
+                                </div>
+                            </div>
+
+                            <!-- AI分析结果 -->
+                            <div class="ai-analysis-results" id="aiAnalysisResults" style="display: none;">
+                                <div class="analysis-summary">
+                                    <h4>分析摘要</h4>
+                                    <div class="summary-content" id="analysisSummary">--</div>
+                                </div>
+                                <div class="analysis-advice">
+                                    <h4>投资建议</h4>
+                                    <div class="advice-content" id="investmentAdvice">--</div>
+                                </div>
+                                <div class="analysis-risk">
+                                    <h4>风险评估</h4>
+                                    <div class="risk-content" id="riskAssessment">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -534,6 +722,275 @@
         </div>
     </div>
 
+    <!-- 创建快照模态窗口 -->
+    <div id="createSnapshotModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>创建投资组合快照</h3>
+                <button class="modal-close" id="closeSnapshotModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="createSnapshotForm" class="modal-body">
+                <!-- 快照类型显示 -->
+                <div class="form-group">
+                    <label class="form-label">快照类型</label>
+                    <div class="snapshot-type-display">
+                        <span class="type-badge manual">
+                            <i data-lucide="user"></i>
+                            手动快照
+                        </span>
+                        <div class="type-description">用户主动创建的快照，可添加备注信息</div>
+                    </div>
+                </div>
+
+                <!-- 快照预览 -->
+                <div class="form-group">
+                    <label class="form-label">当前投资组合状态</label>
+                    <div class="snapshot-preview">
+                        <div class="preview-stat">
+                            <span class="label">总价值：</span>
+                            <span class="value" id="previewTotalValue">¥0</span>
+                        </div>
+                        <div class="preview-stat">
+                            <span class="label">总收益：</span>
+                            <span class="value" id="previewTotalReturn">¥0</span>
+                        </div>
+                        <div class="preview-stat">
+                            <span class="label">收益率：</span>
+                            <span class="value" id="previewReturnRate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 备注 -->
+                <div class="form-group">
+                    <label for="snapshotNotes" class="form-label">备注</label>
+                    <textarea id="snapshotNotes" class="form-textarea" 
+                              placeholder="记录快照创建的原因或重要事件..." rows="3"></textarea>
+                    <div class="form-help">可选：记录创建此快照的背景信息</div>
+                </div>
+
+                <!-- 覆盖警告 -->
+                <div class="warning-message" id="snapshotWarning" style="display: none;">
+                    <i data-lucide="alert-triangle"></i>
+                    <div class="warning-content">
+                        <div class="warning-title">今日已存在手动快照</div>
+                        <div class="warning-text">创建新快照将覆盖今日的现有快照，是否继续？</div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelSnapshotBtn">取消</button>
+                <button type="submit" class="btn-primary" form="createSnapshotForm">创建快照</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI配置模态窗口 -->
+    <div id="aiConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>AI分析配置</h3>
+                <button class="modal-close" id="closeAiConfigModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- AI类型选择 -->
+                <div class="form-group">
+                    <label class="form-label">AI服务类型</label>
+                    <div class="ai-type-options">
+                        <div class="ai-option" data-type="LOCAL">
+                            <div class="option-header">
+                                <input type="radio" id="aiTypeLocal" name="aiType" value="LOCAL" checked>
+                                <label for="aiTypeLocal">
+                                    <i data-lucide="home"></i>
+                                    本地AI
+                                </label>
+                            </div>
+                            <div class="option-description">使用本地部署的AI模型（Ollama）</div>
+                            <div class="option-details">
+                                <div class="detail-item">
+                                    <span>✓ 数据隐私保护</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>✓ 无网络依赖</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>⚠ 需要本地环境支持</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-option" data-type="CLOUD">
+                            <div class="option-header">
+                                <input type="radio" id="aiTypeCloud" name="aiType" value="CLOUD">
+                                <label for="aiTypeCloud">
+                                    <i data-lucide="cloud"></i>
+                                    云端AI
+                                </label>
+                            </div>
+                            <div class="option-description">使用云端AI服务（OpenAI、Claude等）</div>
+                            <div class="option-details">
+                                <div class="detail-item">
+                                    <span>✓ 高质量分析</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>✓ 免部署即用</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>⚠ 需要API密钥</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 本地AI配置 -->
+                <div class="ai-config-section" id="localAiConfig">
+                    <h4>本地AI配置</h4>
+                    <div class="form-group">
+                        <label for="localModelName" class="form-label">模型名称</label>
+                        <input type="text" id="localModelName" class="form-input" 
+                               value="llama3.1:8b" placeholder="llama3.1:8b">
+                        <div class="form-help">Ollama模型名称，确保已在本地安装</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="localApiPort" class="form-label">API端口</label>
+                        <input type="number" id="localApiPort" class="form-input" 
+                               value="11434" placeholder="11434">
+                        <div class="form-help">Ollama API服务端口</div>
+                    </div>
+                    <div class="ai-status" id="localAiStatus">
+                        <div class="status-indicator unknown"></div>
+                        <span>连接状态未知</span>
+                        <button type="button" class="btn-link" id="testLocalConnection">测试连接</button>
+                    </div>
+                </div>
+
+                <!-- 云端AI配置 -->
+                <div class="ai-config-section" id="cloudAiConfig" style="display: none;">
+                    <h4>云端AI配置</h4>
+                    <div class="form-group">
+                        <label for="cloudProvider" class="form-label">服务提供商</label>
+                        <select id="cloudProvider" class="form-select">
+                            <option value="OPENAI">OpenAI (GPT)</option>
+                            <option value="CLAUDE">Anthropic (Claude)</option>
+                            <option value="GEMINI">Google (Gemini)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cloudApiKey" class="form-label">API密钥</label>
+                        <input type="password" id="cloudApiKey" class="form-input" 
+                               placeholder="输入您的API密钥...">
+                        <div class="form-help">API密钥将被安全存储，仅用于AI分析</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cloudModelName" class="form-label">模型名称</label>
+                        <input type="text" id="cloudModelName" class="form-input" 
+                               placeholder="gpt-4o-mini">
+                        <div class="form-help">使用的具体模型名称</div>
+                    </div>
+                    <div class="ai-status" id="cloudAiStatus">
+                        <div class="status-indicator unknown"></div>
+                        <span>连接状态未知</span>
+                        <button type="button" class="btn-link" id="testCloudConnection">测试连接</button>
+                    </div>
+                </div>
+
+                <!-- 通用配置 -->
+                <div class="ai-config-section">
+                    <h4>分析参数</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="aiTemperature" class="form-label">创造性 (Temperature)</label>
+                            <input type="range" id="aiTemperature" class="form-range" 
+                                   min="0" max="1" step="0.1" value="0.7">
+                            <div class="range-value" id="temperatureValue">0.7</div>
+                            <div class="form-help">较低值产生更保守的分析，较高值更有创造性</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="aiMaxTokens" class="form-label">最大输出长度</label>
+                            <input type="number" id="aiMaxTokens" class="form-input" 
+                                   value="4000" min="1000" max="8000">
+                            <div class="form-help">控制AI分析报告的详细程度</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAiConfigBtn">取消</button>
+                <button type="button" class="btn-primary" id="saveAiConfigBtn">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快照详情模态窗口 -->
+    <div id="snapshotDetailModal" class="modal modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="snapshotDetailTitle">快照详情</h3>
+                <button class="modal-close" id="closeSnapshotDetailModal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 快照基本信息 -->
+                <div class="snapshot-detail-overview">
+                    <div class="detail-stats">
+                        <div class="detail-stat">
+                            <div class="stat-label">总价值</div>
+                            <div class="stat-value" id="detailTotalValue">¥0</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="stat-label">总成本</div>
+                            <div class="stat-value" id="detailTotalCost">¥0</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="stat-label">总收益</div>
+                            <div class="stat-value" id="detailTotalReturn">¥0</div>
+                        </div>
+                        <div class="detail-stat">
+                            <div class="stat-label">收益率</div>
+                            <div class="stat-value" id="detailReturnRate">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 资产配置图表 -->
+                <div class="snapshot-detail-allocation">
+                    <h4>资产配置</h4>
+                    <div class="allocation-chart">
+                        <canvas id="snapshotAllocationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 持仓详情 -->
+                <div class="snapshot-detail-positions">
+                    <h4>持仓详情</h4>
+                    <div class="table-container">
+                        <table class="positions-table">
+                            <thead>
+                                <tr>
+                                    <th>资产名称</th>
+                                    <th>资产类型</th>
+                                    <th>当时价值</th>
+                                    <th>占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="snapshotPositionsBody">
+                                <!-- 持仓数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="closeSnapshotDetailBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
 
 
     <!-- JavaScript -->
@@ -543,6 +1000,7 @@
     <script src="js/transactions.js"></script>
     <script src="js/assets.js"></script>
     <script src="js/charts.js"></script>
+    <script src="js/portfolio.js"></script>
     <script src="js/main.js"></script>
     
     <!-- 开发工具 (仅在开发环境加载) -->

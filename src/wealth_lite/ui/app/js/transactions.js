@@ -249,28 +249,86 @@ class TransactionManager {
     updateStats() {
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
         
+        // 本月交易
         const monthlyTransactions = this.transactions.filter(t => {
             const transactionDate = new Date(t.date);
             return transactionDate.getMonth() === currentMonth && 
                    transactionDate.getFullYear() === currentYear;
         });
 
+        // 上月交易（用于计算变化）
+        const lastMonthTransactions = this.transactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === lastMonth && 
+                   transactionDate.getFullYear() === lastMonthYear;
+        });
+
+        // 本月统计
         const monthlyCount = monthlyTransactions.length;
         const monthlyAmount = monthlyTransactions.reduce((sum, t) => {
-            return sum + (t.amount * t.exchangeRate);
+            const exchangeRate = t.exchangeRate || 1; // 如果没有汇率，默认为1
+            return sum + (parseFloat(t.amount) * exchangeRate);
         }, 0);
         
         const monthlyReturn = monthlyTransactions
-            .filter(t => t.type === 'INTEREST')
-            .reduce((sum, t) => sum + (t.amount * t.exchangeRate), 0);
+            .filter(t => t.type === 'INTEREST' || t.type === 'DIVIDEND')
+            .reduce((sum, t) => {
+                const exchangeRate = t.exchangeRate || 1;
+                return sum + (parseFloat(t.amount) * exchangeRate);
+            }, 0);
+
+        // 上月统计（用于计算变化）
+        const lastMonthCount = lastMonthTransactions.length;
+        const lastMonthAmount = lastMonthTransactions.reduce((sum, t) => {
+            const exchangeRate = t.exchangeRate || 1;
+            return sum + (parseFloat(t.amount) * exchangeRate);
+        }, 0);
+        
+        const lastMonthReturn = lastMonthTransactions
+            .filter(t => t.type === 'INTEREST' || t.type === 'DIVIDEND')
+            .reduce((sum, t) => {
+                const exchangeRate = t.exchangeRate || 1;
+                return sum + (parseFloat(t.amount) * exchangeRate);
+            }, 0);
+
+        // 计算变化
+        const countChange = monthlyCount - lastMonthCount;
+        const amountChangePercent = lastMonthAmount > 0 
+            ? ((monthlyAmount - lastMonthAmount) / lastMonthAmount * 100).toFixed(1)
+            : 0;
+        const returnChangePercent = lastMonthReturn > 0 
+            ? ((monthlyReturn - lastMonthReturn) / lastMonthReturn * 100).toFixed(1)
+            : 0;
 
         // 更新UI
         document.getElementById('monthlyTransactionCount').textContent = monthlyCount;
         document.getElementById('monthlyTransactionAmount').textContent = 
-            this.app.formatAmount(monthlyAmount);
+            this.app.formatAmount(Math.round(monthlyAmount));
         document.getElementById('monthlyReturn').textContent = 
-            this.app.formatAmount(monthlyReturn);
+            this.app.formatAmount(Math.round(monthlyReturn));
+
+        // 更新变化显示
+        const countChangeElement = document.querySelector('#monthlyTransactionCount').parentElement.querySelector('.stat-change');
+        const amountChangeElement = document.querySelector('#monthlyTransactionAmount').parentElement.querySelector('.stat-change');
+        const returnChangeElement = document.querySelector('#monthlyReturn').parentElement.querySelector('.stat-change');
+
+        if (countChangeElement) {
+            countChangeElement.textContent = countChange >= 0 ? `+${countChange}` : `${countChange}`;
+            countChangeElement.className = `stat-change ${countChange >= 0 ? 'positive' : 'negative'}`;
+        }
+
+        if (amountChangeElement) {
+            amountChangeElement.textContent = `${amountChangePercent >= 0 ? '+' : ''}${amountChangePercent}%`;
+            amountChangeElement.className = `stat-change ${amountChangePercent >= 0 ? 'positive' : 'negative'}`;
+        }
+
+        if (returnChangeElement) {
+            returnChangeElement.textContent = `${returnChangePercent >= 0 ? '+' : ''}${returnChangePercent}%`;
+            returnChangeElement.className = `stat-change ${returnChangePercent >= 0 ? 'positive' : 'negative'}`;
+        }
     }
 
     updateTransactionTable() {
@@ -1312,8 +1370,201 @@ class TransactionManager {
     }
 
     handleExport() {
-        // TODO: 实现导出功能
-        console.log('导出交易数据');
+        console.log('📤 开始导出交易数据');
+        
+        try {
+            // 获取当前筛选后的交易数据
+            const filteredTransactions = this.getFilteredTransactions();
+            const sortedTransactions = this.getSortedTransactions(filteredTransactions);
+            
+            if (sortedTransactions.length === 0) {
+                this.showValidationError('没有可导出的交易记录');
+                return;
+            }
+            
+            // 准备导出数据
+            const exportData = this.prepareExportData(sortedTransactions);
+            
+            // 创建CSV内容
+            const csvContent = this.generateCSVContent(exportData);
+            
+            // 下载文件
+            this.downloadCSV(csvContent, this.generateFileName());
+            
+            this.showSuccessMessage(`成功导出 ${sortedTransactions.length} 笔交易记录`);
+            
+        } catch (error) {
+            console.error('❌ 导出失败:', error);
+            this.showValidationError('导出失败，请稍后重试');
+        }
+    }
+
+    prepareExportData(transactions) {
+        return transactions.map(transaction => {
+            // 获取资产信息
+            const asset = this.assets.find(a => a.id === transaction.asset_id);
+            const assetName = asset ? asset.name : '未知资产';
+            const assetType = asset ? this.getAssetTypeDisplayName(asset.asset_type || asset.type) : '未知';
+            
+            // 基础导出数据
+            const exportRow = {
+                '交易ID': transaction.id,
+                '交易日期': transaction.date,
+                '资产名称': assetName,
+                '资产类型': assetType,
+                '交易类型': this.getTransactionTypeText(transaction.type),
+                '交易金额': transaction.amount,
+                '币种': this.getCurrencyDisplayName(transaction.currency),
+                '汇率': transaction.exchange_rate || 1.0,
+                '基础货币金额': transaction.amount_base_currency || (transaction.amount * (transaction.exchange_rate || 1.0)),
+                '备注': transaction.description || transaction.notes || '',
+                '参考号码': transaction.reference_number || '',
+                '创建时间': transaction.created_date ? new Date(transaction.created_date).toLocaleString('zh-CN') : '',
+                '交易类别': transaction.transaction_class || 'BaseTransaction'
+            };
+            
+            // 添加特定类型的字段
+            if (transaction.quantity !== undefined) {
+                exportRow['数量'] = transaction.quantity;
+            }
+            if (transaction.price_per_share !== undefined) {
+                exportRow['每股价格'] = transaction.price_per_share;
+            }
+            if (transaction.commission !== undefined) {
+                exportRow['佣金'] = transaction.commission;
+            }
+            
+            // 固定收益特有字段
+            if (transaction.annual_rate !== undefined) {
+                exportRow['年利率(%)'] = transaction.annual_rate;
+            }
+            if (transaction.start_date) {
+                exportRow['起息日期'] = transaction.start_date;
+            }
+            if (transaction.maturity_date) {
+                exportRow['到期日期'] = transaction.maturity_date;
+            }
+            if (transaction.interest_type) {
+                exportRow['利息类型'] = transaction.interest_type;
+            }
+            if (transaction.payment_frequency) {
+                exportRow['付息频率'] = transaction.payment_frequency;
+            }
+            if (transaction.face_value !== undefined) {
+                exportRow['面值'] = transaction.face_value;
+            }
+            if (transaction.coupon_rate !== undefined) {
+                exportRow['票面利率(%)'] = transaction.coupon_rate;
+            }
+            
+            // 现金类特有字段
+            if (transaction.account_type) {
+                exportRow['账户类型'] = transaction.account_type;
+            }
+            if (transaction.interest_rate !== undefined) {
+                exportRow['存款利率(%)'] = transaction.interest_rate;
+            }
+            if (transaction.compound_frequency) {
+                exportRow['复利频率'] = transaction.compound_frequency;
+            }
+            
+            // 房产特有字段
+            if (transaction.property_area !== undefined) {
+                exportRow['物业面积(㎡)'] = transaction.property_area;
+            }
+            if (transaction.price_per_unit !== undefined) {
+                exportRow['单价(元/㎡)'] = transaction.price_per_unit;
+            }
+            if (transaction.rental_income !== undefined) {
+                exportRow['租金收入'] = transaction.rental_income;
+            }
+            if (transaction.property_type) {
+                exportRow['物业类型'] = transaction.property_type;
+            }
+            if (transaction.location) {
+                exportRow['位置'] = transaction.location;
+            }
+            if (transaction.tax_amount !== undefined) {
+                exportRow['税费'] = transaction.tax_amount;
+            }
+            
+            return exportRow;
+        });
+    }
+
+    generateCSVContent(data) {
+        if (data.length === 0) return '';
+        
+        // 获取表头
+        const headers = Object.keys(data[0]);
+        
+        // 生成CSV内容
+        const csvRows = [];
+        
+        // 添加表头
+        csvRows.push(headers.join(','));
+        
+        // 添加数据行
+        data.forEach(row => {
+            const values = headers.map(header => {
+                const value = row[header];
+                // 处理包含逗号、引号或换行符的值
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            });
+            csvRows.push(values.join(','));
+        });
+        
+        return csvRows.join('\n');
+    }
+
+    downloadCSV(csvContent, filename) {
+        // 添加BOM以支持中文
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // 创建下载链接
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } else {
+            // 如果浏览器不支持download属性，使用window.open
+            const url = URL.createObjectURL(blob);
+            window.open(url);
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    generateFileName() {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, ''); // HHMMSS
+        
+        // 添加筛选条件到文件名
+        let filterSuffix = '';
+        if (this.currentFilters.type) {
+            filterSuffix += `_${this.getTransactionTypeText(this.currentFilters.type)}`;
+        }
+        if (this.currentFilters.asset) {
+            const asset = this.assets.find(a => a.id === this.currentFilters.asset);
+            if (asset) {
+                filterSuffix += `_${asset.name}`;
+            }
+        }
+        if (this.currentFilters.startDate || this.currentFilters.endDate) {
+            filterSuffix += '_日期筛选';
+        }
+        
+        return `交易记录_${dateStr}_${timeStr}${filterSuffix}.csv`;
     }
 
     // 工具方法

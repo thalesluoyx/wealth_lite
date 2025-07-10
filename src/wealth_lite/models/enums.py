@@ -400,6 +400,36 @@ class LiquidityLevel(Enum):
         return [cls.LOW, cls.VERY_LOW]
 
 
+class SnapshotType(Enum):
+    """
+    快照类型枚举
+    
+    定义投资组合快照的类型，用于区分自动快照和手动快照。
+    """
+    AUTO = "AUTO"     # 自动快照
+    MANUAL = "MANUAL" # 手动快照
+    
+    @property
+    def display_name(self) -> str:
+        """返回显示名称"""
+        return {"AUTO": "自动快照", "MANUAL": "手动快照"}[self.value]
+
+
+class AIType(Enum):
+    """
+    AI类型枚举
+    
+    定义AI分析服务的类型，用于区分本地AI和云端AI。
+    """
+    LOCAL = "LOCAL"   # 本地AI
+    CLOUD = "CLOUD"   # 云端AI
+    
+    @property
+    def display_name(self) -> str:
+        """返回显示名称"""
+        return {"LOCAL": "本地AI", "CLOUD": "云端AI"}[self.value]
+
+
 # ============================================================================
 # 枚举工具函数
 # ============================================================================
@@ -456,6 +486,8 @@ def get_all_enum_classes() -> Dict[str, type]:
         'PositionStatus': PositionStatus,
         'RiskLevel': RiskLevel,
         'LiquidityLevel': LiquidityLevel,
+        'SnapshotType': SnapshotType,
+        'AIType': AIType,
     }
 
 
@@ -503,5 +535,8 @@ FINANCIAL_ENUMS = [InterestType, PaymentFrequency]
 # 所有状态评级枚举类的列表
 STATUS_ENUMS = [PositionStatus, RiskLevel, LiquidityLevel]
 
+# 快照和AI相关枚举类的列表
+SNAPSHOT_ENUMS = [SnapshotType, AIType]
+
 # 所有枚举类的列表
-ALL_ENUMS = CORE_ENUMS + CATEGORY_ENUMS + FINANCIAL_ENUMS + STATUS_ENUMS 
+ALL_ENUMS = CORE_ENUMS + CATEGORY_ENUMS + FINANCIAL_ENUMS + STATUS_ENUMS + SNAPSHOT_ENUMS 

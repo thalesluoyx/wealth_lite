@@ -67,7 +67,7 @@ class DatabaseManager:
             
             # 创建索引
             self._create_indexes(conn)
-            
+            self._connection = conn
             self.logger.info(f"数据库初始化完成: {self.db_path}")
     
     def _create_tables(self, conn: sqlite3.Connection) -> None:
@@ -156,18 +156,102 @@ class DatabaseManager:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS portfolio_snapshots (
                 snapshot_id TEXT PRIMARY KEY,                                -- 快照唯一标识符（UUID格式）
-                snapshot_date DATETIME NOT NULL,                             -- 快照日期时间
-                base_currency TEXT NOT NULL,                                 -- 基础货币（CNY/USD等）
-                description TEXT,                                           -- 快照描述信息
-                total_value DECIMAL(15,4) NOT NULL,                        -- 总市值（基础货币）
-                total_cost DECIMAL(15,4) NOT NULL,                         -- 总成本（基础货币）
-                total_return DECIMAL(15,4) NOT NULL,                       -- 总收益（基础货币）
-                return_rate REAL NOT NULL,                                  -- 收益率（小数形式，如0.15表示15%）
-                asset_allocation TEXT,                                      -- 资产配置比例（JSON格式存储）
-                performance_metrics TEXT,                                   -- 业绩指标（JSON格式存储）
-                position_snapshots TEXT,                                    -- 持仓快照详情（JSON格式存储）
-                created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- 记录创建时间
-                is_immutable BOOLEAN NOT NULL DEFAULT 1                     -- 是否不可变（1=不可变，0=可变）
+                snapshot_date DATE NOT NULL,                                -- 快照日期（YYYY-MM-DD格式）
+                snapshot_time DATETIME NOT NULL,                            -- 快照时间戳
+                snapshot_type TEXT NOT NULL,                                -- 快照类型（'AUTO' 或 'MANUAL'）
+                base_currency TEXT NOT NULL,                                -- 基础货币（CNY/USD等）
+                
+                -- 组合概览数据
+                total_value DECIMAL(20,2) NOT NULL,                        -- 总价值（基础货币）
+                total_cost DECIMAL(20,2) NOT NULL,                         -- 总成本（基础货币）
+                total_return DECIMAL(20,2) NOT NULL,                       -- 总收益（基础货币）
+                total_return_rate DECIMAL(10,4) NOT NULL,                  -- 总收益率（小数形式）
+                
+                -- 分类统计
+                cash_value DECIMAL(20,2) DEFAULT 0,                        -- 现金价值
+                fixed_income_value DECIMAL(20,2) DEFAULT 0,                -- 固收价值
+                equity_value DECIMAL(20,2) DEFAULT 0,                      -- 权益价值
+                real_estate_value DECIMAL(20,2) DEFAULT 0,                 -- 房产价值
+                commodity_value DECIMAL(20,2) DEFAULT 0,                   -- 商品价值
+                
+                -- 业绩指标
+                annualized_return DECIMAL(10,4) DEFAULT 0,                 -- 年化收益率
+                volatility DECIMAL(10,4) DEFAULT 0,                        -- 波动率
+                sharpe_ratio DECIMAL(10,4) DEFAULT 0,                      -- 夏普比率
+                max_drawdown DECIMAL(10,4) DEFAULT 0,                      -- 最大回撤
+                
+                -- 详细数据（JSON格式）
+                position_snapshots TEXT NOT NULL,                          -- 完整的持仓详情
+                asset_allocation TEXT NOT NULL,                            -- 资产配置分析
+                performance_metrics TEXT NOT NULL,                         -- 业绩指标详情
+                
+                -- 元数据
+                created_date DATETIME DEFAULT CURRENT_TIMESTAMP,           -- 记录创建时间
+                notes TEXT,                                                -- 备注信息
+                
+                -- 唯一约束：每天每种类型只能有一个快照
+                UNIQUE(snapshot_date, snapshot_type)
+            )
+        """)
+        
+        # 8. AI分析配置表 - 存储AI分析服务的配置信息
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS ai_analysis_configs (
+                config_id TEXT PRIMARY KEY,                                -- 配置唯一标识符（UUID格式）
+                config_name TEXT NOT NULL,                                 -- 配置名称
+                ai_type TEXT NOT NULL,                                     -- AI类型（'LOCAL' 或 'CLOUD'）
+                is_default BOOLEAN DEFAULT 0,                             -- 是否为默认配置
+                is_active BOOLEAN DEFAULT 1,                              -- 是否激活
+                
+                -- 本地AI配置
+                local_model_path TEXT,                                     -- 本地模型路径
+                local_model_name TEXT,                                     -- 本地模型名称
+                local_api_port INTEGER,                                    -- 本地API端口
+                
+                -- 云端AI配置
+                cloud_provider TEXT,                                       -- 云端提供商（'OPENAI', 'CLAUDE', 'GEMINI'等）
+                cloud_api_key TEXT,                                        -- 云端API密钥
+                cloud_api_url TEXT,                                        -- 云端API地址
+                cloud_model_name TEXT,                                     -- 云端模型名称
+                
+                -- 通用配置
+                max_tokens INTEGER DEFAULT 4000,                          -- 最大令牌数
+                temperature DECIMAL(3,2) DEFAULT 0.7,                     -- 温度参数
+                timeout_seconds INTEGER DEFAULT 30,                       -- 超时时间（秒）
+                
+                -- 元数据
+                created_date DATETIME DEFAULT CURRENT_TIMESTAMP,          -- 记录创建时间
+                updated_date DATETIME DEFAULT CURRENT_TIMESTAMP           -- 记录更新时间
+            )
+        """)
+        
+        # 9. AI分析结果表 - 存储AI分析的结果
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS ai_analysis_results (
+                analysis_id TEXT PRIMARY KEY,                             -- 分析唯一标识符（UUID格式）
+                snapshot1_id TEXT NOT NULL,                               -- 第一个快照ID
+                snapshot2_id TEXT NOT NULL,                               -- 第二个快照ID
+                config_id TEXT NOT NULL,                                  -- 使用的配置ID
+                
+                -- 分析结果
+                analysis_content TEXT NOT NULL,                           -- 分析内容
+                analysis_summary TEXT,                                    -- 分析摘要
+                investment_advice TEXT,                                   -- 投资建议
+                risk_assessment TEXT,                                     -- 风险评估
+                
+                -- 分析元数据
+                analysis_type TEXT NOT NULL,                              -- 分析类型（'COMPARISON', 'TREND', 'RISK'等）
+                analysis_status TEXT NOT NULL,                            -- 分析状态（'SUCCESS', 'FAILED', 'PENDING'）
+                error_message TEXT,                                       -- 错误信息
+                processing_time_ms INTEGER,                               -- 处理时间（毫秒）
+                
+                -- 时间戳
+                created_date DATETIME DEFAULT CURRENT_TIMESTAMP,          -- 记录创建时间
+                
+                -- 外键约束（软关联）
+                FOREIGN KEY (snapshot1_id) REFERENCES portfolio_snapshots(snapshot_id),
+                FOREIGN KEY (snapshot2_id) REFERENCES portfolio_snapshots(snapshot_id),
+                FOREIGN KEY (config_id) REFERENCES ai_analysis_configs(config_id)
             )
         """)
         
@@ -195,8 +279,18 @@ class DatabaseManager:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_real_estate_transaction_id ON real_estate_transactions(transaction_id)")
         
         # 快照表索引
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_date ON portfolio_snapshots(snapshot_date)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_date_type ON portfolio_snapshots(snapshot_date DESC, snapshot_type)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_type_date ON portfolio_snapshots(snapshot_type, snapshot_date DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_currency ON portfolio_snapshots(base_currency)")
+        
+        # AI配置索引
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_configs_type ON ai_analysis_configs(ai_type)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_configs_default ON ai_analysis_configs(is_default, is_active)")
+        
+        # AI分析结果索引
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_results_snapshots ON ai_analysis_results(snapshot1_id, snapshot2_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_results_status ON ai_analysis_results(analysis_status, created_date DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ai_results_type ON ai_analysis_results(analysis_type, created_date DESC)")
         
         self.logger.info("索引创建完成")
     
@@ -338,4 +432,6 @@ class DatabaseManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """上下文管理器出口"""
         self.close()
- 
+
+    def is_connected(self):
+        return self._connection is not None

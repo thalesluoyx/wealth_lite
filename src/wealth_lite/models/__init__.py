@@ -11,7 +11,7 @@ WealthLite 数据模型包
 
 from .enums import (
     AssetType, AssetSubType, TransactionType, Currency, InterestType, PaymentFrequency,
-    PositionStatus, RiskLevel, LiquidityLevel
+    PositionStatus, RiskLevel, LiquidityLevel, SnapshotType, AIType
 )
 from .asset import Asset
 from .transaction import (
@@ -23,6 +23,7 @@ from .transaction import (
 )
 from .position import Position
 from .portfolio import Portfolio, PortfolioSnapshot
+from .snapshot import PortfolioSnapshot as ExtendedPortfolioSnapshot, AIAnalysisConfig, AIAnalysisResult
 
 __all__ = [
     # 枚举类型
@@ -35,6 +36,8 @@ __all__ = [
     "PositionStatus",
     "RiskLevel",
     "LiquidityLevel",
+    "SnapshotType",
+    "AIType",
     
     # 核心模型
     "Asset",
@@ -45,5 +48,8 @@ __all__ = [
     "RealEstateTransaction",
     "Position",
     "Portfolio",
-    "PortfolioSnapshot"
+    "PortfolioSnapshot",
+    "ExtendedPortfolioSnapshot",
+    "AIAnalysisConfig",
+    "AIAnalysisResult"
 ] 

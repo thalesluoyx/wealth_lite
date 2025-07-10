@@ -1,0 +1,819 @@
+/* 投资组合快照功能样式 */
+
+/* ==================== 投资组合概览 ==================== */
+.portfolio-overview {
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.overview-card h3 {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.overview-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* ==================== 快照浏览 ==================== */
+.snapshots-section {
+    margin-bottom: 2rem;
+}
+
+.snapshots-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.snapshots-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 0 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 1.5rem;
+}
+
+.snapshots-card .card-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.snapshot-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.tab-btn.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.tab-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.snapshots-content {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.snapshots-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.snapshots-table th,
+.snapshots-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.snapshots-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.snapshots-table td {
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+.snapshot-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.snapshot-row:hover {
+    background: #f8fafc;
+}
+
+.snapshot-row.selected {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+}
+
+.snapshot-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.snapshot-type-badge.auto {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.snapshot-type-badge.manual {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.snapshot-type-badge i {
+    width: 12px;
+    height: 12px;
+}
+
+.snapshot-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 4px;
+    color: #64748b;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+/* ==================== 快照对比分析 ==================== */
+.comparison-section {
+    margin-bottom: 2rem;
+}
+
+.comparison-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.comparison-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 0 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-card .card-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.comparison-content {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.snapshot-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.selection-item label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.selected-snapshot {
+    padding: 1rem;
+    border: 2px dashed #e5e7eb;
+    border-radius: 8px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    transition: all 0.2s ease;
+}
+
+.selected-snapshot.has-snapshot {
+    border-style: solid;
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.selected-snapshot .placeholder {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.selected-snapshot .snapshot-info {
+    text-align: center;
+}
+
+.selected-snapshot .snapshot-date {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.selected-snapshot .snapshot-value {
+    color: #3b82f6;
+    font-size: 0.875rem;
+}
+
+.comparison-actions {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-results {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1.5rem;
+}
+
+.comparison-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-stat {
+    text-align: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.comparison-stat .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.comparison-stat .stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.comparison-stat .stat-value.positive {
+    color: #059669;
+}
+
+.comparison-stat .stat-value.negative {
+    color: #dc2626;
+}
+
+.comparison-details {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+/* ==================== AI分析对比 ==================== */
+.ai-analysis-section {
+    margin-bottom: 2rem;
+}
+
+.ai-analysis-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.ai-analysis-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 0 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 1.5rem;
+}
+
+.ai-analysis-card .card-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.ai-config-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.ai-type-label {
+    color: #64748b;
+}
+
+.ai-type-value {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.ai-analysis-content {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.ai-analysis-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.ai-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-analysis-results {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1.5rem;
+}
+
+.ai-analysis-results h4 {
+    margin: 0 0 0.75rem 0;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.ai-analysis-results .summary-content,
+.ai-analysis-results .advice-content,
+.ai-analysis-results .risk-content {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: #374151;
+    line-height: 1.6;
+    border-left: 4px solid #3b82f6;
+}
+
+.ai-analysis-results .advice-content {
+    border-left-color: #059669;
+}
+
+.ai-analysis-results .risk-content {
+    border-left-color: #dc2626;
+}
+
+/* ==================== 模态窗口样式 ==================== */
+
+/* 快照创建模态窗口 */
+.snapshot-type-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.type-badge.manual {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.type-badge.auto {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+.type-badge i {
+    width: 16px;
+    height: 16px;
+}
+
+.type-description {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.snapshot-preview {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+.preview-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.preview-stat:last-child {
+    margin-bottom: 0;
+}
+
+.preview-stat .label {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.preview-stat .value {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.warning-message {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    color: #92400e;
+}
+
+.warning-message i {
+    width: 20px;
+    height: 20px;
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+.warning-content {
+    flex: 1;
+}
+
+.warning-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.warning-text {
+    font-size: 0.875rem;
+}
+
+/* AI配置模态窗口 */
+.ai-type-options {
+    display: grid;
+    gap: 1rem;
+}
+
+.ai-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-option:hover {
+    border-color: #cbd5e1;
+}
+
+.ai-option:has(input:checked) {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.option-header input[type="radio"] {
+    margin: 0;
+}
+
+.option-header label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #1e293b;
+    cursor: pointer;
+    margin: 0;
+}
+
+.option-header label i {
+    width: 18px;
+    height: 18px;
+}
+
+.option-description {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    margin-left: 1.5rem;
+}
+
+.option-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+}
+
+.detail-item {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.ai-config-section {
+    margin-bottom: 2rem;
+}
+
+.ai-config-section h4 {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+}
+
+.ai-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-indicator.unknown {
+    background: #64748b;
+}
+
+.status-indicator.connected {
+    background: #059669;
+}
+
+.status-indicator.error {
+    background: #dc2626;
+}
+
+.form-range {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.range-value {
+    text-align: center;
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* 快照详情模态窗口 */
+.modal-large .modal-content {
+    max-width: 800px;
+}
+
+.snapshot-detail-overview {
+    margin-bottom: 2rem;
+}
+
+.detail-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.detail-stat {
+    text-align: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-stat .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.detail-stat .stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.snapshot-detail-allocation {
+    margin-bottom: 2rem;
+}
+
+.snapshot-detail-allocation h4 {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.allocation-chart {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.snapshot-detail-positions h4 {
+    margin: 0 0 1rem 0;
+    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.positions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.positions-table th,
+.positions-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.positions-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.positions-table td {
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 768px) {
+    .overview-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .snapshot-tabs {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .tab-btn {
+        justify-content: center;
+    }
+    
+    .snapshot-selection {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-stats {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .snapshots-table,
+    .positions-table {
+        font-size: 0.75rem;
+    }
+    
+    .snapshots-table th,
+    .snapshots-table td,
+    .positions-table th,
+    .positions-table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .snapshot-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .btn-action {
+        font-size: 0.625rem;
+        padding: 0.25rem;
+    }
+} 
