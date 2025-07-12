@@ -1,11 +1,9 @@
 """
-WealthLite 配置包
+配置模块
 
-包含系统配置相关的模块。
+提供系统配置、环境变量加载等功能。
 """
 
-# 全局日志级别配置
-import logging
-LOG_LEVEL = logging.DEBUG  # 可选: logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL
+from .env_loader import get_env, load_environment
 
-# 暂时为空，后续添加配置相关功能 
+__all__ = ['get_env', 'load_environment'] 

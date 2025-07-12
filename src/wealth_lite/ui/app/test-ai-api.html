@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI接口测试 - WealthLite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4a6cf7;
+            margin-bottom: 20px;
+        }
+        .test-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3a5ce5;
+        }
+        button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        .result-panel {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+        .result-panel pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(74, 108, 247, 0.2);
+            border-top: 4px solid #4a6cf7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>AI接口测试</h1>
+    
+    <div class="test-panel">
+        <h2>测试配置</h2>
+        
+        <div class="form-group">
+            <label for="ai-config-select">选择AI配置</label>
+            <select id="ai-config-select">
+                <option value="">-- 加载中... --</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="snapshot-select">选择快照</label>
+            <select id="snapshot-select">
+                <option value="">-- 加载中... --</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="system-prompt-type">系统提示类型</label>
+            <select id="system-prompt-type">
+                <option value="default" selected>默认</option>
+                <option value="conservative">保守型</option>
+                <option value="aggressive">进取型</option>
+                <option value="educational">教育型</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="user-prompt-type">用户提示类型</label>
+            <select id="user-prompt-type">
+                <option value="default" selected>默认</option>
+                <option value="simple">简单</option>
+                <option value="detailed">详细</option>
+                <option value="risk_focused">风险聚焦</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="user-prompt">用户提示</label>
+            <textarea id="user-prompt" placeholder="输入分析需求，例如：分析我的投资组合风险水平">分析我的投资组合风险水平和资产配置是否合理</textarea>
+        </div>
+        
+        <button id="test-btn">测试AI接口</button>
+    </div>
+    
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>请求中，请稍候...</p>
+    </div>
+    
+    <div id="result-panel" class="result-panel">
+        <h2>测试结果</h2>
+        <div id="status" class="status"></div>
+        <h3>响应数据</h3>
+        <pre id="result-data"></pre>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 获取DOM元素
+            const aiConfigSelect = document.getElementById('ai-config-select');
+            const snapshotSelect = document.getElementById('snapshot-select');
+            const systemPromptType = document.getElementById('system-prompt-type');
+            const userPromptType = document.getElementById('user-prompt-type');
+            const userPrompt = document.getElementById('user-prompt');
+            const testBtn = document.getElementById('test-btn');
+            const loading = document.getElementById('loading');
+            const resultPanel = document.getElementById('result-panel');
+            const status = document.getElementById('status');
+            const resultData = document.getElementById('result-data');
+            
+            // 加载AI配置
+            try {
+                const response = await fetch('/api/ai/configs');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 清空选择框
+                    aiConfigSelect.innerHTML = '';
+                    
+                    // 添加AI配置选项
+                    const configs = data.data.configs || [];
+                    let cloudConfigFound = false;
+                    
+                    configs.forEach(config => {
+                        const option = document.createElement('option');
+                        option.value = config.config_id;
+                        option.textContent = config.display_name;
+                        
+                        // 默认选择云端AI配置
+                        if (config.ai_type === 'CLOUD' && !cloudConfigFound) {
+                            option.selected = true;
+                            cloudConfigFound = true;
+                        }
+                        
+                        aiConfigSelect.appendChild(option);
+                    });
+                    
+                    if (configs.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = '-- 没有可用的AI配置 --';
+                        aiConfigSelect.appendChild(option);
+                    }
+                } else {
+                    throw new Error(data.message || '获取AI配置失败');
+                }
+            } catch (error) {
+                console.error('加载AI配置失败:', error);
+                aiConfigSelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '-- 加载失败 --';
+                aiConfigSelect.appendChild(option);
+            }
+            
+            // 加载快照列表
+            try {
+                // 参考portfolio.js中的API调用方式，添加type和limit参数
+                const response = await fetch('/api/snapshots?type=all&limit=50');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 清空选择框
+                    snapshotSelect.innerHTML = '';
+                    
+                    // 添加快照选项
+                    const snapshots = data.data.snapshots || [];
+                    if (snapshots.length > 0) {
+                        snapshots.forEach(snapshot => {
+                            const option = document.createElement('option');
+                            option.value = snapshot.snapshot_id;
+                            const date = new Date(snapshot.snapshot_date);
+                            const formattedDate = date.toLocaleDateString('zh-CN');
+                            option.textContent = `${formattedDate} - ${formatCurrency(snapshot.total_value)}`;
+                            snapshotSelect.appendChild(option);
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = '-- 没有可用的快照 --';
+                        snapshotSelect.appendChild(option);
+                    }
+                } else {
+                    throw new Error(data.message || '获取快照列表失败');
+                }
+            } catch (error) {
+                console.error('加载快照失败:', error);
+                snapshotSelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '-- 加载失败 --';
+                snapshotSelect.appendChild(option);
+            }
+            
+            // 测试按钮点击事件
+            testBtn.addEventListener('click', async () => {
+                // 获取选中的AI配置ID
+                const configId = aiConfigSelect.value;
+                if (!configId) {
+                    alert('请选择一个AI配置');
+                    return;
+                }
+                
+                // 获取选中的快照ID
+                const snapshotId = snapshotSelect.value;
+                if (!snapshotId) {
+                    alert('请选择一个快照');
+                    return;
+                }
+                
+                // 获取其他参数
+                const systemPromptTypeValue = systemPromptType.value;
+                const userPromptTypeValue = userPromptType.value;
+                const userPromptValue = userPrompt.value.trim();
+                
+                if (!userPromptValue) {
+                    alert('请输入用户提示');
+                    return;
+                }
+                
+                // 显示加载状态
+                testBtn.disabled = true;
+                loading.style.display = 'block';
+                resultPanel.style.display = 'none';
+                
+                try {
+                    // 准备请求数据
+                    const requestData = {
+                        snapshot1_id: snapshotId,
+                        config_id: configId,
+                        user_prompt: userPromptValue,
+                        system_prompt_type: systemPromptTypeValue,
+                        user_prompt_type: userPromptTypeValue
+                    };
+                    
+                    console.log('发送请求数据:', requestData);
+                    
+                    // 使用直接的fetch API调用，而不是依赖OpenAI库
+                    // 先测试切换AI配置
+                    const switchResponse = await fetch('/api/ai/configs/switch', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ai_type: 'CLOUD' })
+                    });
+                    
+                    const switchData = await switchResponse.json();
+                    console.log('切换AI配置结果:', switchData);
+                    
+                    if (!switchData.success) {
+                        throw new Error(switchData.message || '切换AI配置失败');
+                    }
+                    
+                    // 使用直接的API调用
+                    const response = await fetch('/api/ai/analysis/snapshots', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    // 解析响应
+                    const data = await response.json();
+                    
+                    // 显示结果
+                    resultPanel.style.display = 'block';
+                    
+                    if (data.success) {
+                        status.className = 'status success';
+                        status.textContent = '✅ 请求成功';
+                    } else {
+                        status.className = 'status error';
+                        status.textContent = `❌ 请求失败: ${data.message || '未知错误'}`;
+                    }
+                    
+                    // 显示响应数据
+                    resultData.textContent = JSON.stringify(data, null, 2);
+                    
+                } catch (error) {
+                    console.error('测试失败:', error);
+                    
+                    // 显示错误
+                    resultPanel.style.display = 'block';
+                    status.className = 'status error';
+                    status.textContent = `❌ 请求异常: ${error.message}`;
+                    resultData.textContent = error.stack || error.toString();
+                    
+                } finally {
+                    // 恢复按钮状态
+                    testBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            });
+            
+            // 格式化货币
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('zh-CN', {
+                    style: 'currency',
+                    currency: 'CNY',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+        });
+    </script>
+</body>
+</html> 

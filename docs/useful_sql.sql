@@ -17,7 +17,7 @@ on transactions.transaction_id = fixed_income_transactions.transaction_id where 
 
 SELECT name FROM sqlite_master WHERE type='table'
 
-select * from portfolio_snapshots;
+select position_snapshots from portfolio_snapshots;
 
 
 transactions

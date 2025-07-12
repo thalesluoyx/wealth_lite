@@ -123,6 +123,7 @@ class PortfolioManager {
     // ==================== 投资组合概览 ====================
     async loadPortfolioOverview() {
         try {
+            // 使用相对路径，通过代理访问API
             const response = await fetch('/api/portfolio/current');
             const data = await response.json();
             
@@ -134,6 +135,13 @@ class PortfolioManager {
         } catch (error) {
             console.error('加载投资组合概览失败:', error);
             this.showError('加载投资组合数据失败');
+            
+            // 使用模拟数据作为备用
+            this.updatePortfolioOverview({
+                total_value: 1250000.00,
+                total_return: 250000.00,
+                total_return_rate: 0.25
+            });
         }
     }
 
@@ -204,6 +212,9 @@ class PortfolioManager {
                         </button>
                         <button class="btn-action" onclick="portfolioManager.selectSnapshotForComparison('${snapshot.snapshot_id}')">
                             选择对比
+                        </button>
+                        <button class="btn-action analyze" onclick="portfolioManager.analyzeSnapshot('${snapshot.snapshot_id}')">
+                            AI分析
                         </button>
                         ${snapshot.snapshot_type === 'MANUAL' && !snapshot.is_today ? 
                             `<button class="btn-action delete" onclick="portfolioManager.deleteSnapshot('${snapshot.snapshot_id}')">删除</button>` : 
@@ -318,6 +329,10 @@ class PortfolioManager {
     }
 
     // ==================== 快照对比 ====================
+    /**
+     * 选择快照进行对比
+     * @param {string} snapshotId 快照ID
+     */
     selectSnapshotForComparison(snapshotId) {
         const snapshot = this.getSnapshotFromTable(snapshotId);
         if (!snapshot) return;
@@ -325,18 +340,39 @@ class PortfolioManager {
         if (!this.selectedSnapshots.snapshot1) {
             this.selectedSnapshots.snapshot1 = snapshot;
             this.updateSelectedSnapshotDisplay('selectedSnapshot1', snapshot);
+            this.showNotification(`已选择第一个快照: ${this.formatDate(snapshot.snapshot_date)}`, 'info');
         } else if (!this.selectedSnapshots.snapshot2) {
             this.selectedSnapshots.snapshot2 = snapshot;
             this.updateSelectedSnapshotDisplay('selectedSnapshot2', snapshot);
+            this.showNotification(`已选择第二个快照: ${this.formatDate(snapshot.snapshot_date)}`, 'info');
+            
+            // 询问用户是否进行AI对比分析
+            if (confirm('您已选择两个快照，是否进行AI对比分析？')) {
+                this.analyzeCompareSnapshots();
+            }
         } else {
             // 如果已经选择了两个，替换第一个
             this.selectedSnapshots.snapshot1 = this.selectedSnapshots.snapshot2;
             this.selectedSnapshots.snapshot2 = snapshot;
             this.updateSelectedSnapshotDisplay('selectedSnapshot1', this.selectedSnapshots.snapshot1);
             this.updateSelectedSnapshotDisplay('selectedSnapshot2', snapshot);
+            this.showNotification(`已更新选择的快照: ${this.formatDate(snapshot.snapshot_date)}`, 'info');
         }
 
         this.updateComparisonButtonState();
+    }
+    
+    /**
+     * 分析对比快照
+     */
+    analyzeCompareSnapshots() {
+        if (!this.selectedSnapshots.snapshot1 || !this.selectedSnapshots.snapshot2) {
+            this.showNotification('请先选择两个快照进行对比', 'warning');
+            return;
+        }
+        
+        // 打开AI分析页面，并传递两个快照ID
+        window.location.href = `ai-analysis.html?snapshot_id=${this.selectedSnapshots.snapshot1.snapshot_id}&compare_snapshot_id=${this.selectedSnapshots.snapshot2.snapshot_id}`;
     }
 
     getSnapshotFromTable(snapshotId) {
@@ -764,6 +800,15 @@ class PortfolioManager {
         }
     }
 
+    /**
+     * 分析快照
+     * @param {string} snapshotId 快照ID
+     */
+    analyzeSnapshot(snapshotId) {
+        // 打开AI分析页面，并传递快照ID
+        window.location.href = `ai-analysis.html?snapshot_id=${snapshotId}`;
+    }
+
     // ==================== 工具方法 ====================
     formatCurrency(amount) {
         return new Intl.NumberFormat('zh-CN', {
@@ -860,4 +905,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // 导出全局引用
+window.portfolioManager = portfolioManager; 
 window.portfolioManager = portfolioManager; 

@@ -402,6 +402,7 @@ class AIAnalysisResult:
     analysis_status: str = "PENDING"
     error_message: str = ""
     processing_time_ms: int = 0
+    metadata: Dict[str, Any] = field(default_factory=dict)
     
     # 时间戳
     created_date: datetime = field(default_factory=datetime.now)
@@ -431,6 +432,7 @@ class AIAnalysisResult:
             'analysis_status': self.analysis_status,
             'error_message': self.error_message,
             'processing_time_ms': self.processing_time_ms,
+            'metadata': self.metadata,
             'created_date': self.created_date.isoformat(),
             'is_success': self.is_success,
             'display_name': self.display_name
@@ -454,5 +456,6 @@ class AIAnalysisResult:
             analysis_status=data.get('analysis_status', 'PENDING'),
             error_message=data.get('error_message', ''),
             processing_time_ms=data.get('processing_time_ms', 0),
+            metadata=data.get('metadata', {}),
             created_date=created_date
         ) 

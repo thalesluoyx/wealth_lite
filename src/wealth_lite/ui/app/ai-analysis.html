@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI投资组合分析 - WealthLite</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components/ai-analysis.css">
+    <!-- 引入Marked.js用于Markdown渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 引入jsPDF用于PDF导出 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        // 确保jspdf全局变量可用
+        window.jspdf = window.jspdf || {};
+    </script>
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">WealthLite</a>
+            </div>
+            <nav class="nav">
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="portfolio.html">投资组合</a></li>
+                    <li><a href="assets.html">资产管理</a></li>
+                    <li><a href="transactions.html">交易记录</a></li>
+                    <li><a href="ai-analysis.html" class="active">AI分析</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="main">
+        <div class="ai-analysis-container">
+            <h2>AI投资组合分析</h2>
+            <p class="description">
+                使用AI智能分析您的投资组合，获取专业的投资建议和风险评估。
+                支持单个快照分析和快照对比分析，以及与AI的多轮对话交互。
+            </p>
+
+            <!-- AI配置面板 -->
+            <section id="ai-config-panel" class="ai-config-panel">
+                <h3>AI配置</h3>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="ai-api-key">OpenRouter API Key</label>
+                        <input type="password" id="ai-api-key" placeholder="输入您的API Key">
+                    </div>
+                    <div class="form-group">
+                        <label for="ai-model-select">选择AI模型</label>
+                        <select id="ai-model-select">
+                            <optgroup label="OpenRouter模型">
+                                <option value="deepseek/deepseek-chat-v3-0324:free:online" selected>DeepSeek Chat v3</option>
+                                <option value="qwen/qwen3-235b-a22b:free">Qwen 3 (235B)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <button id="save-ai-config" class="btn primary-btn">保存配置</button>
+            </section>
+
+            <!-- 分析控制面板 -->
+            <section class="analysis-control-panel">
+                <h3>快照分析</h3>
+                <div class="snapshot-selection">
+                    <select id="snapshot-select">
+                        <option value="">-- 选择要分析的快照 --</option>
+                        <!-- 快照选项将通过JavaScript动态填充 -->
+                    </select>
+                    <select id="compare-snapshot-select" style="display: none;">
+                        <option value="">-- 选择比较快照 --</option>
+                        <!-- 快照选项将通过JavaScript动态填充 -->
+                    </select>
+                </div>
+                <div class="compare-toggle">
+                    <input type="checkbox" id="compare-mode-toggle">
+                    <label for="compare-mode-toggle">启用快照对比分析</label>
+                </div>
+                
+                <!-- 提示类型选择 -->
+                <div class="prompt-type-selection">
+                    <div class="form-group">
+                        <label for="system-prompt-type">系统提示类型</label>
+                        <select id="system-prompt-type">
+                            <option value="default" selected>默认</option>
+                            <option value="conservative">保守型</option>
+                            <option value="aggressive">进取型</option>
+                            <option value="educational">教育型</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="user-prompt-type">用户提示类型</label>
+                        <select id="user-prompt-type">
+                            <option value="default" selected>默认</option>
+                            <option value="simple">简单</option>
+                            <option value="detailed">详细</option>
+                            <option value="risk_focused">风险聚焦</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <textarea id="ai-prompt-input" class="prompt-input" placeholder="输入您的分析需求，例如：'分析我的投资组合风险水平'或'评估我的资产配置是否合理'..."></textarea>
+                <button id="analyze-btn" class="analyze-btn">开始分析</button>
+                
+                <!-- 分析进度指示器 -->
+                <div id="analysis-progress" class="analysis-progress" style="display: none;">
+                    <div class="progress-spinner"></div>
+                    <div class="progress-text">分析中，请稍候...</div>
+                    <div class="progress-subtext">分析过程可能需要几秒到几十秒不等，取决于AI服务响应速度</div>
+                </div>
+            </section>
+
+            <!-- 分析结果面板 -->
+            <section id="ai-result-panel" class="ai-result-panel">
+                <h3>分析结果</h3>
+                <div class="result-summary">
+                    <div class="summary-card">
+                        <h4>投资组合概览</h4>
+                        <p id="analysis-summary">尚未进行分析</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>风险评估</h4>
+                        <p id="risk-assessment">尚未进行分析</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>投资建议</h4>
+                        <p id="investment-advice">尚未进行分析</p>
+                    </div>
+                </div>
+                <div class="analysis-content" id="analysis-content">
+                    <!-- 分析内容将通过JavaScript动态填充 -->
+                </div>
+            </section>
+
+            <!-- 对话面板 -->
+            <section id="conversation-panel" class="conversation-panel">
+                <h3>与AI对话</h3>
+                <div id="messages-list" class="messages-container">
+                    <!-- 消息将通过JavaScript动态填充 -->
+                </div>
+                <div class="message-input-container">
+                    <textarea id="user-message" class="message-input" placeholder="输入您的问题或补充信息..."></textarea>
+                    <button id="send-message-btn" class="send-message-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="conversation-actions">
+                    <button id="clear-conversation-btn" class="clear-conversation-btn">清除对话</button>
+                    <button id="export-pdf-btn" class="export-pdf-btn">
+                        <i class="fas fa-file-pdf"></i> 导出PDF报告
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WealthLite. 保留所有权利。</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script type="module">
+        import AIAnalysisManager from './js/components/ai-analysis.js';
+        
+        // 初始化AI分析管理器
+        document.addEventListener('DOMContentLoaded', () => {
+            window.aiAnalysisManager = new AIAnalysisManager();
+        });
+    </script>
+</body>
+</html> 

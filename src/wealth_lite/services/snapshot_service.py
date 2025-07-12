@@ -179,16 +179,20 @@ class AIConfigService:
         """获取默认AI配置"""
         config = self.config_repository.get_default_config()
         if not config:
-            # 创建默认本地AI配置
+            # 创建默认OpenRouter配置
             config = AIAnalysisConfig(
-                config_name="默认本地AI",
-                ai_type=AIType.LOCAL,
+                config_name="OpenRouter DeepSeek",
+                ai_type=AIType.CLOUD,
                 is_default=True,
-                local_model_name="llama3.1:8b",
-                local_api_port=11434
+                cloud_provider="openrouter",
+                cloud_api_url="https://openrouter.ai/api/v1",
+                cloud_model_name="deepseek/deepseek-chat",
+                max_tokens=4000,
+                temperature=0.7,
+                timeout_seconds=30
             )
             self.config_repository.save(config)
-            self.logger.info("创建默认AI配置")
+            self.logger.info("创建默认OpenRouter配置")
         return config
     
     def get_config_by_id(self, config_id: str) -> Optional[AIAnalysisConfig]:
@@ -247,6 +251,57 @@ class AIConfigService:
         except Exception as e:
             self.logger.error(f"删除AI配置失败: {e}")
             return False
+    
+    def create_predefined_configs(self) -> List[AIAnalysisConfig]:
+        """创建预定义的AI配置"""
+        configs = []
+        
+        # OpenRouter DeepSeek (免费)
+        deepseek_config = AIAnalysisConfig(
+            config_name="OpenRouter DeepSeek (免费)",
+            ai_type=AIType.CLOUD,
+            cloud_provider="openrouter",
+            cloud_api_url="https://openrouter.ai/api/v1",
+            cloud_model_name="deepseek/deepseek-chat",
+            max_tokens=4000,
+            temperature=0.7,
+            timeout_seconds=30
+        )
+        
+        # OpenRouter Qwen (免费)
+        qwen_config = AIAnalysisConfig(
+            config_name="OpenRouter Qwen (免费)",
+            ai_type=AIType.CLOUD,
+            cloud_provider="openrouter", 
+            cloud_api_url="https://openrouter.ai/api/v1",
+            cloud_model_name="qwen/qwen-2.5-72b-instruct",
+            max_tokens=4000,
+            temperature=0.7,
+            timeout_seconds=30
+        )
+        
+        # 本地Ollama
+        ollama_config = AIAnalysisConfig(
+            config_name="本地Ollama",
+            ai_type=AIType.LOCAL,
+            local_model_name="llama3.1:8b",
+            local_api_port=11434,
+            max_tokens=4000,
+            temperature=0.7,
+            timeout_seconds=60
+        )
+        
+        configs.extend([deepseek_config, qwen_config, ollama_config])
+        
+        # 保存配置
+        for config in configs:
+            try:
+                self.config_repository.save(config)
+                self.logger.info(f"创建预定义配置: {config.config_name}")
+            except Exception as e:
+                self.logger.error(f"创建配置失败 {config.config_name}: {e}")
+        
+        return configs
 
 
 class AIAnalysisService:

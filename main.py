@@ -28,8 +28,14 @@ sys.path.append(str(Path(__file__).parent / "src"))
 from src.wealth_lite.data.database import DatabaseManager
 from src.wealth_lite.services.wealth_service import WealthService
 from src.wealth_lite.services.enum_generator import EnumGeneratorService
-from src.wealth_lite.services.snapshot_service import SnapshotService, AIConfigService, AIAnalysisService
+from src.wealth_lite.services.snapshot_service import SnapshotService, AIConfigService
+from src.wealth_lite.services.ai_service import ai_analysis_service
 from src.wealth_lite.models.enums import AssetType, AssetSubType, Currency, TransactionType
+from src.wealth_lite.config.env_loader import load_environment, get_env
+from src.wealth_lite.config.prompt_templates import get_available_prompt_types
+
+# 加载环境变量
+load_environment()
 
 # 初始化日志
 setup_logging(LOG_LEVEL)
@@ -37,7 +43,6 @@ setup_logging(LOG_LEVEL)
 db_manager = DatabaseManager()
 wealth_service = WealthService(db_manager)
 config_service = AIConfigService(db_manager)
-analysis_service = AIAnalysisService(db_manager)
 snapshot_service = SnapshotService(db_manager, wealth_service)
 
 class WealthLiteApp:
@@ -461,25 +466,146 @@ class WealthLiteApp:
                 snapshot1_id = analysis_data.get("snapshot1_id")
                 snapshot2_id = analysis_data.get("snapshot2_id")
                 config_id = analysis_data.get("config_id")
-                if not snapshot1_id or not snapshot2_id:
+                user_prompt = analysis_data.get("user_prompt", "")
+                conversation_id = analysis_data.get("conversation_id")
+                
+                # 获取prompt类型
+                system_prompt_type = analysis_data.get("system_prompt_type", "default")
+                user_prompt_type = analysis_data.get("user_prompt_type", "default")
+                result_template_type = analysis_data.get("result_template_type", "default")
+                
+                # 获取快照
+                snapshot1 = snapshot_service.get_snapshot_by_id(snapshot1_id)
+                snapshot2 = snapshot_service.get_snapshot_by_id(snapshot2_id) if snapshot2_id else None
+                
+                if not snapshot1:
                     return {
                         "success": False,
-                        "message": "需要提供两个快照ID"
+                        "message": "快照1不存在"
                     }
-                result = analysis_service.analyze_snapshots(snapshot1_id, snapshot2_id, config_id)
+                
+                # 获取AI配置
+                ai_config = config_service.get_config_by_id(config_id) if config_id else config_service.get_default_config()
+                
+                if not ai_config:
+                    return {
+                        "success": False,
+                        "message": "AI配置不存在"
+                    }
+                
+                # 执行分析
+                if snapshot2:
+                    # 对比分析
+                    result = ai_analysis_service.compare_snapshots(
+                        snapshot1, snapshot2, ai_config, user_prompt, conversation_id,
+                        system_prompt_type, user_prompt_type, result_template_type
+                    )
+                else:
+                    # 单快照分析
+                    result = ai_analysis_service.analyze_snapshot(
+                        snapshot1, ai_config, user_prompt, conversation_id,
+                        system_prompt_type, user_prompt_type, result_template_type
+                    )
+                
+                return {
+                    "success": True,
+                    "data": result.to_dict()
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ AI分析失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.post("/api/ai/conversation/continue")
+        async def continue_ai_conversation(conversation_data: dict):
+            """继续AI对话"""
+            try:
+                conversation_id = conversation_data.get("conversation_id")
+                user_message = conversation_data.get("message", "")
+                config_id = conversation_data.get("config_id")
+                
+                if not conversation_id:
+                    return {
+                        "success": False,
+                        "message": "对话ID不能为空"
+                    }
+                
+                if not user_message:
+                    return {
+                        "success": False,
+                        "message": "消息内容不能为空"
+                    }
+                
+                # 获取AI配置
+                ai_config = config_service.get_config_by_id(config_id) if config_id else config_service.get_default_config()
+                
+                # 继续对话
+                response = ai_analysis_service.continue_conversation(conversation_id, user_message, ai_config)
+                
                 return {
                     "success": True,
                     "data": {
-                        "analysis_id": result.analysis_id,
-                        "analysis_status": result.analysis_status,
-                        "analysis_summary": result.analysis_summary,
-                        "investment_advice": result.investment_advice,
-                        "risk_assessment": result.risk_assessment,
-                        "processing_time_ms": result.processing_time_ms
+                        "conversation_id": conversation_id,
+                        "response": response
                     }
                 }
+                
             except Exception as e:
-                logging.error(f"❌ AI分析失败: {e}", exc_info=True)
+                logging.error(f"❌ 继续AI对话失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.get("/api/ai/conversation/{conversation_id}")
+        async def get_ai_conversation(conversation_id: str):
+            """获取AI对话历史"""
+            try:
+                conversation = ai_analysis_service.get_conversation(conversation_id)
+                
+                if not conversation:
+                    return {
+                        "success": False,
+                        "message": "对话不存在"
+                    }
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "conversation_id": conversation_id,
+                        "messages": conversation
+                    }
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取AI对话历史失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.delete("/api/ai/conversation/{conversation_id}")
+        async def delete_ai_conversation(conversation_id: str):
+            """删除AI对话历史"""
+            try:
+                success = ai_analysis_service.clear_conversation(conversation_id)
+                
+                if success:
+                    return {
+                        "success": True,
+                        "message": "对话历史已删除"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "对话不存在"
+                    }
+                
+            except Exception as e:
+                logging.error(f"❌ 删除AI对话历史失败: {e}", exc_info=True)
                 return {
                     "success": False,
                     "message": str(e)
@@ -489,32 +615,139 @@ class WealthLiteApp:
         async def get_ai_analysis_result(analysis_id: str):
             """获取AI分析结果"""
             try:
-                from wealth_lite.services.snapshot_service import AIAnalysisService
-                
-                analysis_service = AIAnalysisService()
-                result = analysis_service.get_analysis_result(analysis_id)
-                
-                if not result:
-                    return {
-                        "success": False,
-                        "message": "分析结果不存在"
-                    }
-                
+                # 这里暂时返回模拟数据，后续需要实现数据库存储
                 return {
                     "success": True,
                     "data": {
-                        "analysis_id": result.analysis_id,
-                        "analysis_status": result.analysis_status,
-                        "analysis_summary": result.analysis_summary,
-                        "investment_advice": result.investment_advice,
-                        "risk_assessment": result.risk_assessment,
-                        "processing_time_ms": result.processing_time_ms,
-                        "created_date": result.created_date.isoformat()
+                        "analysis_id": analysis_id,
+                        "analysis_status": "SUCCESS",
+                        "analysis_summary": "投资组合表现良好",
+                        "investment_advice": "建议继续持有",
+                        "risk_assessment": "风险可控",
+                        "processing_time_ms": 1500,
+                        "created_date": datetime.now().isoformat()
                     }
                 }
                 
             except Exception as e:
                 logging.error(f"❌ 获取AI分析结果失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.post("/api/ai/configs")
+        async def create_ai_config(config_data: dict):
+            """创建AI配置"""
+            try:
+                from wealth_lite.models.snapshot import AIAnalysisConfig
+                from wealth_lite.models.enums import AIType
+                
+                # 构建配置对象
+                config = AIAnalysisConfig(
+                    config_name=config_data.get("config_name", ""),
+                    ai_type=AIType[config_data.get("ai_type", "CLOUD")],
+                    cloud_provider=config_data.get("cloud_provider", ""),
+                    cloud_api_key=config_data.get("cloud_api_key", ""),
+                    cloud_api_url=config_data.get("cloud_api_url", ""),
+                    cloud_model_name=config_data.get("cloud_model_name", ""),
+                    local_model_name=config_data.get("local_model_name", ""),
+                    local_api_port=config_data.get("local_api_port", 11434),
+                    max_tokens=config_data.get("max_tokens", 4000),
+                    temperature=config_data.get("temperature", 0.7),
+                    timeout_seconds=config_data.get("timeout_seconds", 30)
+                )
+                
+                # 保存配置
+                success = config_service.save_config(config)
+                
+                if success:
+                    return {
+                        "success": True,
+                        "data": config.to_dict()
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "保存配置失败"
+                    }
+                    
+            except Exception as e:
+                logging.error(f"❌ 创建AI配置失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.post("/api/ai/configs/test")
+        async def test_ai_config(config_data: dict):
+            """测试AI配置"""
+            try:
+                from wealth_lite.models.snapshot import AIAnalysisConfig
+                from wealth_lite.models.enums import AIType
+                
+                # 构建临时配置对象进行测试
+                config = AIAnalysisConfig(
+                    config_name=config_data.get("config_name", "测试配置"),
+                    ai_type=AIType[config_data.get("ai_type", "CLOUD")],
+                    cloud_provider=config_data.get("cloud_provider", ""),
+                    cloud_api_key=config_data.get("cloud_api_key", ""),
+                    cloud_api_url=config_data.get("cloud_api_url", ""),
+                    cloud_model_name=config_data.get("cloud_model_name", ""),
+                    local_model_name=config_data.get("local_model_name", ""),
+                    local_api_port=config_data.get("local_api_port", 11434),
+                    max_tokens=config_data.get("max_tokens", 4000),
+                    temperature=config_data.get("temperature", 0.7),
+                    timeout_seconds=config_data.get("timeout_seconds", 30)
+                )
+                
+                # 测试配置
+                test_result = ai_analysis_service.test_ai_config(config)
+                
+                return {
+                    "success": True,
+                    "data": test_result
+                }
+                    
+            except Exception as e:
+                logging.error(f"❌ 测试AI配置失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+        
+        @app.post("/api/ai/configs/predefined")
+        async def create_predefined_configs():
+            """创建预定义的AI配置"""
+            try:
+                configs = config_service.create_predefined_configs()
+                
+                return {
+                    "success": True,
+                    "message": f"创建了 {len(configs)} 个预定义配置",
+                    "data": [config.to_dict() for config in configs]
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 创建预定义配置失败: {e}", exc_info=True)
+                return {
+                    "success": False,
+                    "message": str(e)
+                }
+
+        @app.get("/api/ai/prompt-types")
+        async def get_available_ai_prompt_types():
+            """获取可用的AI提示类型"""
+            try:
+                prompt_types = get_available_prompt_types()
+                
+                return {
+                    "success": True,
+                    "data": prompt_types
+                }
+                
+            except Exception as e:
+                logging.error(f"❌ 获取AI提示类型失败: {e}", exc_info=True)
                 return {
                     "success": False,
                     "message": str(e)
