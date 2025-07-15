@@ -3,7 +3,7 @@
  * 
  * 功能：
  * 1. AI配置管理（API Key设置、模型选择）
- * 2. 快照分析（单个快照分析、快照对比分析）
+ * 2. 快照分析（单个快照分析）
  * 3. 多轮对话交互
  * 4. 分析结果展示
  * 5. PDF报告导出
@@ -21,9 +21,7 @@ class AIAnalysisManager {
         this.selectedModel = localStorage.getItem('ai_model') || 'deepseek/deepseek-chat-v3-0324:free:online';
         this.currentConversationId = null;
         this.currentSnapshotId = null;
-        this.secondSnapshotId = null;
         this.analysisResult = null;
-        this.isCompareMode = false;
         this.isAnalyzing = false;
         this.conversationHistory = [];
         
@@ -34,13 +32,6 @@ class AIAnalysisManager {
         // 从URL参数获取快照ID
         this.urlParams = new URLSearchParams(window.location.search);
         this.urlSnapshotId = this.urlParams.get('snapshot_id');
-        this.urlCompareSnapshotId = this.urlParams.get('compare_snapshot_id');
-        
-        // 如果URL中有对比快照ID，则设置为对比模式
-        if (this.urlCompareSnapshotId) {
-            this.isCompareMode = true;
-            this.secondSnapshotId = this.urlCompareSnapshotId;
-        }
         
         // 绑定DOM元素
         this.bindElements();
@@ -68,17 +59,30 @@ class AIAnalysisManager {
         
         // 分析控制面板
         this.snapshotSelect = document.getElementById('snapshot-select');
-        this.compareSnapshotSelect = document.getElementById('compare-snapshot-select');
-        this.compareToggle = document.getElementById('compare-mode-toggle');
         this.promptInput = document.getElementById('ai-prompt-input');
         this.analyzeBtn = document.getElementById('analyze-btn');
         
         // 结果展示区
         this.resultPanel = document.getElementById('ai-result-panel');
-        this.analysisContent = document.getElementById('analysis-content');
-        this.summarySection = document.getElementById('analysis-summary');
-        this.adviceSection = document.getElementById('investment-advice');
-        this.riskSection = document.getElementById('risk-assessment');
+        
+        // 基本信息部分
+        this.basicInfoSummary = document.getElementById('basic-info-summary');
+        this.basicInfoContent = document.getElementById('basic-info-content');
+        
+        // 投资组合概览部分
+        this.analysisSummary = document.getElementById('analysis-summary');
+        this.portfolioOverviewContent = document.getElementById('portfolio-overview-content');
+        
+        // 风险评估部分
+        this.riskAssessmentSummary = document.getElementById('risk-assessment-summary');
+        this.riskAssessmentContent = document.getElementById('risk-assessment-content');
+        
+        // 投资建议部分
+        this.investmentAdviceSummary = document.getElementById('investment-advice-summary');
+        this.investmentAdviceContent = document.getElementById('investment-advice-content');
+        
+        // 切换按钮
+        this.toggleButtons = document.querySelectorAll('.toggle-btn');
         
         // 进度指示器
         this.progressIndicator = document.getElementById('analysis-progress');
@@ -131,6 +135,9 @@ class AIAnalysisManager {
             });
         }
         
+        // 初始化展开/收起按钮
+        this.initToggleButtons();
+        
         // 发送消息
         if (this.sendMessageBtn) {
             this.sendMessageBtn.addEventListener('click', () => this.sendUserMessage());
@@ -155,6 +162,32 @@ class AIAnalysisManager {
         if (this.exportPdfBtn) {
             this.exportPdfBtn.addEventListener('click', () => this.exportToPdf());
         }
+    }
+    
+    /**
+     * 初始化展开/收起按钮
+     */
+    initToggleButtons() {
+        if (!this.toggleButtons) {
+            this.toggleButtons = document.querySelectorAll('.toggle-btn');
+        }
+        
+        this.toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const section = button.getAttribute('data-section');
+                const content = document.getElementById(`${section}-content`);
+                
+                if (content) {
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        button.textContent = '收起';
+                    } else {
+                        content.style.display = 'none';
+                        button.textContent = '展开';
+                    }
+                }
+            });
+        });
     }
     
     /**
@@ -299,14 +332,14 @@ class AIAnalysisManager {
     async loadSnapshots() {
         try {
             // 从后端获取快照列表
-            const response = await fetch('/api/snapshots?type=all&limit=50');
+            const response = await fetch('/api/snapshots');
             const data = await response.json();
             
             if (!data.success) {
                 throw new Error(data.message || '获取快照列表失败');
             }
             
-            const snapshots = data.data.snapshots || [];
+            const snapshots = data.data?.snapshots || [];
             
             // 填充快照选择下拉框
             if (this.snapshotSelect) {
@@ -341,51 +374,15 @@ class AIAnalysisManager {
                 }
             }
             
-            // 填充比较快照选择下拉框
-            if (this.compareSnapshotSelect) {
-                this.compareSnapshotSelect.innerHTML = '';
-                
-                // 添加一个空选项
-                const emptyOption = document.createElement('option');
-                emptyOption.value = '';
-                emptyOption.textContent = '-- 选择比较快照 --';
-                this.compareSnapshotSelect.appendChild(emptyOption);
-                
-                snapshots.forEach(snapshot => {
-                    const option = document.createElement('option');
-                    option.value = snapshot.snapshot_id;
-                    const date = new Date(snapshot.snapshot_date);
-                    const formattedDate = date.toLocaleDateString('zh-CN');
-                    option.textContent = `${formattedDate} - ${formatCurrency(snapshot.total_value)}`;
-                    
-                    // 如果URL中有对比快照ID，则自动选择该快照
-                    if (this.urlCompareSnapshotId && this.urlCompareSnapshotId === snapshot.snapshot_id) {
-                        option.selected = true;
-                        this.secondSnapshotId = snapshot.snapshot_id;
-                    }
-                    
-                    this.compareSnapshotSelect.appendChild(option);
-                });
-                
-                // 设置比较模式
-                this.toggleCompareMode(this.isCompareMode);
-            }
-            
-            // 如果URL中有快照ID，则自动开始分析
+            // 如果URL中有快照ID，则选择该快照但不自动开始分析
             if (this.urlSnapshotId && this.currentSnapshotId) {
                 // 设置默认提示
                 if (this.promptInput) {
-                    if (this.isCompareMode && this.secondSnapshotId) {
-                        this.promptInput.value = '分析这两个快照之间的资产配置变化和收益情况';
-                    } else {
-                        this.promptInput.value = '分析我的投资组合风险水平和资产配置是否合理';
-                    }
+                    this.promptInput.value = '分析我的投资组合风险水平和资产配置是否合理';
                 }
                 
-                // 延迟一点时间后自动开始分析
-                setTimeout(() => {
-                    this.startAnalysis();
-                }, 500);
+                // 不再自动开始分析，让用户手动点击"开始分析"按钮
+                console.log('已选择快照，等待用户点击"开始分析"按钮');
             }
             
         } catch (error) {
@@ -443,22 +440,7 @@ class AIAnalysisManager {
                 throw new Error(data.message || '更新AI配置失败');
             }
             
-            // 确保使用云端AI
-            const switchResponse = await fetch('/api/ai/configs/switch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ ai_type: 'CLOUD' })
-            });
-            
-            const switchData = await switchResponse.json();
-            
-            if (!switchData.success) {
-                throw new Error(switchData.message || '切换AI类型失败');
-            }
-            
-            return switchData.data.config_id;
+            return data.data.config_id;
             
         } catch (error) {
             console.error('更新AI配置失败:', error);
@@ -481,27 +463,6 @@ class AIAnalysisManager {
     }
     
     /**
-     * 切换比较模式
-     */
-    toggleCompareMode(enabled) {
-        if (this.compareSnapshotSelect) {
-            this.compareSnapshotSelect.style.display = enabled ? 'block' : 'none';
-        }
-        
-        // 如果是从URL参数中获取的对比模式，则设置compareToggle的状态
-        if (this.compareToggle) {
-            this.compareToggle.checked = enabled;
-        }
-        
-        // 更新提示文本
-        if (this.promptInput) {
-            this.promptInput.placeholder = enabled 
-                ? '输入对比分析需求，例如：分析两个快照之间的资产配置变化...'
-                : '输入分析需求，例如：分析我的投资组合风险水平...';
-        }
-    }
-    
-    /**
      * 开始分析
      */
     async startAnalysis() {
@@ -512,16 +473,6 @@ class AIAnalysisManager {
         if (!snapshotId) {
             this.showNotification('请选择要分析的快照', 'warning');
             return;
-        }
-        
-        // 如果是比较模式，还需要获取第二个快照ID
-        let compareSnapshotId = null;
-        if (this.isCompareMode) {
-            compareSnapshotId = this.compareSnapshotSelect ? this.compareSnapshotSelect.value : null;
-            if (!compareSnapshotId) {
-                this.showNotification('请选择比较快照', 'warning');
-                return;
-            }
         }
         
         // 获取用户提示
@@ -538,7 +489,6 @@ class AIAnalysisManager {
             // 准备分析请求数据
             const analysisData = {
                 snapshot1_id: snapshotId,
-                snapshot2_id: compareSnapshotId,
                 config_id: configId,  // 添加配置ID
                 user_prompt: userPrompt,
                 api_key: this.apiKey,
@@ -601,30 +551,92 @@ class AIAnalysisManager {
      * 显示分析结果
      */
     displayAnalysisResult(result) {
+        if (!this.resultPanel || !result) {
+            return;
+        }
+        
+        // 保存分析结果
+        this.analysisResult = result;
+        
         // 显示结果面板
-        if (this.resultPanel) {
-            this.resultPanel.style.display = 'block';
+        this.resultPanel.style.display = 'block';
+        
+        // 1. 更新基本信息部分
+        if (this.basicInfoSummary) {
+            const basicInfo = this.generateBasicInfoSummary(result);
+            this.basicInfoSummary.textContent = basicInfo;
         }
         
-        // 更新摘要部分
-        if (this.summarySection) {
-            this.summarySection.textContent = result.analysis_summary || '无摘要信息';
+        if (this.basicInfoContent) {
+            // 直接从快照数据生成基本信息，不使用AI生成的内容
+            const basicInfoDetail = this.generateBasicInfoDetail(result);
+            this.basicInfoContent.innerHTML = marked.parse(basicInfoDetail);
+            // 确保基本信息内容默认隐藏
+            this.basicInfoContent.style.display = 'none';
+            
+            // 确保对应的展开按钮显示"展开"
+            const basicInfoToggleBtn = document.querySelector('[data-section="basic-info"]');
+            if (basicInfoToggleBtn) {
+                basicInfoToggleBtn.textContent = '展开';
+            }
         }
         
-        // 更新风险评估部分
-        if (this.riskSection) {
-            this.riskSection.textContent = result.risk_assessment || '无风险评估信息';
+        // 2. 更新投资组合概览部分
+        if (this.analysisSummary && result.analysis_summary) {
+            this.analysisSummary.textContent = result.analysis_summary;
         }
         
-        // 更新投资建议部分
-        if (this.adviceSection) {
-            this.adviceSection.textContent = result.investment_advice || '无投资建议';
+        if (this.portfolioOverviewContent) {
+            // 从完整分析内容中提取投资组合概览部分
+            const overviewContent = this.extractSectionFromAnalysis(result.analysis_content, '投资组合概览');
+            // 使用marked.parse来正确渲染markdown内容
+            this.portfolioOverviewContent.innerHTML = marked.parse(overviewContent || '');
+            // 确保内容默认隐藏
+            this.portfolioOverviewContent.style.display = 'none';
+            
+            // 确保对应的展开按钮显示"展开"
+            const overviewToggleBtn = document.querySelector('[data-section="portfolio-overview"]');
+            if (overviewToggleBtn) {
+                overviewToggleBtn.textContent = '展开';
+            }
         }
         
-        // 更新完整分析内容
-        if (this.analysisContent) {
-            // 使用marked.js渲染Markdown
-            this.analysisContent.innerHTML = marked.parse(result.analysis_content || '');
+        // 3. 更新风险评估部分
+        if (this.riskAssessmentSummary && result.risk_assessment) {
+            this.riskAssessmentSummary.textContent = result.risk_assessment;
+        }
+        
+        if (this.riskAssessmentContent) {
+            // 从完整分析内容中提取风险评估部分
+            const riskContent = this.extractSectionFromAnalysis(result.analysis_content, '风险评估');
+            this.riskAssessmentContent.innerHTML = marked.parse(riskContent || '');
+            // 确保内容默认隐藏
+            this.riskAssessmentContent.style.display = 'none';
+            
+            // 确保对应的展开按钮显示"展开"
+            const riskToggleBtn = document.querySelector('[data-section="risk-assessment"]');
+            if (riskToggleBtn) {
+                riskToggleBtn.textContent = '展开';
+            }
+        }
+        
+        // 4. 更新投资建议部分
+        if (this.investmentAdviceSummary && result.investment_advice) {
+            this.investmentAdviceSummary.textContent = result.investment_advice;
+        }
+        
+        if (this.investmentAdviceContent) {
+            // 从完整分析内容中提取投资建议部分
+            const adviceContent = this.extractSectionFromAnalysis(result.analysis_content, '投资建议');
+            this.investmentAdviceContent.innerHTML = marked.parse(adviceContent || '');
+            // 确保内容默认隐藏
+            this.investmentAdviceContent.style.display = 'none';
+            
+            // 确保对应的展开按钮显示"展开"
+            const adviceToggleBtn = document.querySelector('[data-section="investment-advice"]');
+            if (adviceToggleBtn) {
+                adviceToggleBtn.textContent = '展开';
+            }
         }
         
         // 显示对话面板
@@ -633,9 +645,104 @@ class AIAnalysisManager {
         }
         
         // 滚动到结果区域
-        if (this.resultPanel) {
-            this.resultPanel.scrollIntoView({ behavior: 'smooth' });
+        this.resultPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    /**
+     * 生成基本信息摘要
+     */
+    generateBasicInfoSummary(result) {
+        if (!result.snapshot_date || !result.total_value) {
+            return '基本信息不可用';
         }
+        
+        const date = new Date(result.snapshot_date).toLocaleDateString('zh-CN');
+        const totalValue = formatCurrency(result.total_value);
+        const returnRate = result.total_return_rate ? `${(result.total_return_rate * 100).toFixed(2)}%` : 'N/A';
+        
+        return `快照日期: ${date}, 总资产: ${totalValue}, 总收益率: ${returnRate}`;
+    }
+    
+    /**
+     * 生成基本信息详情
+     */
+    generateBasicInfoDetail(result) {
+        if (!result.snapshot_date || !result.total_value) {
+            return '# 基本信息\n\n基本信息不可用';
+        }
+        
+        const date = new Date(result.snapshot_date).toLocaleDateString('zh-CN');
+        const totalValue = formatCurrency(result.total_value);
+        const totalCost = result.total_cost ? formatCurrency(result.total_cost) : 'N/A';
+        const totalReturn = result.total_return ? formatCurrency(result.total_return) : 'N/A';
+        const returnRate = result.total_return_rate ? `${(result.total_return_rate * 100).toFixed(2)}%` : 'N/A';
+        
+        let markdown = `# 投资组合基本信息\n\n`;
+        markdown += `- **快照日期**: ${date}\n`;
+        markdown += `- **总资产**: ${totalValue}\n`;
+        markdown += `- **总成本**: ${totalCost}\n`;
+        markdown += `- **总收益**: ${totalReturn}\n`;
+        markdown += `- **总收益率**: ${returnRate}\n\n`;
+        
+        // 如果有资产配置信息，添加资产配置
+        if (result.asset_allocation) {
+            markdown += `## 资产配置\n\n`;
+            
+            // 直接从快照数据中获取资产配置信息
+            const allocation = result.asset_allocation;
+            
+            if (typeof allocation === 'object') {
+                // 如果是对象形式，直接使用
+                const cash = allocation.cash || 0;
+                const fixedIncome = allocation.fixed_income || 0;
+                const equity = allocation.equity || 0;
+                const realEstate = allocation.real_estate || 0;
+                const commodity = allocation.commodity || 0;
+                
+                markdown += `- **现金**: ${formatCurrency(cash)} (${this.calculatePercentage(cash, result.total_value)})\n`;
+                markdown += `- **固定收益**: ${formatCurrency(fixedIncome)} (${this.calculatePercentage(fixedIncome, result.total_value)})\n`;
+                markdown += `- **股票**: ${formatCurrency(equity)} (${this.calculatePercentage(equity, result.total_value)})\n`;
+                markdown += `- **房地产**: ${formatCurrency(realEstate)} (${this.calculatePercentage(realEstate, result.total_value)})\n`;
+                markdown += `- **商品**: ${formatCurrency(commodity)} (${this.calculatePercentage(commodity, result.total_value)})\n`;
+            }
+        }
+        
+        // 添加持仓数量信息
+        if (result.position_snapshots) {
+            markdown += `\n## 持仓信息\n\n`;
+            markdown += `- **持仓数量**: ${result.position_snapshots.length}个\n`;
+        }
+        
+        return markdown;
+    }
+    
+    /**
+     * 计算百分比
+     */
+    calculatePercentage(value, total) {
+        if (!value || !total || total === 0) {
+            return '0%';
+        }
+        return `${((value / total) * 100).toFixed(2)}%`;
+    }
+    
+    /**
+     * 从分析内容中提取特定部分
+     */
+    extractSectionFromAnalysis(content, sectionName) {
+        if (!content) {
+            return '';
+        }
+        
+        // 尝试找到该部分的标题
+        const regex = new RegExp(`(#+)\\s*${sectionName}[\\s\\S]*?((?=#+\\s*[^#])|$)`, 'i');
+        const match = content.match(regex);
+        
+        if (match && match[0]) {
+            return match[0].trim();
+        }
+        
+        return '';
     }
     
     /**
@@ -888,46 +995,82 @@ class AIAnalysisManager {
             doc.setFontSize(10);
             doc.text(`生成时间: ${new Date().toLocaleString()}`, 105, 30, { align: 'center' });
             
-            // 添加摘要
+            // 1. 添加基本信息
+            let yPos = 40;
             doc.setFontSize(14);
-            doc.text('投资组合概览', 20, 40);
+            doc.text('1. 投资组合基本信息', 20, yPos);
             doc.setFontSize(12);
-            doc.text(this.analysisResult.analysis_summary || '无摘要', 20, 50, {
+            
+            const basicInfo = this.generateBasicInfoSummary(this.analysisResult);
+            doc.text(basicInfo, 20, yPos + 10, {
                 maxWidth: 170
             });
             
-            // 添加风险评估
-            let yPos = doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : 70;
+            // 2. 添加投资组合概览
+            yPos += 30;
             doc.setFontSize(14);
-            doc.text('风险评估', 20, yPos);
+            doc.text('2. 投资组合概览', 20, yPos);
+            doc.setFontSize(12);
+            doc.text(this.analysisResult.analysis_summary || '无概览信息', 20, yPos + 10, {
+                maxWidth: 170
+            });
+            
+            // 3. 添加风险评估
+            yPos += 40;
+            doc.setFontSize(14);
+            doc.text('3. 风险评估', 20, yPos);
             doc.setFontSize(12);
             doc.text(this.analysisResult.risk_assessment || '无风险评估', 20, yPos + 10, {
                 maxWidth: 170
             });
             
-            // 添加投资建议
-            yPos = doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : yPos + 30;
+            // 4. 添加投资建议
+            yPos += 40;
             doc.setFontSize(14);
-            doc.text('投资建议', 20, yPos);
+            doc.text('4. 投资建议', 20, yPos);
             doc.setFontSize(12);
             doc.text(this.analysisResult.investment_advice || '无投资建议', 20, yPos + 10, {
                 maxWidth: 170
             });
             
-            // 添加完整分析内容
-            yPos = doc.previousAutoTable ? doc.previousAutoTable.finalY + 10 : yPos + 30;
-            doc.setFontSize(14);
-            doc.text('详细分析', 20, yPos);
-            
-            // 将Markdown转换为纯文本
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = marked.parse(this.analysisResult.analysis_content);
-            const plainText = tempDiv.textContent || tempDiv.innerText || '';
-            
-            doc.setFontSize(12);
-            doc.text(plainText, 20, yPos + 10, {
-                maxWidth: 170
-            });
+            // 添加对话历史（如果有）
+            if (this.conversationHistory && this.conversationHistory.length > 0) {
+                // 添加新页面
+                doc.addPage();
+                
+                doc.setFontSize(16);
+                doc.text('对话历史', 105, 20, { align: 'center' });
+                
+                let chatYPos = 40;
+                this.conversationHistory.forEach((message, index) => {
+                    // 如果页面空间不足，添加新页面
+                    if (chatYPos > 250) {
+                        doc.addPage();
+                        chatYPos = 20;
+                    }
+                    
+                    const role = message.role === 'user' ? '用户' : 'AI';
+                    const roleColor = message.role === 'user' ? '#0d47a1' : '#333333';
+                    
+                    // 设置角色颜色
+                    doc.setTextColor(roleColor);
+                    doc.setFontSize(11);
+                    doc.text(`${role}:`, 20, chatYPos);
+                    
+                    // 恢复默认颜色
+                    doc.setTextColor('#000000');
+                    doc.setFontSize(10);
+                    
+                    // 处理可能的多行内容
+                    const content = message.content || '';
+                    const contentLines = doc.splitTextToSize(content, 160);
+                    
+                    doc.text(contentLines, 30, chatYPos);
+                    
+                    // 更新Y位置，为下一条消息腾出空间
+                    chatYPos += 10 + (contentLines.length * 5);
+                });
+            }
             
             // 保存PDF
             doc.save('投资组合分析报告.pdf');

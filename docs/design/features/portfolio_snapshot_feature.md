@@ -710,7 +710,7 @@ class AIAnalysisService:
 
 #### 5.1.1 创建手动快照
 ```http
-POST /api/portfolio/snapshots
+POST /api/snapshots
 Content-Type: application/json
 
 {
@@ -738,7 +738,7 @@ Content-Type: application/json
 
 #### 5.2.1 获取快照列表
 ```http
-GET /api/portfolio/snapshots?type=AUTO&limit=20&offset=0
+GET /api/snapshots?type=AUTO&limit=20&offset=0
 ```
 
 **响应示例**:
@@ -765,7 +765,7 @@ GET /api/portfolio/snapshots?type=AUTO&limit=20&offset=0
 
 #### 5.2.2 获取快照详情
 ```http
-GET /api/portfolio/snapshots/{snapshot_id}
+GET /api/snapshots/{snapshot_id}
 ```
 
 **响应示例**:
@@ -788,7 +788,7 @@ GET /api/portfolio/snapshots/{snapshot_id}
 
 #### 5.3.1 快照对比
 ```http
-POST /api/portfolio/snapshots/compare
+POST /api/snapshots/compare
 Content-Type: application/json
 
 {

@@ -43,7 +43,7 @@
             <h2>AI投资组合分析</h2>
             <p class="description">
                 使用AI智能分析您的投资组合，获取专业的投资建议和风险评估。
-                支持单个快照分析和快照对比分析，以及与AI的多轮对话交互。
+                支持单个快照分析，以及与AI的多轮对话交互。
             </p>
 
             <!-- AI配置面板 -->
@@ -75,14 +75,6 @@
                         <option value="">-- 选择要分析的快照 --</option>
                         <!-- 快照选项将通过JavaScript动态填充 -->
                     </select>
-                    <select id="compare-snapshot-select" style="display: none;">
-                        <option value="">-- 选择比较快照 --</option>
-                        <!-- 快照选项将通过JavaScript动态填充 -->
-                    </select>
-                </div>
-                <div class="compare-toggle">
-                    <input type="checkbox" id="compare-mode-toggle">
-                    <label for="compare-mode-toggle">启用快照对比分析</label>
                 </div>
                 
                 <!-- 提示类型选择 -->
@@ -121,22 +113,45 @@
             <!-- 分析结果面板 -->
             <section id="ai-result-panel" class="ai-result-panel">
                 <h3>分析结果</h3>
-                <div class="result-summary">
-                    <div class="summary-card">
-                        <h4>投资组合概览</h4>
-                        <p id="analysis-summary">尚未进行分析</p>
+                
+                <!-- 基本信息部分 -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h4>1. 当前投资组合的基本信息</h4>
+                        <button class="toggle-btn" data-section="basic-info">展开</button>
                     </div>
-                    <div class="summary-card">
-                        <h4>风险评估</h4>
-                        <p id="risk-assessment">尚未进行分析</p>
-                    </div>
-                    <div class="summary-card">
-                        <h4>投资建议</h4>
-                        <p id="investment-advice">尚未进行分析</p>
-                    </div>
+                    <div class="section-summary" id="basic-info-summary">尚未进行分析</div>
+                    <div class="section-content" id="basic-info-content" style="display: none;"></div>
                 </div>
-                <div class="analysis-content" id="analysis-content">
-                    <!-- 分析内容将通过JavaScript动态填充 -->
+                
+                <!-- 投资组合概览部分 -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h4>2. 投资组合概览</h4>
+                        <button class="toggle-btn" data-section="portfolio-overview">展开</button>
+                    </div>
+                    <div class="section-summary" id="analysis-summary">尚未进行分析</div>
+                    <div class="section-content" id="portfolio-overview-content" style="display: none;"></div>
+                </div>
+                
+                <!-- 风险评估部分 -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h4>3. 风险评估</h4>
+                        <button class="toggle-btn" data-section="risk-assessment">展开</button>
+                    </div>
+                    <div class="section-summary" id="risk-assessment-summary">尚未进行分析</div>
+                    <div class="section-content" id="risk-assessment-content" style="display: none;"></div>
+                </div>
+                
+                <!-- 投资建议部分 -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h4>4. 投资建议</h4>
+                        <button class="toggle-btn" data-section="investment-advice">展开</button>
+                    </div>
+                    <div class="section-summary" id="investment-advice-summary">尚未进行分析</div>
+                    <div class="section-content" id="investment-advice-content" style="display: none;"></div>
                 </div>
             </section>
 
